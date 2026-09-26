@@ -386,6 +386,9 @@
   .setup-skip:hover{color:var(--text-2);}
 
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -490,14 +493,13 @@
     <div class="section-head"><h2>الإعدادات</h2></div>
 
     <div class="settings-block">
-      <h3 style="margin-bottom:10px;">المزامنة عبر GitHub</h3>
+      <h3 style="margin-bottom:10px;">المزامنة عبر Firebase</h3>
       <div class="settings-desc" id="ghStatusLine">—</div>
-      <div class="gh-form-row"><label>Personal Access Token</label><input type="text" id="ghTokenInput" placeholder="github_pat_..." autocomplete="off"></div>
-      <div class="gh-help">التوكن يُحفظ في متصفحك فقط ولا يُرفع أبدًا إلى المستودع. يجب أن يملك صلاحية Contents: Read and write على مستودع <b id="ghRepoLabel"></b> فقط.</div>
-      <div class="setup-actions" style="margin-top:12px;">
-        <button class="btn btn-filled btn-sm" onclick="saveGhTokenFromSettings()">حفظ التوكن</button>
+      <div class="gh-help" id="ghAccountLine" style="margin-bottom:10px;"></div>
+      <div class="setup-actions" style="margin-top:4px;">
         <button class="btn btn-glass btn-sm" onclick="forceSyncNow()">مزامنة الآن</button>
-        <button class="btn btn-danger btn-sm" onclick="clearGhToken()">مسح التوكن</button>
+        <button class="btn btn-glass btn-sm" id="settingsSetupBtn" onclick="openSetupFromSettings()">إعداد / تغيير الحساب</button>
+        <button class="btn btn-danger btn-sm" id="settingsSignOutBtn" onclick="doFirebaseSignOut()" style="display:none;">تسجيل الخروج</button>
       </div>
     </div>
 
@@ -667,18 +669,34 @@
 
 <div id="setupOverlay">
   <div class="setup-card">
-    <h2>مرحبًا بك في المتابعة</h2>
-    <p>لمزامنة بياناتك تلقائيًا بين جوالك وحاسوبك عبر مستودع GitHub الخاص بك، الصق توكن الوصول (Personal Access Token) هنا. بإمكانك تخطي هذه الخطوة والعمل محليًا على هذا الجهاز فقط، وربطه لاحقًا من الإعدادات.</p>
-    <div class="setup-steps">
-      1. من GitHub: Settings ← Developer settings ← Personal access tokens ← Fine-grained tokens<br>
-      2. Generate new token ← اختر <b>Only select repositories</b> وحدد مستودع <b id="ghRepoLabelSetup"></b> فقط<br>
-      3. فعّل صلاحية <b>Contents: Read and write</b> فقط، ثم انسخ التوكن الصقه بالأسفل
+    <h2 id="setupTitle">مرحبًا بك في المتابعة</h2>
+    <p id="setupIntro">لمزامنة بياناتك تلقائيًا وبأمان بين جوالك وحاسوبك نستخدم Firebase (خدمة مجانية من Google) — قاعدة بيانات خاصة محمية بتسجيل دخول، ولا علاقة لها بمستودع GitHub الذي يستضيف الموقع. خطوة واحدة فقط عند أول استخدام.</p>
+
+    <div id="setupStepConfig">
+      <div class="setup-steps">
+        1. اذهب إلى <b>console.firebase.google.com</b> وسجّل دخولك بحساب Google (نفس حسابك في Gmail)<br>
+        2. Add project ← اكتب اسمًا مثل <b>maham</b> ← أكمل الخطوات (يمكن تعطيل Google Analytics)<br>
+        3. من القائمة الجانبية: Build ← <b>Firestore Database</b> ← Create database ← اختر أي موقع قريب ← ابدأ في <b>Production mode</b><br>
+        4. Build ← <b>Authentication</b> ← Get started ← فعّل طريقة <b>Email/Password</b><br>
+        5. من تبويب Users داخل Authentication ← Add user ← ضع بريدك وكلمة مرور تختارها (هذا حساب دخولك للبرنامج)<br>
+        6. ⚙️ Project settings (بجانب Project Overview) ← انزل إلى "Your apps" ← اضغط أيقونة الويب <b>&lt;/&gt;</b> ← سجّل التطبيق ← انسخ كامل كائن <b>firebaseConfig</b> والصقه بالأسفل
+      </div>
+      <div class="gh-form-row"><label>Firebase Config (الصق الكائن كاملًا كما هو)</label><textarea id="setupConfigInput" rows="5" style="width:100%;font-family:monospace;font-size:12px;" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea></div>
+      <div class="setup-actions">
+        <button class="btn btn-filled" onclick="saveFirebaseConfig()">التالي: تسجيل الدخول</button>
+      </div>
+      <div class="setup-skip" onclick="skipSetup()">تخطي — العمل محليًا على هذا الجهاز فقط</div>
     </div>
-    <div class="gh-form-row"><input type="text" id="setupTokenInput" placeholder="github_pat_..." autocomplete="off"></div>
-    <div class="setup-actions">
-      <button class="btn btn-filled" onclick="completeSetupWithToken()">حفظ والمتابعة</button>
+
+    <div id="setupStepLogin" style="display:none;">
+      <div class="gh-help" style="margin-bottom:14px;">أدخل البريد وكلمة المرور اللذين أنشأتهما في خطوة Authentication ← Users.</div>
+      <div class="gh-form-row"><label>البريد الإلكتروني</label><input type="email" id="setupEmailInput" placeholder="you@example.com" autocomplete="off"></div>
+      <div class="gh-form-row"><label>كلمة المرور</label><input type="password" id="setupPasswordInput" placeholder="••••••••" autocomplete="off"></div>
+      <div class="setup-actions">
+        <button class="btn btn-filled" onclick="doFirebaseLogin('setup')">تسجيل الدخول والمتابعة</button>
+        <button class="btn btn-glass btn-sm" onclick="backToConfigStep()">رجوع</button>
+      </div>
     </div>
-    <div class="setup-skip" onclick="skipSetup()">تخطي — العمل محليًا على هذا الجهاز فقط</div>
   </div>
 </div>
 
@@ -687,28 +705,22 @@
 
 <script>
 /* ============================================================
-   GitHub Contents API storage shim — replaces window.storage
+   Firebase (Auth + Firestore) storage shim — replaces window.storage
    ============================================================ */
-const GH_OWNER = 'S4F3N';
-const GH_REPO = 'MAHAM';
-const GH_PATH = 'data.json';
-const TOKEN_KEY = 'maham_gh_token';
-const CACHE_KEY = 'maham_gh_cache';
+const FB_CONFIG_KEY = 'maham_fb_config';
+const FB_EMAIL_KEY = 'maham_fb_email';
+const CACHE_KEY = 'maham_fb_cache';
 const SEEN_KEY = 'maham_setup_seen';
-const API_BASE = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+const FB_COLLECTION = 'maham';
 
 let _cache = {};
-let _sha = null;
 let _loadPromise = null;
 let _saveTimer = null;
-let _saveInFlight = false;
-let _pendingResave = false;
+let fbApp = null, fbAuth = null, fbDb = null, fbUser = null;
 
-function getToken(){ try{ return localStorage.getItem(TOKEN_KEY) || ''; }catch(e){ return ''; } }
-function setToken(t){ try{ localStorage.setItem(TOKEN_KEY, t); }catch(e){} }
-function clearTokenStorage(){ try{ localStorage.removeItem(TOKEN_KEY); }catch(e){} }
-function b64EncodeUnicode(str){ return btoa(unescape(encodeURIComponent(str))); }
-function b64DecodeUnicode(str){ return decodeURIComponent(escape(atob(str.replace(/\n/g,'')))); }
+function getFbConfig(){ try{ const raw = localStorage.getItem(FB_CONFIG_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
+function setFbConfig(cfg){ try{ localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(cfg)); }catch(e){} }
+function clearFbConfig(){ try{ localStorage.removeItem(FB_CONFIG_KEY); }catch(e){} }
 function readLocalCache(){ try{ const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : {}; }catch(e){ return {}; } }
 function writeLocalCache(obj){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(obj)); }catch(e){} }
 
@@ -716,71 +728,68 @@ function setStatus(s){
   const pill = document.getElementById('syncPill');
   const label = document.getElementById('syncLabel');
   const line = document.getElementById('ghStatusLine');
-  const map = {idle:'—', synced:'متزامن مع GitHub', saving:'جارٍ الحفظ...', error:'فشل الحفظ — إعادة المحاولة', offline:'غير متصل — العمل محليًا', local:'محلي فقط (بدون مزامنة)'};
+  const map = {idle:'—', synced:'متزامن مع Firebase', saving:'جارٍ الحفظ...', error:'فشل الاتصال — إعادة المحاولة', offline:'غير متصل — العمل محليًا', local:'محلي فقط (بدون مزامنة)'};
   if(pill) pill.className = 'sync-pill ' + s;
   if(label) label.textContent = map[s] || s;
   if(line) line.textContent = map[s] || s;
 }
 
-async function fetchRemote(){
-  const token = getToken();
-  if(!token){ setStatus('local'); _cache = readLocalCache(); return; }
+function initFirebase(){
+  const cfg = getFbConfig();
+  if(!cfg){ setStatus('local'); return false; }
   try{
-    const res = await fetch(API_BASE, { headers: { 'Authorization': 'Bearer '+token, 'Accept':'application/vnd.github+json' }, cache:'no-store' });
-    if(res.status === 404){ _cache = readLocalCache(); _sha = null; setStatus('synced'); return; }
-    if(res.status === 401 || res.status === 403){ setStatus('error'); _cache = readLocalCache(); return; }
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const json = await res.json();
-    _sha = json.sha;
-    const decoded = b64DecodeUnicode(json.content || '');
-    _cache = decoded ? JSON.parse(decoded) : {};
-    writeLocalCache(_cache);
-    setStatus('synced');
-  }catch(e){
-    _cache = readLocalCache();
-    setStatus(navigator.onLine === false ? 'offline' : 'error');
-  }
+    if(!fbApp) fbApp = firebase.initializeApp(cfg);
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+    return true;
+  }catch(e){ setStatus('error'); return false; }
 }
-function ensureLoaded(){ if(!_loadPromise) _loadPromise = fetchRemote(); return _loadPromise; }
+
+function ensureLoaded(){
+  if(_loadPromise) return _loadPromise;
+  _loadPromise = new Promise(function(resolve){
+    if(!initFirebase()){ _cache = readLocalCache(); resolve(); return; }
+    fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
+      fbAuth.onAuthStateChanged(function(user){
+        if(user){
+          fbUser = user;
+          setStatus('idle');
+          fbDb.collection(FB_COLLECTION).doc(user.uid).get().then(function(snap){
+            _cache = snap.exists ? (snap.data() || {}) : {};
+            writeLocalCache(_cache);
+            setStatus('synced');
+            resolve();
+          }).catch(function(){
+            _cache = readLocalCache();
+            setStatus(navigator.onLine === false ? 'offline' : 'error');
+            resolve();
+          });
+        } else {
+          fbUser = null;
+          _cache = readLocalCache();
+          setStatus('local');
+          resolve();
+        }
+      });
+    }).catch(function(){ _cache = readLocalCache(); setStatus('error'); resolve(); });
+  });
+  return _loadPromise;
+}
+
 function scheduleSave(){
   writeLocalCache(_cache);
-  if(!getToken()){ setStatus('local'); return; }
+  if(!fbUser || !fbDb){ setStatus(getFbConfig() ? 'idle' : 'local'); return; }
   clearTimeout(_saveTimer);
   setStatus('saving');
   _saveTimer = setTimeout(pushRemote, 800);
 }
-async function pushRemote(){
-  const token = getToken();
-  if(!token){ setStatus('local'); return; }
-  if(_saveInFlight){ _pendingResave = true; return; }
-  _saveInFlight = true;
-  try{
-    const body = { message: 'تحديث بيانات المتابعة — ' + new Date().toISOString(), content: b64EncodeUnicode(JSON.stringify(_cache)) };
-    if(_sha) body.sha = _sha;
-    const res = await fetch(API_BASE, { method:'PUT', headers: { 'Authorization':'Bearer '+token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' }, body: JSON.stringify(body) });
-    if(res.status === 409){
-      const fresh = await fetch(API_BASE, { headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}, cache:'no-store' });
-      if(fresh.ok){
-        const j = await fresh.json();
-        _sha = j.sha;
-        const remoteObj = JSON.parse(b64DecodeUnicode(j.content||'{}'));
-        _cache = Object.assign({}, remoteObj, _cache);
-        const retryBody = { message:'تحديث بيانات المتابعة (دمج) — '+new Date().toISOString(), content: b64EncodeUnicode(JSON.stringify(_cache)), sha:_sha };
-        const retryRes = await fetch(API_BASE, { method:'PUT', headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body: JSON.stringify(retryBody) });
-        if(retryRes.ok){ const rj = await retryRes.json(); _sha = rj.content.sha; setStatus('synced'); }
-        else { setStatus('error'); }
-      } else { setStatus('error'); }
-    } else if(res.ok){
-      const j = await res.json();
-      _sha = j.content.sha;
-      setStatus('synced');
-    } else { setStatus('error'); }
-  }catch(e){
-    setStatus(navigator.onLine===false?'offline':'error');
-  } finally {
-    _saveInFlight = false;
-    if(_pendingResave){ _pendingResave=false; pushRemote(); }
-  }
+function pushRemote(){
+  if(!fbUser || !fbDb) return;
+  fbDb.collection(FB_COLLECTION).doc(fbUser.uid).set(_cache, {merge:false}).then(function(){
+    setStatus('synced');
+  }).catch(function(){
+    setStatus(navigator.onLine === false ? 'offline' : 'error');
+  });
 }
 
 window.storage = {
@@ -797,18 +806,47 @@ window.storage = {
   }
 };
 
-function completeSetupWithToken(){
-  const input = document.getElementById('setupTokenInput');
-  const val = input ? input.value.trim() : '';
-  if(!val){ if(typeof _showToast==='function') _showToast('الصق التوكن أولاً'); return; }
-  setToken(val);
-  try{ localStorage.setItem(SEEN_KEY, '1'); }catch(e){}
-  _loadPromise = null;
-  const overlay = document.getElementById('setupOverlay');
-  ensureLoaded().then(function(){
-    if(overlay) overlay.classList.remove('open');
-    if(typeof loadIfEmpty === 'function') loadIfEmpty();
-    if(typeof _showToast==='function') _showToast('تم الربط بنجاح');
+function saveFirebaseConfig(){
+  const input = document.getElementById('setupConfigInput');
+  const raw = input ? input.value.trim() : '';
+  if(!raw){ if(typeof _showToast==='function') _showToast('الصق كائن firebaseConfig أولاً'); return; }
+  let cfg;
+  try{ cfg = JSON.parse(raw); }
+  catch(e){ if(typeof _showToast==='function') _showToast('تعذر قراءة الكائن — تأكد من نسخه كاملًا'); return; }
+  if(!cfg.apiKey || !cfg.projectId){ if(typeof _showToast==='function') _showToast('الكائن ناقص — انسخه كاملًا من Firebase'); return; }
+  setFbConfig(cfg);
+  fbApp = null;
+  initFirebase();
+  document.getElementById('setupStepConfig').style.display = 'none';
+  document.getElementById('setupStepLogin').style.display = '';
+}
+function backToConfigStep(){
+  document.getElementById('setupStepLogin').style.display = 'none';
+  document.getElementById('setupStepConfig').style.display = '';
+}
+function doFirebaseLogin(mode){
+  const emailEl = document.getElementById(mode==='setup' ? 'setupEmailInput' : 'settingsEmailInput');
+  const passEl = document.getElementById(mode==='setup' ? 'setupPasswordInput' : 'settingsPasswordInput');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const pass = passEl ? passEl.value : '';
+  if(!email || !pass){ if(typeof _showToast==='function') _showToast('أدخل البريد وكلمة المرور'); return; }
+  if(!initFirebase()){ if(typeof _showToast==='function') _showToast('أكمل إعداد Firebase أولاً'); return; }
+  fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
+    return fbAuth.signInWithEmailAndPassword(email, pass);
+  }).then(function(cred){
+    try{ localStorage.setItem(FB_EMAIL_KEY, email); }catch(e){}
+    try{ localStorage.setItem(SEEN_KEY, '1'); }catch(e){}
+    fbUser = cred.user;
+    _loadPromise = null;
+    const overlay = document.getElementById('setupOverlay');
+    ensureLoaded().then(function(){
+      if(overlay) overlay.classList.remove('open');
+      if(typeof loadIfEmpty === 'function') loadIfEmpty();
+      updateAccountLine();
+      if(typeof _showToast==='function') _showToast('تم تسجيل الدخول بنجاح');
+    });
+  }).catch(function(err){
+    if(typeof _showToast==='function') _showToast('فشل تسجيل الدخول — تأكد من البريد وكلمة المرور');
   });
 }
 function skipSetup(){
@@ -817,42 +855,50 @@ function skipSetup(){
   if(overlay) overlay.classList.remove('open');
   setStatus('local');
 }
-function saveGhTokenFromSettings(){
-  const input = document.getElementById('ghTokenInput');
-  const val = input ? input.value.trim() : '';
-  if(!val){ if(typeof _showToast==='function') _showToast('الصق التوكن أولاً'); return; }
-  setToken(val);
-  _loadPromise = null;
-  ensureLoaded().then(function(){
-    if(typeof _showToast==='function') _showToast('تم حفظ التوكن والمزامنة');
-    if(input) input.value = '';
-  });
+function openSetupFromSettings(){
+  const overlay = document.getElementById('setupOverlay');
+  const cfg = getFbConfig();
+  if(cfg){
+    document.getElementById('setupStepConfig').style.display = 'none';
+    document.getElementById('setupStepLogin').style.display = '';
+  } else {
+    document.getElementById('setupStepConfig').style.display = '';
+    document.getElementById('setupStepLogin').style.display = 'none';
+  }
+  if(overlay) overlay.classList.add('open');
+}
+function doFirebaseSignOut(){
+  if(fbAuth){ fbAuth.signOut(); }
+  fbUser = null;
+  try{ localStorage.removeItem(FB_EMAIL_KEY); }catch(e){}
+  setStatus('local');
+  updateAccountLine();
+  if(typeof _showToast==='function') _showToast('تم تسجيل الخروج — البيانات محفوظة محليًا فقط الآن');
 }
 function forceSyncNow(){
-  if(!getToken()){ if(typeof _showToast==='function') _showToast('لا يوجد توكن محفوظ'); return; }
+  if(!getFbConfig()){ if(typeof _showToast==='function') _showToast('لم يتم إعداد Firebase بعد'); return; }
   setStatus('saving');
   _loadPromise = null;
   ensureLoaded().then(function(){
-    pushRemote();
+    if(fbUser) pushRemote();
     if(typeof _showToast==='function') _showToast('تمت المزامنة');
   });
 }
-function clearGhToken(){
-  clearTokenStorage();
-  setStatus('local');
-  if(typeof _showToast==='function') _showToast('تم مسح التوكن — البيانات محفوظة محليًا فقط الآن');
+function updateAccountLine(){
+  const line = document.getElementById('ghAccountLine');
+  const signOutBtn = document.getElementById('settingsSignOutBtn');
+  let email = '';
+  try{ email = localStorage.getItem(FB_EMAIL_KEY) || ''; }catch(e){}
+  if(line) line.textContent = email ? ('متصل بحساب: ' + email) : 'غير متصل بأي حساب — اضغط "إعداد" للربط';
+  if(signOutBtn) signOutBtn.style.display = email ? '' : 'none';
 }
 
-window.addEventListener('online', function(){ if(getToken()) pushRemote(); });
+window.addEventListener('online', function(){ if(fbUser) pushRemote(); });
 
 document.addEventListener('DOMContentLoaded', function(){
-  const repoFull = GH_OWNER + '/' + GH_REPO;
-  const lbl1 = document.getElementById('ghRepoLabel');
-  const lbl2 = document.getElementById('ghRepoLabelSetup');
-  if(lbl1) lbl1.textContent = repoFull;
-  if(lbl2) lbl2.textContent = repoFull;
-  const tok = getToken();
-  if(tok){
+  updateAccountLine();
+  const cfg = getFbConfig();
+  if(cfg){
     setStatus('idle');
     ensureLoaded();
   } else {
