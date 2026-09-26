@@ -896,19 +896,19 @@ window.addEventListener('online', function(){ if(fbUser) pushRemote(); });
 
 document.addEventListener('DOMContentLoaded', function(){
   updateAccountLine();
-  const cfg = getFbConfig();
-  if(cfg){
-    setStatus('idle');
-    ensureLoaded();
-  } else {
-    setStatus('local');
-    let seen = false;
-    try{ seen = localStorage.getItem(SEEN_KEY) === '1'; }catch(e){}
-    if(!seen){
-      const overlay = document.getElementById('setupOverlay');
-      if(overlay) overlay.classList.add('open');
+  setStatus('idle');
+  ensureLoaded().then(function(){
+    if(!fbUser){
+      let seen = false;
+      try{ seen = localStorage.getItem(SEEN_KEY) === '1'; }catch(e){}
+      if(!seen){
+        const overlay = document.getElementById('setupOverlay');
+        if(overlay) overlay.classList.add('open');
+      } else {
+        setStatus('local');
+      }
     }
-  }
+  });
 });
 
 const COLORS = [
