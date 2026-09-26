@@ -181,6 +181,14 @@
   .file-card .f-tags{display:flex;gap:4px;flex-wrap:wrap;}
   .tag-chip{font-size:10px;background:var(--surface-3);color:var(--text-2);padding:2px 8px;border-radius:20px;}
   .warn-flag{color:var(--red);font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:center;gap:4px;}
+  nav.tabs button{position:relative;}
+  .notif-badge.tab-badge{position:static;display:inline-flex;margin-right:5px;top:0;left:0;vertical-align:middle;}
+  .task-group-title{font-size:12px;font-weight:700;color:var(--text-3);margin:20px 0 8px;}
+  .task-group-title:first-child{margin-top:0;}
+  .task-type-chip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface-3);color:var(--text-2);margin-left:5px;}
+  .tasks-empty-note{color:var(--text-3);font-size:13px;padding:30px 0;text-align:center;}
+  .agenda-drop-footer{text-align:center;font-size:12px;font-weight:600;color:var(--accent);padding:10px 6px 4px;cursor:pointer;border-top:1px solid var(--border);margin-top:6px;}
+  .agenda-drop-footer:hover{text-decoration:underline;}
   .next-flag{color:var(--text-2);font-size:11px;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:4px;}
   .fh-next-action{margin-top:10px;font-size:12.5px;color:var(--text-2);background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   .fh-next-action b{color:var(--text-1);font-weight:600;}
@@ -434,6 +442,7 @@
 
 <nav class="tabs">
   <button data-tab="home" class="active">الرئيسية</button>
+  <button data-tab="tasks">المهام<span class="notif-badge tab-badge" id="tasksTabBadge" style="display:none"></span></button>
   <button data-tab="calendar">التقويم</button>
   <button data-tab="contacts">جهات الاتصال</button>
   <button data-tab="settings">الإعدادات</button>
@@ -495,6 +504,15 @@
       <div class="day-panel-head"><h3 id="dayPanelTitle"></h3></div>
       <div id="dayPanelList"></div>
     </div>
+  </section>
+
+  <!-- TASKS -->
+  <section class="page" id="page-tasks">
+    <div class="section-head"><h2>المهام والمواعيد</h2>
+      <button class="btn btn-filled btn-sm" onclick="openTaskModal(null, today())">+ موعد / مهمة جديدة</button>
+    </div>
+    <div class="settings-desc" style="margin-bottom:14px;">سجّل هنا أي موعد أو اجتماع أو مهمة وقتية أو تذكير — كل شي تحتاج ما تفوتك تاريخه، بدون ربطه بملف بالضرورة.</div>
+    <div id="tasksPageList"></div>
   </section>
 
   <section class="page" id="page-contacts">
@@ -582,7 +600,7 @@
   <div class="fab-menu" id="fabMenu">
     <button onclick="openFileModal(); closeFab();">📁 ملف جديد</button>
     <button onclick="quickAddRound()">🔄 جولة جديدة</button>
-    <button onclick="openTaskModal(null, today()); closeFab();">📅 مهمة مجدولة</button>
+    <button onclick="openTaskModal(null, today()); closeFab();">📅 موعد / مهمة جديدة</button>
     <button onclick="openContactModal(); closeFab();">👤 جهة اتصال جديدة</button>
   </div>
   <button class="fab" id="fabBtn">+</button>
@@ -665,9 +683,12 @@
 <div class="overlay" id="taskOverlay">
   <div class="modal narrow">
     <div class="modal-handle"></div>
-    <h3 id="taskModalTitle">مهمة جديدة</h3>
+    <h3 id="taskModalTitle">موعد / مهمة جديدة</h3>
     <input type="hidden" id="tId">
-    <div class="form-row"><label>عنوان المهمة</label><input type="text" id="tTitle" placeholder="ما المطلوب؟"></div>
+    <div class="form-row"><label>العنوان</label><input type="text" id="tTitle" placeholder="مثال: اجتماع مع العميل، تجديد الرخصة، متابعة مع المحكمة..."></div>
+    <div class="form-row"><label>النوع</label>
+      <select id="tType"><option value="موعد">📅 موعد</option><option value="اجتماع">🤝 اجتماع</option><option value="مهمة" selected>✅ مهمة وقتية</option><option value="تذكير">🔔 تذكير</option></select>
+    </div>
     <div class="form-2col">
       <div class="form-row"><label>التاريخ</label><input type="date" id="tDate"></div>
       <div class="form-row"><label>الوقت (اختياري)</label><input type="time" id="tTime"></div>
@@ -945,6 +966,7 @@ document.addEventListener('DOMContentLoaded', function(){
   updateAccountLine();
   setStatus('idle');
   ensureLoaded().then(function(){
+    updateTasksTabBadge();
     if(!fbUser){
       let seen = false;
       try{ seen = localStorage.getItem(SEEN_KEY) === '1'; }catch(e){}
@@ -964,6 +986,7 @@ const COLORS = [
   {name:'purple', val:'var(--purple)', glow:'var(--purple-glow)'}, {name:'tc', val:'var(--tc)', glow:'var(--tc-glow)'},
 ];
 const ROUND_TYPES = {'جلسة':'🏛️','مراسلة':'✉️','اتصال':'📞','اجتماع':'🤝','تحديث داخلي':'🔄','أخرى':'📌'};
+const TASK_TYPES = {'موعد':'📅','اجتماع':'🤝','مهمة':'✅','تذكير':'🔔'};
 const ACCENT_HEX = {
   accent:{dark:'#0a84ff',light:'#0071e3'}, green:{dark:'#30d158',light:'#1c8a38'},
   red:{dark:'#ff453a',light:'#d70015'}, orange:{dark:'#ff9f0a',light:'#c9720a'},
@@ -1175,9 +1198,10 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentFileId=null;
-    ['home','calendar','contacts','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
+    ['home','tasks','calendar','contacts','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
     document.getElementById('page-file').classList.remove('active');
     if(btn.dataset.tab==='home') renderHome();
+    if(btn.dataset.tab==='tasks') renderTasksPage();
     if(btn.dataset.tab==='calendar') renderCalendarPage();
     if(btn.dataset.tab==='contacts') renderContacts();
     if(btn.dataset.tab==='settings') renderSettings();
@@ -1186,6 +1210,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 function goHome(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='home'));
   document.getElementById('page-file').classList.remove('active');
+  document.getElementById('page-tasks').classList.remove('active');
   document.getElementById('page-calendar').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
@@ -1193,9 +1218,21 @@ function goHome(){
   currentFileId=null;
   renderHome();
 }
+function goToTasks(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='tasks'));
+  document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-file').classList.remove('active');
+  document.getElementById('page-calendar').classList.remove('active');
+  document.getElementById('page-contacts').classList.remove('active');
+  document.getElementById('page-settings').classList.remove('active');
+  document.getElementById('page-tasks').classList.add('active');
+  currentFileId=null;
+  renderTasksPage();
+}
 function goToFile(id){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-tasks').classList.remove('active');
   document.getElementById('page-calendar').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
@@ -1207,6 +1244,7 @@ function goToCalendarDay(dateStr){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='calendar'));
   document.getElementById('page-home').classList.remove('active');
   document.getElementById('page-file').classList.remove('active');
+  document.getElementById('page-tasks').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-calendar').classList.add('active');
@@ -1347,7 +1385,7 @@ function renderTodayAgenda(){
       <div class="swipeable-inner" style="display:flex;gap:10px;align-items:flex-start;background:transparent;">
         <input type="checkbox" class="tchk" onclick="event.stopPropagation()" onchange="toggleTaskDone('${x.id}')">
         <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}'); toggleTodayDrop(false);">
-          <div class="ttitle"><span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
+          <div class="ttitle">${TASK_TYPES[x.type]||'✅'} <span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
           <div class="tmeta">${x.time?`<span class="time-badge">${x.time}</span>`:''} ${f?esc(f.title):''}</div>
         </div>
       </div>
@@ -1360,6 +1398,7 @@ function renderTodayAgenda(){
       <div><div class="ttl">${esc((r.actionNeeded||'').slice(0,60))}</div><div class="sub">${f?esc(f.title):''} — إجراء مستحق اليوم</div></div>
     </div>`;
   });
+  html += `<div class="agenda-drop-footer" onclick="goToTasks(); toggleTodayDrop(false);">عرض كل المهام والمواعيد ↩</div>`;
   document.getElementById('todayDrop').innerHTML = html;
 }
 const todayBtn = document.getElementById('todayBtn');
@@ -1429,7 +1468,7 @@ function renderDayPanel(){
       <div class="swipeable-inner task-row" style="background:var(--surface-2);border-radius:var(--radius-sm);">
         <input type="checkbox" class="tchk" ${x.done?'checked':''} onchange="toggleTaskDone('${x.id}')">
         <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}')">
-          <div class="ttitle ${x.done?'done':''}"><span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
+          <div class="ttitle ${x.done?'done':''}">${TASK_TYPES[x.type]||'✅'} <span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
           <div class="tmeta">${x.time?`<span class="time-badge">${x.time}</span>`:'بدون وقت محدد'} ${f?'· '+esc(f.title):''}</div>
         </div>
       </div>
@@ -1461,8 +1500,9 @@ function openTaskModal(id, prefillDate){
   document.getElementById('tId').value = id||'';
   if(id){
     const x = TASKS.find(t=>t.id===id);
-    document.getElementById('taskModalTitle').innerText = 'تعديل المهمة';
+    document.getElementById('taskModalTitle').innerText = 'تعديل الموعد / المهمة';
     document.getElementById('tTitle').value = x.title;
+    document.getElementById('tType').value = x.type||'مهمة';
     document.getElementById('tDate').value = x.date;
     document.getElementById('tTime').value = x.time||'';
     document.getElementById('tPriority').value = x.priority;
@@ -1470,8 +1510,9 @@ function openTaskModal(id, prefillDate){
     document.getElementById('tNotes').value = x.notes||'';
     document.getElementById('tDeleteBtn').style.display='inline-flex';
   } else {
-    document.getElementById('taskModalTitle').innerText = 'مهمة جديدة';
+    document.getElementById('taskModalTitle').innerText = 'موعد / مهمة جديدة';
     document.getElementById('tTitle').value='';
+    document.getElementById('tType').value='مهمة';
     document.getElementById('tDate').value = prefillDate || selectedDay || today();
     document.getElementById('tTime').value='';
     document.getElementById('tPriority').value='متوسط';
@@ -1487,7 +1528,8 @@ function saveTask(){
   const title = document.getElementById('tTitle').value.trim();
   if(!title){ _showToast('الرجاء إدخال عنوان المهمة','error'); return; }
   const data = {
-    title, date: document.getElementById('tDate').value || today(), time: document.getElementById('tTime').value,
+    title, type: document.getElementById('tType').value || 'مهمة',
+    date: document.getElementById('tDate').value || today(), time: document.getElementById('tTime').value,
     priority: document.getElementById('tPriority').value, fileId: document.getElementById('tFile').value,
     notes: document.getElementById('tNotes').value.trim(),
   };
@@ -1496,14 +1538,16 @@ function saveTask(){
   persistTasks().then(()=>{
     closeTaskModal(); _showToast('تم الحفظ','success');
     if(document.getElementById('page-calendar').classList.contains('active')){ selectedDay=data.date; renderCalendarPage(); }
-    renderNotif();
+    if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
+    renderNotif(); updateTasksTabBadge();
   });
 }
 function toggleTaskDone(id){
   const x = TASKS.find(t=>t.id===id); x.done=!x.done; haptic(8);
   persistTasks().then(()=>{
     if(document.getElementById('page-calendar').classList.contains('active')) renderDayPanel();
-    renderTodayAgenda();
+    if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
+    renderTodayAgenda(); updateTasksTabBadge();
   });
 }
 function deleteTask(){ deleteTaskById(document.getElementById('tId').value, true); }
@@ -1517,10 +1561,51 @@ function deleteTaskById(id, fromModal){
     persistTasks().then(()=>{
       if(fromModal) closeTaskModal();
       if(document.getElementById('page-calendar').classList.contains('active')) renderCalendarPage();
-      renderNotif();
+      if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
+      renderNotif(); updateTasksTabBadge();
       _showToastUndo('تم حذف المهمة');
     });
   });
+}
+function updateTasksTabBadge(){
+  const badge = document.getElementById('tasksTabBadge'); if(!badge) return;
+  const t = today();
+  const count = TASKS.filter(x=>!x.done && x.date<=t).length;
+  if(count){ badge.style.display='inline-flex'; badge.textContent = count>9?'9+':count; } else { badge.style.display='none'; }
+}
+function renderTasksPage(){
+  updateTasksTabBadge();
+  const wrap = document.getElementById('tasksPageList');
+  const t = today();
+  const all = TASKS.slice().sort((a,b)=>(a.date+((a.time)||'99:99')).localeCompare(b.date+((b.time)||'99:99')));
+  const overdue = all.filter(x=>!x.done && x.date<t);
+  const dueToday = all.filter(x=>!x.done && x.date===t);
+  const upcoming = all.filter(x=>!x.done && x.date>t);
+  const done = all.filter(x=>x.done).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+  if(!overdue.length && !dueToday.length && !upcoming.length && !done.length){
+    wrap.innerHTML = `<div class="tasks-empty-note">لا مواعيد أو مهام مسجلة حتى الآن — اضغط "موعد / مهمة جديدة" لإضافة أول موعد أو تذكير.</div>`;
+    return;
+  }
+  function rowHtml(x){
+    const f = fileOf(x.fileId);
+    const icon = TASK_TYPES[x.type] || '✅';
+    return `<div class="swipe-row">
+      <button class="swipe-del-btn" onclick="event.stopPropagation(); quickDelete('task','${x.id}')">🗑<br>حذف</button>
+      <div class="swipeable-inner" style="display:flex;gap:10px;align-items:flex-start;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 14px;margin-bottom:8px;">
+        <input type="checkbox" class="tchk" ${x.done?'checked':''} onclick="event.stopPropagation()" onchange="toggleTaskDone('${x.id}')">
+        <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}')">
+          <div class="ttitle">${icon} <span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
+          <div class="tmeta" style="margin-top:4px;">${x.time?`<span class="time-badge">${x.time}</span>`:''} <span class="badge">${fmtDate(x.date)}</span> ${f?('· '+esc(f.title)):''}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  let html = '';
+  if(overdue.length){ html += `<div class="task-group-title">متأخرة (${overdue.length})</div>` + overdue.map(rowHtml).join(''); }
+  if(dueToday.length){ html += `<div class="task-group-title">اليوم (${dueToday.length})</div>` + dueToday.map(rowHtml).join(''); }
+  if(upcoming.length){ html += `<div class="task-group-title">القادمة (${upcoming.length})</div>` + upcoming.map(rowHtml).join(''); }
+  if(done.length){ html += `<div class="task-group-title">مكتملة</div>` + done.map(rowHtml).join(''); }
+  wrap.innerHTML = html;
 }
 
 /* ---------- GLOBAL SEARCH ---------- */
