@@ -670,17 +670,9 @@
 <div id="setupOverlay">
   <div class="setup-card">
     <h2 id="setupTitle">مرحبًا بك في المتابعة</h2>
-    <p id="setupIntro">لمزامنة بياناتك تلقائيًا وبأمان بين جوالك وحاسوبك نستخدم Firebase (خدمة مجانية من Google) — قاعدة بيانات خاصة محمية بتسجيل دخول، ولا علاقة لها بمستودع GitHub الذي يستضيف الموقع. خطوة واحدة فقط عند أول استخدام.</p>
+    <p id="setupIntro">بياناتك تُحفظ في قاعدة بيانات خاصة (Firebase) محمية بتسجيل دخول، وتتزامن تلقائيًا بين جوالك وحاسوبك. سجّل دخولك بالحساب الذي أُنشئ لك.</p>
 
-    <div id="setupStepConfig">
-      <div class="setup-steps">
-        1. اذهب إلى <b>console.firebase.google.com</b> وسجّل دخولك بحساب Google (نفس حسابك في Gmail)<br>
-        2. Add project ← اكتب اسمًا مثل <b>maham</b> ← أكمل الخطوات (يمكن تعطيل Google Analytics)<br>
-        3. من القائمة الجانبية: Build ← <b>Firestore Database</b> ← Create database ← اختر أي موقع قريب ← ابدأ في <b>Production mode</b><br>
-        4. Build ← <b>Authentication</b> ← Get started ← فعّل طريقة <b>Email/Password</b><br>
-        5. من تبويب Users داخل Authentication ← Add user ← ضع بريدك وكلمة مرور تختارها (هذا حساب دخولك للبرنامج)<br>
-        6. ⚙️ Project settings (بجانب Project Overview) ← انزل إلى "Your apps" ← اضغط أيقونة الويب <b>&lt;/&gt;</b> ← سجّل التطبيق ← انسخ كامل كائن <b>firebaseConfig</b> والصقه بالأسفل
-      </div>
+    <div id="setupStepConfig" style="display:none;">
       <div class="gh-form-row"><label>Firebase Config (الصق الكائن كاملًا كما هو)</label><textarea id="setupConfigInput" rows="5" style="width:100%;font-family:monospace;font-size:12px;" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea></div>
       <div class="setup-actions">
         <button class="btn btn-filled" onclick="saveFirebaseConfig()">التالي: تسجيل الدخول</button>
@@ -688,14 +680,13 @@
       <div class="setup-skip" onclick="skipSetup()">تخطي — العمل محليًا على هذا الجهاز فقط</div>
     </div>
 
-    <div id="setupStepLogin" style="display:none;">
-      <div class="gh-help" style="margin-bottom:14px;">أدخل البريد وكلمة المرور اللذين أنشأتهما في خطوة Authentication ← Users.</div>
-      <div class="gh-form-row"><label>البريد الإلكتروني</label><input type="email" id="setupEmailInput" placeholder="you@example.com" autocomplete="off"></div>
+    <div id="setupStepLogin">
+      <div class="gh-form-row"><label>البريد الإلكتروني</label><input type="email" id="setupEmailInput" placeholder="you@example.com" autocomplete="off" value="sfn8283@gmail.com"></div>
       <div class="gh-form-row"><label>كلمة المرور</label><input type="password" id="setupPasswordInput" placeholder="••••••••" autocomplete="off"></div>
       <div class="setup-actions">
-        <button class="btn btn-filled" onclick="doFirebaseLogin('setup')">تسجيل الدخول والمتابعة</button>
-        <button class="btn btn-glass btn-sm" onclick="backToConfigStep()">رجوع</button>
+        <button class="btn btn-filled" onclick="doFirebaseLogin('setup')">تسجيل الدخول</button>
       </div>
+      <div class="setup-skip" onclick="skipSetup()">تخطي — العمل محليًا على هذا الجهاز فقط</div>
     </div>
   </div>
 </div>
@@ -712,13 +703,21 @@ const FB_EMAIL_KEY = 'maham_fb_email';
 const CACHE_KEY = 'maham_fb_cache';
 const SEEN_KEY = 'maham_setup_seen';
 const FB_COLLECTION = 'maham';
+const DEFAULT_FB_CONFIG = {
+  apiKey: "AIzaSyDfV7yznF-9aO0Z5ePFSW0KeKWbKFofK18",
+  authDomain: "maham-3d4d7.firebaseapp.com",
+  projectId: "maham-3d4d7",
+  storageBucket: "maham-3d4d7.firebasestorage.app",
+  messagingSenderId: "672519432061",
+  appId: "1:672519432061:web:e79ed1b2e29c7785ee0e14"
+};
 
 let _cache = {};
 let _loadPromise = null;
 let _saveTimer = null;
 let fbApp = null, fbAuth = null, fbDb = null, fbUser = null;
 
-function getFbConfig(){ try{ const raw = localStorage.getItem(FB_CONFIG_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
+function getFbConfig(){ try{ const raw = localStorage.getItem(FB_CONFIG_KEY); if(raw) return JSON.parse(raw); }catch(e){} return DEFAULT_FB_CONFIG; }
 function setFbConfig(cfg){ try{ localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(cfg)); }catch(e){} }
 function clearFbConfig(){ try{ localStorage.removeItem(FB_CONFIG_KEY); }catch(e){} }
 function readLocalCache(){ try{ const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : {}; }catch(e){ return {}; } }
