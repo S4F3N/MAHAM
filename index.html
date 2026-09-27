@@ -508,6 +508,7 @@
 
 <nav class="tabs">
   <button data-tab="home" class="active">الرئيسية</button>
+  <button data-tab="files">الملفات</button>
   <button data-tab="tasks">المهام<span class="notif-badge tab-badge" id="tasksTabBadge" style="display:none"></span></button>
   <button data-tab="calendar">التقويم</button>
   <button data-tab="contacts">جهات الاتصال</button>
@@ -539,7 +540,11 @@
       <div></div>
     </div>
 
-    <div class="section-head" style="margin-top:26px;"><h2>الملفات</h2>
+  </section>
+
+  <!-- FILES -->
+  <section class="page" id="page-files">
+    <div class="section-head"><h2>الملفات</h2>
       <button class="btn btn-filled btn-sm" onclick="openFileModal()">+ ملف جديد</button>
     </div>
     <div class="filter-bar">
@@ -554,7 +559,7 @@
 
   <!-- FILE DETAIL -->
   <section class="page" id="page-file">
-    <button class="back-btn" onclick="goHome()">→ رجوع للملفات</button>
+    <button class="back-btn" onclick="goToFilesPage()">→ رجوع للملفات</button>
     <div class="file-header" id="fileHeaderBox"></div>
 
     <div class="section-head"><h2>سجل الجولات</h2>
@@ -1302,9 +1307,10 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentFileId=null;
-    ['home','tasks','calendar','contacts','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
+    ['home','files','tasks','calendar','contacts','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
     document.getElementById('page-file').classList.remove('active');
     if(btn.dataset.tab==='home') renderHome();
+    if(btn.dataset.tab==='files') renderFilesPage();
     if(btn.dataset.tab==='tasks') renderTasksPage();
     if(btn.dataset.tab==='calendar') renderCalendarPage();
     if(btn.dataset.tab==='contacts') renderContacts();
@@ -1314,6 +1320,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 function goHome(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='home'));
   document.getElementById('page-file').classList.remove('active');
+  document.getElementById('page-files').classList.remove('active');
   document.getElementById('page-tasks').classList.remove('active');
   document.getElementById('page-calendar').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
@@ -1322,9 +1329,22 @@ function goHome(){
   currentFileId=null;
   renderHome();
 }
+function goToFilesPage(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='files'));
+  document.getElementById('page-file').classList.remove('active');
+  document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-tasks').classList.remove('active');
+  document.getElementById('page-calendar').classList.remove('active');
+  document.getElementById('page-contacts').classList.remove('active');
+  document.getElementById('page-settings').classList.remove('active');
+  document.getElementById('page-files').classList.add('active');
+  currentFileId=null;
+  renderFilesPage();
+}
 function goToTasks(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='tasks'));
   document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-files').classList.remove('active');
   document.getElementById('page-file').classList.remove('active');
   document.getElementById('page-calendar').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
@@ -1336,6 +1356,7 @@ function goToTasks(){
 function goToFile(id){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-files').classList.remove('active');
   document.getElementById('page-tasks').classList.remove('active');
   document.getElementById('page-calendar').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
@@ -1347,6 +1368,7 @@ function goToFile(id){
 function goToCalendarDay(dateStr){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='calendar'));
   document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-files').classList.remove('active');
   document.getElementById('page-file').classList.remove('active');
   document.getElementById('page-tasks').classList.remove('active');
   document.getElementById('page-contacts').classList.remove('active');
@@ -1359,7 +1381,8 @@ function goToCalendarDay(dateStr){
 }
 
 /* ---------- HOME ---------- */
-function renderHome(){ renderStats(); renderChart(); renderMiniCal(); renderOpenList(); populateCatFilter(); renderFiles(); renderNotif(); }
+function renderHome(){ renderStats(); renderChart(); renderMiniCal(); renderOpenList(); renderNotif(); }
+function renderFilesPage(){ populateCatFilter(); renderFiles(); }
 function renderStats(){
   const activeFiles = FILES.filter(f=>f.status==='نشط').length;
   const open = pendingRounds();
@@ -1866,14 +1889,14 @@ function saveFile(){
   } else {
     FILES.push({id:uid(), pinned:false, ...data});
   }
-  persistFiles().then(()=>{ closeFileModal(); _showToast('تم الحفظ','success'); currentFileId? renderFilePage() : renderHome(); if(!currentFileId===false){} });
+  persistFiles().then(()=>{ closeFileModal(); _showToast('تم الحفظ','success'); currentFileId? renderFilePage() : goToFilesPage(); });
 }
 function duplicateFile(){
   const id = document.getElementById('fId').value;
   const f = FILES.find(x=>x.id===id); if(!f) return;
   const copy = {...f, id:uid(), title: f.title+' (نسخة)', pinned:false};
   FILES.push(copy);
-  persistFiles().then(()=>{ closeFileModal(); renderHome(); _showToast('تم إنشاء نسخة من الملف','success'); });
+  persistFiles().then(()=>{ closeFileModal(); goToFilesPage(); _showToast('تم إنشاء نسخة من الملف','success'); });
 }
 function togglePin(id, ev){
   ev.stopPropagation();
@@ -1890,13 +1913,13 @@ function deleteFileById(id, fromModal){
     _lastDeleted = {type:'file', file:f, rounds:relatedRounds};
     FILES = FILES.filter(x=>x.id!==id);
     ROUNDS = ROUNDS.filter(x=>x.fileId!==id);
-    Promise.all([persistFiles(), persistRounds()]).then(()=>{ if(fromModal) closeFileModal(); if(currentFileId===id) goHome(); else renderFiles(); _showToastUndo('تم حذف الملف'); });
+    Promise.all([persistFiles(), persistRounds()]).then(()=>{ if(fromModal) closeFileModal(); if(currentFileId===id) goToFilesPage(); else renderFiles(); _showToastUndo('تم حذف الملف'); });
   });
 }
 
 /* ---------- FILE DETAIL PAGE ---------- */
 function renderFilePage(){
-  const f = fileOf(currentFileId); if(!f){ goHome(); return; }
+  const f = fileOf(currentFileId); if(!f){ goToFilesPage(); return; }
   const rs = ROUNDS.filter(r=>r.fileId===f.id);
   const risk = isFileAtRisk(f);
   document.getElementById('fileHeaderBox').innerHTML = `
@@ -2071,7 +2094,10 @@ function deleteRoundById(id, fromModal){
     persistRounds().then(()=>{ if(fromModal) closeRoundModal(); if(currentFileId) renderFilePage(); renderHome_soft(); _showToastUndo('تم حذف الجولة'); });
   });
 }
-function renderHome_soft(){ if(document.getElementById('page-home').classList.contains('active')){ renderOpenList(); renderFiles(); renderStats(); renderChart(); renderMiniCal(); renderNotif(); } }
+function renderHome_soft(){
+  if(document.getElementById('page-home').classList.contains('active')){ renderOpenList(); renderStats(); renderChart(); renderMiniCal(); renderNotif(); }
+  if(document.getElementById('page-files').classList.contains('active')){ renderFiles(); }
+}
 
 /* ---------- CONTACTS ---------- */
 function renderContacts(){
@@ -2328,7 +2354,7 @@ function _showToastUndo(msg){
 }
 function undoLastDelete(){
   if(!_lastDeleted) return;
-  if(_lastDeleted.type==='file'){ FILES.push(_lastDeleted.file); ROUNDS.push(...(_lastDeleted.rounds||[])); Promise.all([persistFiles(),persistRounds()]).then(()=>{ goHome(); _showToast('تم التراجع عن الحذف','success'); }); }
+  if(_lastDeleted.type==='file'){ FILES.push(_lastDeleted.file); ROUNDS.push(...(_lastDeleted.rounds||[])); Promise.all([persistFiles(),persistRounds()]).then(()=>{ goToFilesPage(); _showToast('تم التراجع عن الحذف','success'); }); }
   if(_lastDeleted.type==='round'){ ROUNDS.push(_lastDeleted.round); persistRounds().then(()=>{ if(currentFileId) renderFilePage(); _showToast('تم التراجع عن الحذف','success'); }); }
   if(_lastDeleted.type==='task'){ TASKS.push(_lastDeleted.task); persistTasks().then(()=>{ if(document.getElementById('page-calendar').classList.contains('active')) renderCalendarPage(); renderNotif(); _showToast('تم التراجع عن الحذف','success'); }); }
   _lastDeleted = null;
