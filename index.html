@@ -157,6 +157,58 @@
   .chart-row .cfill{height:100%;border-radius:5px;transition:width .5s var(--ease-out-expo);}
   .chart-row .cn{width:26px;text-align:left;font-weight:700;}
 
+  /* ---- home top row: stats + donut + mini calendar ---- */
+  .top-row{display:grid;grid-template-columns:1fr 1.3fr 230px;gap:16px;margin-bottom:26px;align-items:stretch;}
+  @media (max-width:980px){ .top-row{grid-template-columns:1fr;} }
+  .stat-mini-card{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-mini-card .stat-card{padding:13px 14px;display:flex;flex-direction:column;justify-content:center;}
+  .stat-mini-card .stat-card b{font-size:21px;}
+  .chart-box.top-row-chart{display:flex;align-items:center;gap:18px;margin-bottom:0;}
+  .donut-wrap{position:relative;width:104px;height:104px;flex-shrink:0;}
+  .donut-ring{width:104px;height:104px;border-radius:50%;}
+  .donut-center{position:absolute;inset:15px;border-radius:50%;background:var(--surface-1);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .donut-center b{font-family:var(--font-display);font-size:21px;font-weight:700;}
+  .donut-center span{font-size:9.5px;color:var(--text-2);}
+  .donut-legend{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .donut-legend-title{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:2px;}
+  .donut-legend-row{display:flex;align-items:center;gap:7px;font-size:12px;}
+  .donut-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .donut-legend-row b{margin-inline-start:auto;font-weight:700;}
+
+  .mini-cal-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;backdrop-filter:var(--blur);position:relative;}
+  .mini-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .mini-cal-head button{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);font-size:12px;cursor:pointer;line-height:1;padding:0;}
+  .mini-cal-label{font-size:11.5px;font-weight:700;}
+  .mini-cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
+  .mini-cal-dow div{text-align:center;font-size:9px;color:var(--text-3);}
+  .mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .mini-cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10.5px;cursor:pointer;position:relative;color:var(--text-2);border:1px solid transparent;}
+  .mini-cal-day:hover{background:var(--surface-2);}
+  .mini-cal-day.outside{opacity:.28;}
+  .mini-cal-day.today{border-color:var(--accent);color:var(--text-1);}
+  .mini-cal-day.selected{background:var(--accent);color:#fff;}
+  .mini-cal-day .mcd-dot{position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--accent);}
+  .mini-cal-day.selected .mcd-dot{background:#fff;}
+  .mini-cal-drop{position:absolute;top:100%;left:8px;right:8px;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:0 10px 30px rgba(0,0,0,.35);max-height:260px;overflow:auto;padding:8px;display:none;z-index:50;}
+  .mini-cal-drop.open{display:block;}
+  .mini-cal-drop-title{font-size:11.5px;font-weight:700;color:var(--text-2);padding:2px 4px 8px;}
+  .mini-cal-drop-empty{font-size:12px;color:var(--text-3);padding:6px 4px;}
+  .mini-cal-drop-item{padding:6px 6px;border-radius:8px;font-size:12px;cursor:pointer;}
+  .mini-cal-drop-item:hover{background:var(--surface-3);}
+
+  /* ---- category groups (settings) ---- */
+  .cat-group-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:12px;}
+  .cat-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap;}
+  .cat-group-head h4{font-size:14px;font-weight:700;}
+  .cat-group-actions{display:flex;gap:6px;}
+  .cat-chip-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .cat-chip{display:flex;align-items:center;gap:6px;background:var(--surface-1);border:1px solid var(--border);border-radius:20px;padding:5px 6px 5px 10px;font-size:12px;}
+  .cat-chip .cat-dot-sm{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .cat-chip .cat-chip-x{cursor:pointer;color:var(--text-3);font-size:12px;padding:0 3px;}
+  .cat-chip .cat-chip-x:hover{color:var(--text-1);}
+  select.cat-chip.add-chip{cursor:pointer;border-style:dashed;color:var(--text-2);background:transparent;padding:5px 10px;appearance:none;-webkit-appearance:none;}
+  .cat-group-empty{font-size:12px;color:var(--text-3);padding:4px 2px;}
+
   .empty-note{color:var(--text-3);font-size:13px;padding:18px 0;text-align:center;}
   .open-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px;}
   .open-item{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 14px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;}
@@ -452,8 +504,20 @@
 
   <!-- HOME -->
   <section class="page active" id="page-home">
-    <div class="stat-grid" id="statGrid"></div>
-    <div class="chart-box" id="chartBox"></div>
+    <div class="top-row">
+      <div class="stat-mini-card" id="statMiniGrid"></div>
+      <div class="chart-box top-row-chart" id="chartBox"></div>
+      <div class="mini-cal-card" id="miniCalCard">
+        <div class="mini-cal-head">
+          <button onclick="miniCalShift(-1)">‹</button>
+          <div class="mini-cal-label" id="miniCalLabel"></div>
+          <button onclick="miniCalShift(1)">›</button>
+        </div>
+        <div class="mini-cal-dow" id="miniCalDow"></div>
+        <div class="mini-cal-grid" id="miniCalGrid"></div>
+        <div class="mini-cal-drop" id="miniCalDrop"></div>
+      </div>
+    </div>
 
     <div class="section-head"><h2>إجراءات مطلوبة لم تُنفذ بعد</h2></div>
     <div class="open-list" id="openList"></div>
@@ -578,6 +642,12 @@
     <div class="settings-block">
       <div class="section-head"><h3>التصنيفات</h3><button class="btn btn-glass btn-sm" onclick="openCatModal()">+ تصنيف جديد</button></div>
       <div id="catList"></div>
+    </div>
+
+    <div class="settings-block">
+      <div class="section-head"><h3>التصنيفات كمجموعات</h3><button class="btn btn-glass btn-sm" onclick="openGroupModal()">+ مجموعة جديدة</button></div>
+      <div class="settings-desc" style="margin-bottom:10px;">نظّم تصنيفاتك ضمن مجموعات (مثل أوشن، غين) — يمكن أن ينتمي التصنيف نفسه لأكثر من مجموعة، والتصنيفات غير المضافة لأي مجموعة تبقى كما هي بالأعلى.</div>
+      <div id="catGroupList"></div>
     </div>
 
     <div class="settings-block">
@@ -739,6 +809,21 @@
       <button class="btn btn-danger" id="catDeleteBtn" onclick="deleteCategory()" style="display:none">حذف</button>
       <button class="btn btn-glass" onclick="closeCatModal()">إلغاء</button>
       <button class="btn btn-filled" onclick="saveCategory()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY GROUP MODAL -->
+<div class="overlay" id="groupOverlay">
+  <div class="modal narrow">
+    <div class="modal-handle"></div>
+    <h3 id="groupModalTitle">مجموعة جديدة</h3>
+    <input type="hidden" id="groupId">
+    <div class="form-row"><label>اسم المجموعة</label><input type="text" id="groupName" placeholder="مثال: أوشن"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="groupDeleteBtn" onclick="deleteGroupFromModal()" style="display:none">حذف</button>
+      <button class="btn btn-glass" onclick="closeGroupModal()">إلغاء</button>
+      <button class="btn btn-filled" onclick="saveGroup()">حفظ</button>
     </div>
   </div>
 </div>
@@ -1040,7 +1125,7 @@ function renderAppearanceControls(){
   }
 }
 
-let FILES=[], ROUNDS=[], CONTACTS=[], CATEGORIES=[], TASKS=[], currentFileId=null, pinnedOnly=false;
+let FILES=[], ROUNDS=[], CONTACTS=[], CATEGORIES=[], CATEGORY_GROUPS=[], TASKS=[], currentFileId=null, pinnedOnly=false;
 let calMonth = new Date(); calMonth.setDate(1);
 let selectedDay = new Date().toISOString().slice(0,10);
 let roundFilterExec='', roundFilterType='';
@@ -1095,12 +1180,13 @@ function loadIfEmpty(){
     window.storage.get('rd2:files').catch(()=>null), window.storage.get('rd2:rounds').catch(()=>null),
     window.storage.get('rd2:contacts').catch(()=>null), window.storage.get('rd2:categories').catch(()=>null),
     window.storage.get('rd2:tasks').catch(()=>null), window.storage.get('rd2:theme').catch(()=>null),
-    window.storage.get(APP_SETTINGS_KEY).catch(()=>null),
-  ]).then(([f,r,c,cat,tk,th,aset])=>{
+    window.storage.get(APP_SETTINGS_KEY).catch(()=>null), window.storage.get('rd2:categorygroups').catch(()=>null),
+  ]).then(([f,r,c,cat,tk,th,aset,cgrp])=>{
     if(f&&f.value){try{FILES=JSON.parse(f.value);}catch(e){FILES=[];}}
     if(r&&r.value){try{ROUNDS=JSON.parse(r.value);}catch(e){ROUNDS=[];}}
     if(c&&c.value){try{CONTACTS=JSON.parse(c.value);}catch(e){CONTACTS=[];}}
     if(cat&&cat.value){try{CATEGORIES=JSON.parse(cat.value);}catch(e){CATEGORIES=[];}}
+    if(cgrp&&cgrp.value){try{CATEGORY_GROUPS=JSON.parse(cgrp.value);}catch(e){CATEGORY_GROUPS=[];}}
     if(tk&&tk.value){try{TASKS=JSON.parse(tk.value);}catch(e){TASKS=[];}}
     if(aset&&aset.value){ try{ APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS, JSON.parse(aset.value)); }catch(e){} }
     if(th&&th.value){setTheme(th.value,false);} else { applyAppSettings(); }
@@ -1139,6 +1225,7 @@ function persistFiles(){ return window.storage.set('rd2:files', JSON.stringify(F
 function persistRounds(){ return window.storage.set('rd2:rounds', JSON.stringify(ROUNDS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
 function persistContacts(){ return window.storage.set('rd2:contacts', JSON.stringify(CONTACTS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
 function persistCategories(){ return window.storage.set('rd2:categories', JSON.stringify(CATEGORIES), false).catch(()=>_showToast('تعذر الحفظ','error')); }
+function persistCategoryGroups(){ return window.storage.set('rd2:categorygroups', JSON.stringify(CATEGORY_GROUPS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
 function persistTasks(){ return window.storage.set('rd2:tasks', JSON.stringify(TASKS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
 
 function systemPrefersDark(){ return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
@@ -1255,31 +1342,95 @@ function goToCalendarDay(dateStr){
 }
 
 /* ---------- HOME ---------- */
-function renderHome(){ renderStats(); renderChart(); renderOpenList(); populateCatFilter(); renderFiles(); renderNotif(); }
+function renderHome(){ renderStats(); renderChart(); renderMiniCal(); renderOpenList(); populateCatFilter(); renderFiles(); renderNotif(); }
 function renderStats(){
   const activeFiles = FILES.filter(f=>f.status==='نشط').length;
   const open = pendingRounds();
   const overdue = open.filter(r=>r.due && daysUntil(r.due)<0).length;
   const inProgress = open.filter(r=>r.exec==='جارٍ').length;
-  document.getElementById('statGrid').innerHTML = `
+  document.getElementById('statMiniGrid').innerHTML = `
     <div class="stat-card"><b>${activeFiles}</b><span>ملف نشط</span></div>
     <div class="stat-card red"><b>${overdue}</b><span>إجراء متأخر</span></div>
     <div class="stat-card orange"><b>${inProgress}</b><span>جارٍ تنفيذه</span></div>
     <div class="stat-card accent"><b>${ROUNDS.length}</b><span>إجمالي الجولات</span></div>
-    <div class="stat-card green"><b>${CONTACTS.length}</b><span>جهة اتصال</span></div>
   `;
   animateStatNumbers();
 }
 function renderChart(){
   const total = ROUNDS.length || 1;
-  const groups = [['تم','green'],['جارٍ','orange'],['لم','red']];
-  document.getElementById('chartBox').innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:12px;">توزيع الجولات حسب حالة التنفيذ</div>` +
-    groups.map(([k,c])=>{
-      const n = ROUNDS.filter(r=>r.exec===k).length;
-      const pct = Math.round(n/total*100);
-      const label = k==='تم'?'تم التنفيذ':(k==='جارٍ'?'جارٍ التنفيذ':'لم يُنفذ');
-      return `<div class="chart-row"><div class="cl">${label}</div><div class="ctrack"><div class="cfill" style="width:${pct}%;background:var(--${c})"></div></div><div class="cn">${n}</div></div>`;
-    }).join('');
+  const groups = [['تم','green','تم التنفيذ'],['جارٍ','orange','جارٍ التنفيذ'],['لم','red','لم يُنفذ']];
+  const counts = groups.map(([k])=> ROUNDS.filter(r=>r.exec===k).length);
+  let acc = 0;
+  const segs = groups.map(([k,c],i)=>{
+    const pct = counts[i]/total*100;
+    const str = `var(--${c}) ${acc}% ${acc+pct}%`;
+    acc += pct;
+    return str;
+  });
+  const ring = ROUNDS.length ? `conic-gradient(${segs.join(',')})` : `var(--surface-3)`;
+  document.getElementById('chartBox').innerHTML = `
+    <div class="donut-wrap">
+      <div class="donut-ring" style="background:${ring}"></div>
+      <div class="donut-center"><b>${ROUNDS.length}</b><span>جولة</span></div>
+    </div>
+    <div class="donut-legend">
+      <div class="donut-legend-title">توزيع الجولات حسب حالة التنفيذ</div>
+      ${groups.map(([k,c,label],i)=>{
+        const pct = Math.round(counts[i]/total*100);
+        return `<div class="donut-legend-row"><span class="donut-legend-dot" style="background:var(--${c})"></span>${label} <b>${pct}%</b></div>`;
+      }).join('')}
+    </div>`;
+}
+let miniCalMonth = new Date(); miniCalMonth.setDate(1);
+let miniCalDay = today();
+let miniCalDropOpen = false;
+function miniCalShift(n){ miniCalMonth.setMonth(miniCalMonth.getMonth()+n); renderMiniCal(); }
+function miniCalDayClick(dateStr){
+  if(miniCalDay===dateStr && miniCalDropOpen){ miniCalDropOpen=false; } else { miniCalDay=dateStr; miniCalDropOpen=true; }
+  haptic(6);
+  renderMiniCal();
+}
+function renderMiniCal(){
+  const dowEl = document.getElementById('miniCalDow');
+  if(!dowEl) return;
+  dowEl.innerHTML = CAL_DOW.map(d=>`<div>${d[0]}</div>`).join('');
+  document.getElementById('miniCalLabel').innerText = miniCalMonth.toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'});
+  const year=miniCalMonth.getFullYear(), month=miniCalMonth.getMonth();
+  const firstDow=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrevMonth=new Date(year,month,0).getDate();
+  const cells=[];
+  for(let i=firstDow-1;i>=0;i--) cells.push({d:daysInPrevMonth-i, outside:true, dateStr:null});
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push({d, outside:false, dateStr});
+  }
+  while(cells.length%7!==0) cells.push({d:cells.length, outside:true, dateStr:null});
+  const t = today();
+  document.getElementById('miniCalGrid').innerHTML = cells.map(c=>{
+    if(!c.dateStr) return `<div class="mini-cal-day outside">${c.d}</div>`;
+    const counts = dayItemsCount(c.dateStr);
+    const hasItems = counts.tasks||counts.rounds||counts.files;
+    const cls=['mini-cal-day'];
+    if(c.dateStr===t) cls.push('today');
+    if(c.dateStr===miniCalDay && miniCalDropOpen) cls.push('selected');
+    return `<div class="${cls.join(' ')}" onclick="miniCalDayClick('${c.dateStr}')">${c.d}${hasItems?'<span class="mcd-dot"></span>':''}</div>`;
+  }).join('');
+  const drop = document.getElementById('miniCalDrop');
+  if(miniCalDropOpen){ renderMiniCalDrop(); } else { drop.classList.remove('open'); drop.innerHTML=''; }
+}
+function renderMiniCalDrop(){
+  const drop = document.getElementById('miniCalDrop');
+  const tTasks = TASKS.filter(t=>t.date===miniCalDay).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  const tRounds = ROUNDS.filter(r=>r.due===miniCalDay);
+  const tFiles = FILES.filter(f=>f.target===miniCalDay);
+  let html = `<div class="mini-cal-drop-title">أعمال يوم ${fmtDate(miniCalDay)}${miniCalDay===today()?' (اليوم)':''}</div>`;
+  tTasks.forEach(x=>{ html+=`<div class="mini-cal-drop-item" onclick="openTaskModal('${x.id}')">${TASK_TYPES[x.type]||'✅'} ${esc(x.title)}${x.time?' · '+x.time:''}</div>`; });
+  tRounds.forEach(r=>{ const f=fileOf(r.fileId); html+=`<div class="mini-cal-drop-item" onclick="goToFile('${r.fileId}')">${ROUND_TYPES[r.type]||'📌'} ${esc((r.actionNeeded||'إجراء مستحق').slice(0,40))}${f?' — '+esc(f.title):''}</div>`; });
+  tFiles.forEach(f=>{ html+=`<div class="mini-cal-drop-item" onclick="goToFile('${f.id}')">📁 موعد إنجاز: ${esc(f.title)}</div>`; });
+  if(!tTasks.length && !tRounds.length && !tFiles.length) html += `<div class="mini-cal-drop-empty">لا مهام أو مواعيد في هذا اليوم.</div>`;
+  drop.innerHTML = html;
+  drop.classList.add('open');
 }
 function renderOpenList(){
   const order={'لم':0,'جارٍ':1}, prOrder={'عاجل':0,'متوسط':1,'عادي':2};
@@ -1906,7 +2057,7 @@ function deleteRoundById(id, fromModal){
     persistRounds().then(()=>{ if(fromModal) closeRoundModal(); if(currentFileId) renderFilePage(); renderHome_soft(); _showToastUndo('تم حذف الجولة'); });
   });
 }
-function renderHome_soft(){ if(document.getElementById('page-home').classList.contains('active')){ renderOpenList(); renderFiles(); renderStats(); renderChart(); renderNotif(); } }
+function renderHome_soft(){ if(document.getElementById('page-home').classList.contains('active')){ renderOpenList(); renderFiles(); renderStats(); renderChart(); renderMiniCal(); renderNotif(); } }
 
 /* ---------- CONTACTS ---------- */
 function renderContacts(){
@@ -1983,6 +2134,84 @@ function renderSettings(){
     const count = FILES.filter(f=>f.category===c.name).length;
     return `<div class="cat-row"><span class="cat-dot" style="background:${col.val}"></span><span class="cname">${esc(c.name)} <span style="color:var(--text-3);font-weight:400;">(${count} ملف)</span></span><button class="btn btn-glass btn-sm" onclick="openCatModal('${c.id}')">تعديل</button></div>`;
   }).join('');
+  renderCategoryGroups();
+}
+function renderCategoryGroups(){
+  const el = document.getElementById('catGroupList');
+  if(!el) return;
+  if(!CATEGORY_GROUPS.length){ el.innerHTML = `<div class="empty-note">لا توجد مجموعات بعد. أنشئ أول مجموعة لتنظيم تصنيفاتك.</div>`; return; }
+  el.innerHTML = CATEGORY_GROUPS.map(g=>{
+    const catIds = g.catIds||[];
+    const chips = catIds.map(cid=>{
+      const c = CATEGORIES.find(x=>x.id===cid);
+      if(!c) return '';
+      const col = COLORS.find(x=>x.name===c.color)||COLORS[0];
+      const count = FILES.filter(f=>f.category===c.name).length;
+      return `<span class="cat-chip"><span class="cat-dot-sm" style="background:${col.val}"></span>${esc(c.name)} (${count})<span class="cat-chip-x" onclick="removeCatFromGroup('${g.id}','${cid}')" title="إزالة من المجموعة">✕</span></span>`;
+    }).join('');
+    const available = CATEGORIES.filter(c=>!catIds.includes(c.id));
+    const addChip = available.length ? `<select class="cat-chip add-chip" onchange="if(this.value){addCatToGroup('${g.id}',this.value); this.value='';}">
+      <option value="">+ تصنيف جديد</option>
+      ${available.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+    </select>` : '';
+    return `<div class="cat-group-card">
+      <div class="cat-group-head"><h4>${esc(g.name)}</h4>
+        <div class="cat-group-actions">
+          <button class="btn btn-glass btn-sm" onclick="openGroupModal('${g.id}')">تعديل</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}')">حذف</button>
+        </div>
+      </div>
+      <div class="cat-chip-row">${chips || '<span class="cat-group-empty">لا تصنيفات في هذه المجموعة بعد</span>'}${addChip}</div>
+    </div>`;
+  }).join('');
+}
+function openGroupModal(id){
+  document.getElementById('groupId').value = id||'';
+  if(id){
+    const g = CATEGORY_GROUPS.find(x=>x.id===id);
+    document.getElementById('groupModalTitle').innerText='تعديل المجموعة';
+    document.getElementById('groupName').value=g.name;
+    document.getElementById('groupDeleteBtn').style.display='inline-flex';
+  } else {
+    document.getElementById('groupModalTitle').innerText='مجموعة جديدة';
+    document.getElementById('groupName').value='';
+    document.getElementById('groupDeleteBtn').style.display='none';
+  }
+  document.getElementById('groupOverlay').classList.add('open');
+}
+function closeGroupModal(){ document.getElementById('groupOverlay').classList.remove('open'); }
+function saveGroup(){
+  const id = document.getElementById('groupId').value;
+  const name = document.getElementById('groupName').value.trim();
+  if(!name){ _showToast('الرجاء إدخال اسم المجموعة','error'); return; }
+  if(id){
+    const idx = CATEGORY_GROUPS.findIndex(g=>g.id===id);
+    CATEGORY_GROUPS[idx] = {...CATEGORY_GROUPS[idx], name};
+  } else {
+    CATEGORY_GROUPS.push({id:uid(), name, catIds:[]});
+  }
+  persistCategoryGroups().then(()=>{ closeGroupModal(); renderCategoryGroups(); _showToast('تم الحفظ','success'); });
+}
+function deleteGroupFromModal(){ deleteGroup(document.getElementById('groupId').value, true); }
+function deleteGroup(id, fromModal){
+  _showConfirm('حذف هذه المجموعة؟ (لن يتم حذف التصنيفات نفسها، فقط تنظيمها ضمن هذه المجموعة)', {destructive:true, confirmLabel:'حذف'}).then(ok=>{
+    if(!ok) return;
+    CATEGORY_GROUPS = CATEGORY_GROUPS.filter(g=>g.id!==id);
+    persistCategoryGroups().then(()=>{ if(fromModal) closeGroupModal(); renderCategoryGroups(); _showToast('تم الحذف'); });
+  });
+}
+function addCatToGroup(groupId, catId){
+  const g = CATEGORY_GROUPS.find(x=>x.id===groupId);
+  if(!g) return;
+  g.catIds = g.catIds||[];
+  if(!g.catIds.includes(catId)) g.catIds.push(catId);
+  persistCategoryGroups().then(()=>{ renderCategoryGroups(); });
+}
+function removeCatFromGroup(groupId, catId){
+  const g = CATEGORY_GROUPS.find(x=>x.id===groupId);
+  if(!g) return;
+  g.catIds = (g.catIds||[]).filter(x=>x!==catId);
+  persistCategoryGroups().then(()=>{ renderCategoryGroups(); });
 }
 function openCatModal(id){
   document.getElementById('catId').value = id||'';
@@ -2032,7 +2261,7 @@ function deleteCategory(){
 
 /* ---------- BACKUP / RESET ---------- */
 function exportBackup(){
-  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,TASKS,exportedAt:new Date().toISOString()};
+  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,exportedAt:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download='نسخة-احتياطية-المتابعة.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -2047,8 +2276,8 @@ function importBackup(ev){
       const data = JSON.parse(reader.result);
       _showConfirm('سيتم استبدال جميع البيانات الحالية بالنسخة المستوردة. متابعة؟', {destructive:true, confirmLabel:'استيراد'}).then(ok=>{
         if(!ok) return;
-        FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; TASKS = data.TASKS||[];
-        Promise.all([persistFiles(),persistRounds(),persistContacts(),persistCategories(),persistTasks()]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
+        FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[];
+        Promise.all([persistFiles(),persistRounds(),persistContacts(),persistCategories(),persistCategoryGroups(),persistTasks()]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
       });
     } catch(e){ _showToast('ملف غير صالح','error'); }
   };
@@ -2058,8 +2287,8 @@ function importBackup(ev){
 function resetAllData(){
   _showConfirm('سيتم حذف كل البيانات الحالية والعودة للبيانات التجريبية الافتراضية. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'إعادة التعيين'}).then(ok=>{
     if(!ok) return;
-    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; TASKS=[];
-    Promise.all([persistFiles(),persistRounds(),persistContacts(),persistCategories(),persistTasks()]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
+    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[];
+    Promise.all([persistFiles(),persistRounds(),persistContacts(),persistCategories(),persistCategoryGroups(),persistTasks()]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
   });
 }
 
@@ -2181,7 +2410,7 @@ document.addEventListener('click', (e)=>{
 
 /* ---- animated count-up for stat numbers ---- */
 function animateStatNumbers(){
-  document.querySelectorAll('#statGrid .stat-card b').forEach(el=>{
+  document.querySelectorAll('#statMiniGrid .stat-card b').forEach(el=>{
     const target = parseInt(el.textContent, 10);
     if(isNaN(target)){ return; }
     if(target===0){ el.textContent='0'; return; }
