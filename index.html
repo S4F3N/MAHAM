@@ -217,6 +217,20 @@
   .open-item .ttl{font-weight:600;font-size:13.5px;}
   .open-item .sub{font-size:11.5px;color:var(--text-2);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 
+  .open-cards-wrap{display:grid;grid-template-columns:3fr 1fr;gap:16px;margin-bottom:6px;}
+  @media (max-width:980px){ .open-cards-wrap{grid-template-columns:1fr;} }
+  .action-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  @media (max-width:1100px){ .action-cards{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:640px){ .action-cards{grid-template-columns:repeat(2,1fr);} }
+  .action-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;aspect-ratio:1/0.92;display:flex;flex-direction:column;gap:6px;cursor:pointer;position:relative;}
+  .action-card:hover{background:var(--surface-2);}
+  .action-card .ic{font-size:17px;}
+  .action-card .ttl{font-weight:600;font-size:12px;line-height:1.35;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+  .action-card .ac-badges{display:flex;flex-wrap:wrap;gap:4px;}
+  .action-card .sub{font-size:10.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ac-del{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--surface-3);color:var(--text-3);font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .ac-del:hover{background:var(--red-glow);color:var(--red);}
+
   .p-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;}
   .p-dot.عاجل{background:var(--red);} .p-dot.متوسط{background:var(--orange);} .p-dot.عادي{background:var(--text-3);}
 
@@ -520,7 +534,10 @@
     </div>
 
     <div class="section-head"><h2>إجراءات مطلوبة لم تُنفذ بعد</h2></div>
-    <div class="open-list" id="openList"></div>
+    <div class="open-cards-wrap">
+      <div class="action-cards" id="openList"></div>
+      <div></div>
+    </div>
 
     <div class="section-head" style="margin-top:26px;"><h2>الملفات</h2>
       <button class="btn btn-filled btn-sm" onclick="openFileModal()">+ ملف جديد</button>
@@ -1436,17 +1453,14 @@ function renderOpenList(){
   const order={'لم':0,'جارٍ':1}, prOrder={'عاجل':0,'متوسط':1,'عادي':2};
   let open = pendingRounds().sort((a,b)=> (order[a.exec]-order[b.exec]) || (prOrder[a.priority]-prOrder[b.priority]) || (a.due||'9999').localeCompare(b.due||'9999'));
   if(!open.length){ document.getElementById('openList').innerHTML = `<div class="empty-note">لا توجد إجراءات معلّقة حاليًا 👍</div>`; return; }
-  document.getElementById('openList').innerHTML = open.slice(0,10).map(r=>{
+  document.getElementById('openList').innerHTML = open.slice(0,5).map(r=>{
     const f = fileOf(r.fileId);
-    return `<div class="swipe-row">
-      <button class="swipe-del-btn" onclick="event.stopPropagation(); quickDelete('round','${r.id}')">🗑<br>حذف</button>
-      <div class="swipeable-inner open-item" onclick="tapNav(event,'open','${r.id}')">
-        <span class="ic">${ROUND_TYPES[r.type]||'📌'}</span>
-        <div style="flex:1">
-          <div class="ttl"><span class="p-dot ${r.priority}"></span> ${esc((r.actionNeeded||'بدون وصف').slice(0,90))}</div>
-          <div class="sub">${f?esc(f.title):''} ${r.due?dueBadgeHtml(r.due):''} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span> ${r.responsible?'· '+esc(r.responsible):''}</div>
-        </div>
-      </div>
+    return `<div class="action-card" onclick="tapNav(event,'open','${r.id}')">
+      <button class="ac-del" onclick="event.stopPropagation(); quickDelete('round','${r.id}')" title="حذف">✕</button>
+      <div class="ic">${ROUND_TYPES[r.type]||'📌'}</div>
+      <div class="ttl"><span class="p-dot ${r.priority}"></span> ${esc((r.actionNeeded||'بدون وصف').slice(0,70))}</div>
+      <div class="ac-badges">${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+      <div class="sub">${f?esc(f.title):''}</div>
     </div>`;
   }).join('');
 }
