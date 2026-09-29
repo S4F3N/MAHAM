@@ -88,13 +88,16 @@
   .brand{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;}
   .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent-glow);}
   .brand h1{font-size:19px;font-weight:700;}
-  .topbar-date{display:flex;align-items:center;gap:8px;flex-shrink:0;padding:0 12px;height:36px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);white-space:nowrap;font-size:11.5px;font-weight:700;color:var(--text-1);}
-  .topbar-date .td-sep{color:var(--text-3);font-weight:400;}
+  .topbar-date{display:flex;align-items:center;gap:8px;flex-shrink:0;padding:0 14px;height:36px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);white-space:nowrap;cursor:default;
+    font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:1.5px;color:var(--text-1);}
+  .topbar-date .td-sep{color:var(--text-3);font-weight:400;letter-spacing:0;}
   @media (max-width:920px){ .topbar-date{display:none;} }
   .topbar-quote{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 10px;}
-  .topbar-quote span{font-family:var(--font-display);font-size:16.5px;font-weight:600;letter-spacing:2.5px;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;opacity:0;animation:quoteFade .6s ease forwards;}
+  .topbar-quote span{font-family:var(--quote-font,var(--font-display));font-size:var(--quote-size,19px);font-weight:var(--quote-weight,600);letter-spacing:var(--quote-spacing,3px);color:var(--quote-color,var(--text-1));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;opacity:0;animation:quoteFade .6s ease forwards;}
   @keyframes quoteFade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
   @media (max-width:1180px){ .topbar-quote{display:none;} }
+  .quote-preview-box{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;text-align:center;margin-bottom:14px;overflow:hidden;}
+  .quote-preview-box span{font-family:var(--quote-font,var(--font-display));font-size:var(--quote-size,19px);font-weight:var(--quote-weight,600);letter-spacing:var(--quote-spacing,3px);color:var(--quote-color,var(--text-1));display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .topbar-mid{flex:1;max-width:360px;position:relative;min-width:140px;}
   .topbar-mid input{width:100%;padding-right:32px;}
   .topbar-mid .si{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px;pointer-events:none;}
@@ -784,7 +787,50 @@
     <div class="settings-block">
       <h3 style="margin-bottom:4px;">العبارات المتغيّرة</h3>
       <div class="settings-desc" style="margin-bottom:10px;">عبارات تظهر بالتناوب في منتصف الشريط العلوي، وتتغيّر تلقائيًا كل 5 دقائق (مثل: وأن ليس للإنسان إلا ما سعى).</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
+
+      <div class="quote-preview-box" id="quotePreviewBox"><span id="quotePreviewSpan">وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ</span></div>
+
+      <div class="settings-row">
+        <label>الخط</label>
+        <div class="seg-control" id="quoteFontControl">
+          <button type="button" data-val="display" onclick="setQuoteFont('display')">ثمانية العريض</button>
+          <button type="button" data-val="sans" onclick="setQuoteFont('sans')">ثمانية النص</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>الحجم</label>
+        <div class="seg-control" id="quoteSizeControl">
+          <button type="button" data-val="16" onclick="setQuoteSize('16')">صغير</button>
+          <button type="button" data-val="19" onclick="setQuoteSize('19')">متوسط</button>
+          <button type="button" data-val="23" onclick="setQuoteSize('23')">كبير</button>
+          <button type="button" data-val="28" onclick="setQuoteSize('28')">كبير جدًا</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>المدّ (التباعد بين الأحرف)</label>
+        <div class="seg-control" id="quoteSpacingControl">
+          <button type="button" data-val="normal" onclick="setQuoteSpacing('normal')">عادي</button>
+          <button type="button" data-val="extended" onclick="setQuoteSpacing('extended')">ممدود</button>
+          <button type="button" data-val="xl" onclick="setQuoteSpacing('xl')">ممدود جدًا</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>النمط</label>
+        <div class="seg-control" id="quoteWeightControl">
+          <button type="button" data-val="500" onclick="setQuoteWeight('500')">عادي</button>
+          <button type="button" data-val="600" onclick="setQuoteWeight('600')">متوسط</button>
+          <button type="button" data-val="700" onclick="setQuoteWeight('700')">عريض</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>اللون</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="quoteColorInput" onchange="setQuoteColor(this.value)" style="width:38px;height:32px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer;padding:2px;">
+          <button class="btn btn-glass btn-sm" onclick="resetQuoteColor()">اللون الافتراضي</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin:14px 0 12px;">
         <input type="text" id="newQuoteInput" placeholder="اكتب عبارة جديدة..." style="flex:1;" onkeydown="if(event.key==='Enter') addTopbarQuote();">
         <button class="btn btn-primary btn-sm" onclick="addTopbarQuote()">+ إضافة</button>
       </div>
@@ -1257,7 +1303,7 @@ const ACCENT_HEX = {
   purple:{dark:'#bf5af2',light:'#9526c9'}, tc:{dark:'#64d2ff',light:'#0091b3'},
 };
 const APP_SETTINGS_KEY = 'rd2:appsettings';
-const DEFAULT_APP_SETTINGS = {accent:'accent', fontScale:'normal', eyeComfort:false, dueWarnDays:3};
+const DEFAULT_APP_SETTINGS = {accent:'accent', fontScale:'normal', eyeComfort:false, dueWarnDays:3, quoteFont:'display', quoteSize:19, quoteSpacing:'extended', quoteWeight:600, quoteColor:''};
 let APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS);
 function hexToRgba(hex, a){
   const h = hex.replace('#','');
@@ -1276,8 +1322,25 @@ function applyAppSettings(){
   document.documentElement.setAttribute('data-fontscale', APP_SETTINGS.fontScale==='large'?'large':'normal');
   document.documentElement.setAttribute('data-eyecomfort', APP_SETTINGS.eyeComfort?'1':'0');
   applyAccentColor();
+  applyQuoteStyle();
   renderAppearanceControls();
 }
+function applyQuoteStyle(){
+  const root = document.documentElement.style;
+  const fontVar = APP_SETTINGS.quoteFont==='sans' ? 'var(--font-body)' : 'var(--font-display)';
+  root.setProperty('--quote-font', fontVar);
+  root.setProperty('--quote-size', (APP_SETTINGS.quoteSize||19)+'px');
+  const spacingMap = {normal:'1px', extended:'3px', xl:'5.5px'};
+  root.setProperty('--quote-spacing', spacingMap[APP_SETTINGS.quoteSpacing]||'3px');
+  root.setProperty('--quote-weight', APP_SETTINGS.quoteWeight||600);
+  root.setProperty('--quote-color', APP_SETTINGS.quoteColor || 'var(--text-1)');
+}
+function setQuoteFont(v){ APP_SETTINGS.quoteFont=v; applyAppSettings(); persistAppSettings(); }
+function setQuoteSize(v){ APP_SETTINGS.quoteSize=parseInt(v,10)||19; applyAppSettings(); persistAppSettings(); }
+function setQuoteSpacing(v){ APP_SETTINGS.quoteSpacing=v; applyAppSettings(); persistAppSettings(); }
+function setQuoteWeight(v){ APP_SETTINGS.quoteWeight=parseInt(v,10)||600; applyAppSettings(); persistAppSettings(); }
+function setQuoteColor(v){ APP_SETTINGS.quoteColor=v; applyAppSettings(); persistAppSettings(); }
+function resetQuoteColor(){ APP_SETTINGS.quoteColor=''; applyAppSettings(); persistAppSettings(); }
 function persistAppSettings(){ return window.storage.set(APP_SETTINGS_KEY, JSON.stringify(APP_SETTINGS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
 function setAccent(name){ APP_SETTINGS.accent = name; applyAppSettings(); persistAppSettings(); }
 function setFontScale(v){ APP_SETTINGS.fontScale = v; applyAppSettings(); persistAppSettings(); }
@@ -1302,6 +1365,12 @@ function renderAppearanceControls(){
   if(picker){
     picker.innerHTML = COLORS.map(c=>`<div class="c-op ${c.name===(APP_SETTINGS.accent||'accent')?'sel':''}" data-c="${c.name}" style="background:${c.val}" onclick="setAccent('${c.name}')"></div>`).join('');
   }
+  document.querySelectorAll('#quoteFontControl button').forEach(b=>b.classList.toggle('active', b.dataset.val===(APP_SETTINGS.quoteFont||'display')));
+  document.querySelectorAll('#quoteSizeControl button').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.val,10)===(APP_SETTINGS.quoteSize||19)));
+  document.querySelectorAll('#quoteSpacingControl button').forEach(b=>b.classList.toggle('active', b.dataset.val===(APP_SETTINGS.quoteSpacing||'extended')));
+  document.querySelectorAll('#quoteWeightControl button').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.val,10)===(APP_SETTINGS.quoteWeight||600)));
+  const qcolor = document.getElementById('quoteColorInput');
+  if(qcolor) qcolor.value = APP_SETTINGS.quoteColor || (document.documentElement.getAttribute('data-theme')==='light' ? '#1d1d1f' : '#f5f5f7');
 }
 
 let FILES=[], ROUNDS=[], CONTACTS=[], CATEGORIES=[], CATEGORY_GROUPS=[], TASKS=[], ACTIVITY_LOG=[], SUBFILES=[], currentFileId=null, pinnedOnly=false;
@@ -1316,13 +1385,17 @@ function renderTopbarDate(){
   if(!el) return;
   const now = new Date();
   const part = (parts,type)=> (parts.find(p=>p.type===type)||{}).value || '';
+  const weekday = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{weekday:'long'}).format(now);
   const gParts = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}).formatToParts(now);
-  const gNum = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{month:'numeric'}).format(now);
+  const gNumParts = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'2-digit',month:'2-digit',year:'numeric'}).formatToParts(now);
   const hParts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long',year:'numeric'}).formatToParts(now);
-  const hNum = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{month:'numeric'}).format(now);
-  const g = `${part(gParts,'day')} . ${part(gParts,'month')}(${gNum}) . ${part(gParts,'year')}م`;
-  const h = `${part(hParts,'day')} . ${part(hParts,'month')}(${hNum}) . ${part(hParts,'year')}هـ`;
-  el.innerHTML = `<span>${g}</span><span class="td-sep">|</span><span>${h}</span>`;
+  const hNumParts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'2-digit',month:'2-digit',year:'numeric'}).formatToParts(now);
+  const g = `${part(gParts,'day')} ${part(gParts,'month')} ${part(gParts,'year')}م`;
+  const h = `${part(hParts,'day')} ${part(hParts,'month')} ${part(hParts,'year')}هـ`;
+  const gNum = `${part(gNumParts,'day')}/${part(gNumParts,'month')}/${part(gNumParts,'year')}م`;
+  const hNum = `${part(hNumParts,'day')}/${part(hNumParts,'month')}/${part(hNumParts,'year')}هـ`;
+  el.innerHTML = `<span>${weekday}</span> <span>${g}</span><span class="td-sep">|</span><span>${h}</span>`;
+  el.title = `${weekday} — ${gNum}   ${hNum}`;
 }
 
 /* ---------- TOPBAR QUOTE ---------- */
