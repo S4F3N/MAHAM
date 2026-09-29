@@ -1298,12 +1298,75 @@ function loadIfEmpty(){
     return chain;
   });
 }
-function persistFiles(){ return window.storage.set('rd2:files', JSON.stringify(FILES), false).catch(()=>_showToast('تعذر الحفظ','error')); }
-function persistRounds(){ return window.storage.set('rd2:rounds', JSON.stringify(ROUNDS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
-function persistContacts(){ return window.storage.set('rd2:contacts', JSON.stringify(CONTACTS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
-function persistCategories(){ return window.storage.set('rd2:categories', JSON.stringify(CATEGORIES), false).catch(()=>_showToast('تعذر الحفظ','error')); }
-function persistCategoryGroups(){ return window.storage.set('rd2:categorygroups', JSON.stringify(CATEGORY_GROUPS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
-function persistActivityLog(){ return window.storage.set('rd2:activitylog', JSON.stringify(ACTIVITY_LOG), false).catch(()=>{}); }
+/* ---------- multi-device-safe persistence ----------
+   Each collection is stored as one JSON-array field on the Firestore doc.
+   If we just JSON.stringify the whole in-memory array and write it, a
+   stale tab/device (one that loaded before a change made elsewhere) will
+   overwrite items it never saw — silently erasing them. To avoid that,
+   every save re-fetches the latest remote array straight from the server
+   and reconciles it with our local array by item id: only the id(s) we
+   actually just touched are taken from our local copy, everything else
+   comes from the fresh remote copy (so changes made from another device
+   are preserved, not clobbered). */
+function _addIds(set, ids){ if(ids==null) return; (Array.isArray(ids)?ids:[ids]).forEach(id=>{ if(typeof id==='string' && id) set.add(id); }); }
+function _mergeArrayById(remoteArr, localArr, changedIds, deletedIds){
+  const byId = new Map();
+  (remoteArr||[]).forEach(x=>{ if(x && x.id) byId.set(x.id, x); });
+  (localArr||[]).forEach(x=>{
+    if(!x || !x.id || deletedIds.has(x.id)) return;
+    if(changedIds.has(x.id) || !byId.has(x.id)) byId.set(x.id, x);
+  });
+  deletedIds.forEach(id=> byId.delete(id));
+  return Array.from(byId.values());
+}
+async function _fetchRemoteArray(key){
+  if(!fbUser || !fbDb) return null;
+  try{
+    const docRef = fbDb.collection(FB_COLLECTION).doc(fbUser.uid);
+    const snap = await docRef.get({source:'server'}).catch(()=>docRef.get());
+    if(!snap.exists) return null;
+    const raw = snap.data()[key];
+    if(!raw) return null;
+    try{ return JSON.parse(raw); }catch(e){ return null; }
+  }catch(e){ return null; }
+}
+async function _smartPersist(key, getLocal, setLocal, changedIds, deletedIds){
+  const localArr = getLocal();
+  const remoteArr = await _fetchRemoteArray(key);
+  const merged = remoteArr ? _mergeArrayById(remoteArr, localArr, changedIds, deletedIds) : localArr;
+  changedIds.clear(); deletedIds.clear();
+  setLocal(merged);
+  return window.storage.set(key, JSON.stringify(merged));
+}
+/* Direct, non-merging write — used only when the user explicitly wants a
+   full replace (import backup / reset all data), where clobbering is the
+   intended behavior. */
+function _hardPersist(key, arr){ return window.storage.set(key, JSON.stringify(arr)); }
+
+const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set()};
+const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set()};
+
+function persistFiles(changed, deleted){
+  _addIds(_chgIds.files, changed); _addIds(_delIds.files, deleted);
+  return _smartPersist('rd2:files', ()=>FILES, (arr)=>{FILES=arr;}, _chgIds.files, _delIds.files).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistRounds(changed, deleted){
+  _addIds(_chgIds.rounds, changed); _addIds(_delIds.rounds, deleted);
+  return _smartPersist('rd2:rounds', ()=>ROUNDS, (arr)=>{ROUNDS=arr;}, _chgIds.rounds, _delIds.rounds).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistContacts(changed, deleted){
+  _addIds(_chgIds.contacts, changed); _addIds(_delIds.contacts, deleted);
+  return _smartPersist('rd2:contacts', ()=>CONTACTS, (arr)=>{CONTACTS=arr;}, _chgIds.contacts, _delIds.contacts).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistCategories(changed, deleted){
+  _addIds(_chgIds.categories, changed); _addIds(_delIds.categories, deleted);
+  return _smartPersist('rd2:categories', ()=>CATEGORIES, (arr)=>{CATEGORIES=arr;}, _chgIds.categories, _delIds.categories).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistCategoryGroups(changed, deleted){
+  _addIds(_chgIds.groups, changed); _addIds(_delIds.groups, deleted);
+  return _smartPersist('rd2:categorygroups', ()=>CATEGORY_GROUPS, (arr)=>{CATEGORY_GROUPS=arr;}, _chgIds.groups, _delIds.groups).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistActivityLog(){ return window.storage.set('rd2:activitylog', JSON.stringify(ACTIVITY_LOG)).catch(()=>{}); }
 function logActivity(action, entity, summary, detail){
   ACTIVITY_LOG.unshift({id:uid(), ts:new Date().toISOString(), action, entity, summary, detail: detail||''});
   if(ACTIVITY_LOG.length>300) ACTIVITY_LOG = ACTIVITY_LOG.slice(0,300);
@@ -1311,7 +1374,10 @@ function logActivity(action, entity, summary, detail){
   const p = document.getElementById('page-activity');
   if(p && p.classList.contains('active')) renderActivityPage();
 }
-function persistTasks(){ return window.storage.set('rd2:tasks', JSON.stringify(TASKS), false).catch(()=>_showToast('تعذر الحفظ','error')); }
+function persistTasks(changed, deleted){
+  _addIds(_chgIds.tasks, changed); _addIds(_delIds.tasks, deleted);
+  return _smartPersist('rd2:tasks', ()=>TASKS, (arr)=>{TASKS=arr;}, _chgIds.tasks, _delIds.tasks).catch(()=>_showToast('تعذر الحفظ','error'));
+}
 
 function systemPrefersDark(){ return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
 function setTheme(t, save=true){
@@ -1812,9 +1878,10 @@ function saveTask(){
     priority: document.getElementById('tPriority').value, fileId: document.getElementById('tFile').value,
     notes: document.getElementById('tNotes').value.trim(),
   };
+  let savedId = id;
   if(id){ const idx=TASKS.findIndex(t=>t.id===id); TASKS[idx]={...TASKS[idx],...data}; logActivity('edit','task', `تعديل مهمة/موعد: ${data.title}`, taskDetailText(data)); }
-  else { TASKS.push({id:uid(), done:false, ...data}); logActivity('add','task', `إضافة مهمة/موعد جديد: ${data.title}`, taskDetailText(data)); }
-  persistTasks().then(()=>{
+  else { savedId = uid(); TASKS.push({id:savedId, done:false, ...data}); logActivity('add','task', `إضافة مهمة/موعد جديد: ${data.title}`, taskDetailText(data)); }
+  persistTasks(savedId).then(()=>{
     closeTaskModal(); _showToast('تم الحفظ','success');
     if(document.getElementById('page-calendar').classList.contains('active')){ selectedDay=data.date; renderCalendarPage(); }
     if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
@@ -1824,7 +1891,7 @@ function saveTask(){
 function toggleTaskDone(id){
   const x = TASKS.find(t=>t.id===id); x.done=!x.done; haptic(8);
   logActivity('edit','task', `${x.done?'إتمام':'إلغاء إتمام'} مهمة: ${x.title}`);
-  persistTasks().then(()=>{
+  persistTasks(id).then(()=>{
     if(document.getElementById('page-calendar').classList.contains('active')) renderDayPanel();
     if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
     renderTodayAgenda(); updateTasksTabBadge();
@@ -1839,7 +1906,7 @@ function deleteTaskById(id, fromModal){
     _lastDeleted = {type:'task', task:x};
     TASKS = TASKS.filter(t=>t.id!==id);
     logActivity('delete','task', `حذف مهمة/موعد: ${x?x.title:''}`, x?taskDetailText(x):'');
-    persistTasks().then(()=>{
+    persistTasks(null, id).then(()=>{
       if(fromModal) closeTaskModal();
       if(document.getElementById('page-calendar').classList.contains('active')) renderCalendarPage();
       if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
@@ -1978,16 +2045,18 @@ function saveFile(){
   const id = document.getElementById('fId').value;
   const data = collectFileForm();
   if(!data.title){ _showToast('الرجاء إدخال عنوان الملف','error'); return; }
+  let savedId = id;
   if(id){
     const idx = FILES.findIndex(f=>f.id===id);
     data.pinned = FILES[idx].pinned;
     FILES[idx] = {...FILES[idx], ...data};
     logActivity('edit','file', `تعديل ملف: ${data.title}`, fileDetailText(data));
   } else {
-    FILES.push({id:uid(), pinned:false, ...data});
+    savedId = uid();
+    FILES.push({id:savedId, pinned:false, ...data});
     logActivity('add','file', `إضافة ملف جديد: ${data.title}`, fileDetailText(data));
   }
-  persistFiles().then(()=>{ closeFileModal(); _showToast('تم الحفظ','success'); currentFileId? renderFilePage() : goToFilesPage(); });
+  persistFiles(savedId).then(()=>{ closeFileModal(); _showToast('تم الحفظ','success'); currentFileId? renderFilePage() : goToFilesPage(); });
 }
 function duplicateFile(){
   const id = document.getElementById('fId').value;
@@ -1995,13 +2064,13 @@ function duplicateFile(){
   const copy = {...f, id:uid(), title: f.title+' (نسخة)', pinned:false};
   FILES.push(copy);
   logActivity('add','file', `نسخ ملف: ${copy.title}`, fileDetailText(copy));
-  persistFiles().then(()=>{ closeFileModal(); goToFilesPage(); _showToast('تم إنشاء نسخة من الملف','success'); });
+  persistFiles(copy.id).then(()=>{ closeFileModal(); goToFilesPage(); _showToast('تم إنشاء نسخة من الملف','success'); });
 }
 function togglePin(id, ev){
   ev.stopPropagation();
   const f = FILES.find(x=>x.id===id); f.pinned = !f.pinned;
   logActivity('edit','file', `${f.pinned?'تثبيت':'إلغاء تثبيت'} ملف: ${f.title}`);
-  persistFiles().then(renderFiles);
+  persistFiles(id).then(renderFiles);
 }
 function deleteFile(){ deleteFileById(document.getElementById('fId').value, true); }
 function deleteFileById(id, fromModal){
@@ -2014,7 +2083,7 @@ function deleteFileById(id, fromModal){
     FILES = FILES.filter(x=>x.id!==id);
     ROUNDS = ROUNDS.filter(x=>x.fileId!==id);
     logActivity('delete','file', `حذف ملف: ${f?f.title:''}${relatedRounds.length?` (مع ${relatedRounds.length} جولة متابعة)`:''}`, f?fileDetailText(f):'');
-    Promise.all([persistFiles(), persistRounds()]).then(()=>{ if(fromModal) closeFileModal(); if(currentFileId===id) goToFilesPage(); else renderFiles(); _showToastUndo('تم حذف الملف'); });
+    Promise.all([persistFiles(null, id), persistRounds(null, relatedRounds.map(r=>r.id))]).then(()=>{ if(fromModal) closeFileModal(); if(currentFileId===id) goToFilesPage(); else renderFiles(); _showToastUndo('تم حذف الملف'); });
   });
 }
 
@@ -2099,7 +2168,7 @@ function markExecuted(id){
   haptic();
   const card = document.getElementById('round-'+id);
   if(card) card.classList.add('pulse-done');
-  persistRounds().then(()=>{ renderFilePage(); renderNotif(); _showToast('تم تحديث الحالة إلى: تم التنفيذ','success'); });
+  persistRounds(id).then(()=>{ renderFilePage(); renderNotif(); _showToast('تم تحديث الحالة إلى: تم التنفيذ','success'); });
 }
 function scheduleFollowUp(id){
   const r = ROUNDS.find(x=>x.id===id);
@@ -2177,15 +2246,17 @@ function saveRound(){
     contactIds,
   };
   const _rf = fileOf(currentFileId);
+  let savedId = id;
   if(id){
     const idx = ROUNDS.findIndex(r=>r.id===id);
     ROUNDS[idx] = {...ROUNDS[idx], ...data};
     logActivity('edit','round', `تعديل جولة متابعة${_rf?' — '+_rf.title:''}`, roundDetailText(data));
   } else {
-    ROUNDS.push({id:uid(), fileId: currentFileId, ...data});
+    savedId = uid();
+    ROUNDS.push({id:savedId, fileId: currentFileId, ...data});
     logActivity('add','round', `إضافة جولة متابعة جديدة${_rf?' — '+_rf.title:''}`, roundDetailText(data));
   }
-  persistRounds().then(()=>{ closeRoundModal(); renderFilePage(); renderNotif(); _showToast('تم الحفظ','success'); });
+  persistRounds(savedId).then(()=>{ closeRoundModal(); renderFilePage(); renderNotif(); _showToast('تم الحفظ','success'); });
 }
 function deleteRound(){ deleteRoundById(document.getElementById('rId').value, true); }
 function deleteRoundById(id, fromModal){
@@ -2197,7 +2268,7 @@ function deleteRoundById(id, fromModal){
     ROUNDS = ROUNDS.filter(x=>x.id!==id);
     const _rf2 = r? fileOf(r.fileId) : null;
     logActivity('delete','round', `حذف جولة متابعة${_rf2?' — '+_rf2.title:''}`, r?roundDetailText(r):'');
-    persistRounds().then(()=>{ if(fromModal) closeRoundModal(); if(currentFileId) renderFilePage(); renderHome_soft(); _showToastUndo('تم حذف الجولة'); });
+    persistRounds(null, id).then(()=>{ if(fromModal) closeRoundModal(); if(currentFileId) renderFilePage(); renderHome_soft(); _showToastUndo('تم حذف الجولة'); });
   });
 }
 function renderHome_soft(){
@@ -2250,9 +2321,10 @@ function saveContact(){
   const name = document.getElementById('cName').value.trim();
   if(!name){ _showToast('الرجاء إدخال الاسم','error'); return; }
   const data = {name, role:document.getElementById('cRole').value.trim(), phone:document.getElementById('cPhone').value.trim(), email:document.getElementById('cEmail').value.trim(), notes:document.getElementById('cNotes').value.trim()};
+  let savedId = id;
   if(id){ const idx=CONTACTS.findIndex(c=>c.id===id); CONTACTS[idx]={...CONTACTS[idx],...data}; logActivity('edit','contact', `تعديل جهة اتصال: ${data.name}`, contactDetailText(data)); }
-  else { CONTACTS.push({id:uid(), ...data}); logActivity('add','contact', `إضافة جهة اتصال جديدة: ${data.name}`, contactDetailText(data)); }
-  persistContacts().then(()=>{ closeContactModal(); renderContacts(); _showToast('تم الحفظ','success'); });
+  else { savedId = uid(); CONTACTS.push({id:savedId, ...data}); logActivity('add','contact', `إضافة جهة اتصال جديدة: ${data.name}`, contactDetailText(data)); }
+  persistContacts(savedId).then(()=>{ closeContactModal(); renderContacts(); _showToast('تم الحفظ','success'); });
 }
 function deleteContact(){ deleteContactById(document.getElementById('cId').value, true); }
 function deleteContactById(id, fromModal){
@@ -2261,10 +2333,11 @@ function deleteContactById(id, fromModal){
     haptic();
     const _c = CONTACTS.find(c=>c.id===id);
     CONTACTS = CONTACTS.filter(c=>c.id!==id);
-    FILES.forEach(f=>{ if(f.contactIds) f.contactIds = f.contactIds.filter(x=>x!==id); });
-    ROUNDS.forEach(r=>{ if(r.contactIds) r.contactIds = r.contactIds.filter(x=>x!==id); });
+    const affectedFileIds = [], affectedRoundIds = [];
+    FILES.forEach(f=>{ if(f.contactIds && f.contactIds.includes(id)){ f.contactIds = f.contactIds.filter(x=>x!==id); affectedFileIds.push(f.id); } });
+    ROUNDS.forEach(r=>{ if(r.contactIds && r.contactIds.includes(id)){ r.contactIds = r.contactIds.filter(x=>x!==id); affectedRoundIds.push(r.id); } });
     logActivity('delete','contact', `حذف جهة اتصال: ${_c?_c.name:''}`, _c?contactDetailText(_c):'');
-    Promise.all([persistContacts(), persistFiles(), persistRounds()]).then(()=>{ if(fromModal) closeContactModal(); renderContacts(); _showToast('تم الحذف'); });
+    Promise.all([persistContacts(null, id), persistFiles(affectedFileIds), persistRounds(affectedRoundIds)]).then(()=>{ if(fromModal) closeContactModal(); renderContacts(); _showToast('تم الحذف'); });
   });
 }
 function quickDelete(kind, id){
@@ -2332,15 +2405,17 @@ function saveGroup(){
   const id = document.getElementById('groupId').value;
   const name = document.getElementById('groupName').value.trim();
   if(!name){ _showToast('الرجاء إدخال اسم المجموعة','error'); return; }
+  let savedId = id;
   if(id){
     const idx = CATEGORY_GROUPS.findIndex(g=>g.id===id);
     CATEGORY_GROUPS[idx] = {...CATEGORY_GROUPS[idx], name};
     logActivity('edit','group', `تعديل مجموعة تصنيفات: ${name}`);
   } else {
-    CATEGORY_GROUPS.push({id:uid(), name, catIds:[]});
+    savedId = uid();
+    CATEGORY_GROUPS.push({id:savedId, name, catIds:[]});
     logActivity('add','group', `إضافة مجموعة تصنيفات جديدة: ${name}`);
   }
-  persistCategoryGroups().then(()=>{ closeGroupModal(); renderCategoryGroups(); _showToast('تم الحفظ','success'); });
+  persistCategoryGroups(savedId).then(()=>{ closeGroupModal(); renderCategoryGroups(); _showToast('تم الحفظ','success'); });
 }
 function deleteGroupFromModal(){ deleteGroup(document.getElementById('groupId').value, true); }
 function deleteGroup(id, fromModal){
@@ -2348,10 +2423,10 @@ function deleteGroup(id, fromModal){
     if(!ok) return;
     const _g = CATEGORY_GROUPS.find(g=>g.id===id);
     CATEGORY_GROUPS = CATEGORY_GROUPS.filter(g=>g.id!==id);
-    let filesCleared = 0;
-    FILES.forEach(f=>{ if(f.groupId===id){ f.groupId=''; filesCleared++; } });
-    logActivity('delete','group', `حذف مجموعة تصنيفات: ${_g?_g.name:''}${filesCleared?` (وإزالة ربطها من ${filesCleared} ملف)`:''}`);
-    Promise.all([persistCategoryGroups(), filesCleared?persistFiles():Promise.resolve()]).then(()=>{ if(fromModal) closeGroupModal(); renderCategoryGroups(); if(document.getElementById('page-files').classList.contains('active')) renderFiles(); _showToast('تم الحذف'); });
+    const filesCleared = [];
+    FILES.forEach(f=>{ if(f.groupId===id){ f.groupId=''; filesCleared.push(f.id); } });
+    logActivity('delete','group', `حذف مجموعة تصنيفات: ${_g?_g.name:''}${filesCleared.length?` (وإزالة ربطها من ${filesCleared.length} ملف)`:''}`);
+    Promise.all([persistCategoryGroups(null, id), filesCleared.length?persistFiles(filesCleared):Promise.resolve()]).then(()=>{ if(fromModal) closeGroupModal(); renderCategoryGroups(); if(document.getElementById('page-files').classList.contains('active')) renderFiles(); _showToast('تم الحذف'); });
   });
 }
 function addCatToGroup(groupId, catId){
@@ -2363,7 +2438,7 @@ function addCatToGroup(groupId, catId){
     const c = CATEGORIES.find(x=>x.id===catId);
     logActivity('edit','group', `إضافة تصنيف "${c?c.name:''}" إلى مجموعة: ${g.name}`);
   }
-  persistCategoryGroups().then(()=>{ renderCategoryGroups(); });
+  persistCategoryGroups(groupId).then(()=>{ renderCategoryGroups(); });
 }
 function removeCatFromGroup(groupId, catId){
   const g = CATEGORY_GROUPS.find(x=>x.id===groupId);
@@ -2371,7 +2446,7 @@ function removeCatFromGroup(groupId, catId){
   g.catIds = (g.catIds||[]).filter(x=>x!==catId);
   const c = CATEGORIES.find(x=>x.id===catId);
   logActivity('edit','group', `إزالة تصنيف "${c?c.name:''}" من مجموعة: ${g.name}`);
-  persistCategoryGroups().then(()=>{ renderCategoryGroups(); });
+  persistCategoryGroups(groupId).then(()=>{ renderCategoryGroups(); });
 }
 function openCatModal(id){
   document.getElementById('catId').value = id||'';
@@ -2398,17 +2473,23 @@ function saveCategory(){
   if(!name){ _showToast('الرجاء إدخال اسم التصنيف','error'); return; }
   const selEl = document.querySelector('#catColorPick .c-op.sel');
   const color = selEl? selEl.dataset.c : COLORS[0].name;
+  let savedId = id;
   if(id){
     const idx = CATEGORIES.findIndex(c=>c.id===id);
     const oldName = CATEGORIES[idx].name;
     CATEGORIES[idx] = {...CATEGORIES[idx], name, color};
-    if(oldName!==name){ FILES.forEach(f=>{ if(f.category===oldName) f.category=name; }); persistFiles(); }
+    if(oldName!==name){
+      const affected=[];
+      FILES.forEach(f=>{ if(f.category===oldName){ f.category=name; affected.push(f.id); } });
+      if(affected.length) persistFiles(affected);
+    }
     logActivity('edit','category', `تعديل تصنيف: ${oldName}${oldName!==name?' ← '+name:''}`, categoryDetailText(name,color));
   } else {
-    CATEGORIES.push({id:uid(), name, color});
+    savedId = uid();
+    CATEGORIES.push({id:savedId, name, color});
     logActivity('add','category', `إضافة تصنيف جديد: ${name}`, categoryDetailText(name,color));
   }
-  persistCategories().then(()=>{ closeCatModal(); renderSettings(); populateCatFilter(); _showToast('تم الحفظ','success'); });
+  persistCategories(savedId).then(()=>{ closeCatModal(); renderSettings(); populateCatFilter(); _showToast('تم الحفظ','success'); });
 }
 function deleteCategory(){
   const id = document.getElementById('catId').value;
@@ -2418,7 +2499,7 @@ function deleteCategory(){
     if(!ok) return;
     CATEGORIES = CATEGORIES.filter(x=>x.id!==id);
     logActivity('delete','category', `حذف تصنيف: ${c?c.name:''}`, c?categoryDetailText(c.name,c.color):'');
-    persistCategories().then(()=>{ closeCatModal(); renderSettings(); populateCatFilter(); _showToast('تم الحذف'); });
+    persistCategories(null, id).then(()=>{ closeCatModal(); renderSettings(); populateCatFilter(); _showToast('تم الحذف'); });
   });
 }
 
@@ -2522,7 +2603,9 @@ function importBackup(ev){
         if(!ok) return;
         FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[];
         logActivity('import','data', `استيراد نسخة احتياطية (${FILES.length} ملف، ${ROUNDS.length} جولة، ${CONTACTS.length} جهة اتصال)`);
-        Promise.all([persistFiles(),persistRounds(),persistContacts(),persistCategories(),persistCategoryGroups(),persistTasks()]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
+        // Explicit full replace requested by the user — bypass the
+        // merge-safe persist path and write these arrays as-is.
+        Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS)]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
       });
     } catch(e){ _showToast('ملف غير صالح','error'); }
   };
@@ -2534,7 +2617,7 @@ function resetAllData(){
     if(!ok) return;
     FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[];
     logActivity('reset','data', 'إعادة تعيين جميع بيانات البرنامج بالكامل');
-    Promise.all([persistFiles(),persistRounds(),persistContacts(),persistCategories(),persistCategoryGroups(),persistTasks()]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
+    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
   });
 }
 
@@ -2560,9 +2643,9 @@ function _showToastUndo(msg){
 }
 function undoLastDelete(){
   if(!_lastDeleted) return;
-  if(_lastDeleted.type==='file'){ FILES.push(_lastDeleted.file); ROUNDS.push(...(_lastDeleted.rounds||[])); logActivity('restore','file', `استرجاع ملف محذوف: ${_lastDeleted.file?_lastDeleted.file.title:''}`, _lastDeleted.file?fileDetailText(_lastDeleted.file):''); Promise.all([persistFiles(),persistRounds()]).then(()=>{ goToFilesPage(); _showToast('تم التراجع عن الحذف','success'); }); }
-  if(_lastDeleted.type==='round'){ ROUNDS.push(_lastDeleted.round); logActivity('restore','round', `استرجاع جولة متابعة محذوفة`, _lastDeleted.round?roundDetailText(_lastDeleted.round):''); persistRounds().then(()=>{ if(currentFileId) renderFilePage(); _showToast('تم التراجع عن الحذف','success'); }); }
-  if(_lastDeleted.type==='task'){ TASKS.push(_lastDeleted.task); logActivity('restore','task', `استرجاع مهمة/موعد محذوف: ${_lastDeleted.task?_lastDeleted.task.title:''}`, _lastDeleted.task?taskDetailText(_lastDeleted.task):''); persistTasks().then(()=>{ if(document.getElementById('page-calendar').classList.contains('active')) renderCalendarPage(); renderNotif(); _showToast('تم التراجع عن الحذف','success'); }); }
+  if(_lastDeleted.type==='file'){ FILES.push(_lastDeleted.file); ROUNDS.push(...(_lastDeleted.rounds||[])); logActivity('restore','file', `استرجاع ملف محذوف: ${_lastDeleted.file?_lastDeleted.file.title:''}`, _lastDeleted.file?fileDetailText(_lastDeleted.file):''); Promise.all([persistFiles(_lastDeleted.file?_lastDeleted.file.id:null), persistRounds((_lastDeleted.rounds||[]).map(r=>r.id))]).then(()=>{ goToFilesPage(); _showToast('تم التراجع عن الحذف','success'); }); }
+  if(_lastDeleted.type==='round'){ ROUNDS.push(_lastDeleted.round); logActivity('restore','round', `استرجاع جولة متابعة محذوفة`, _lastDeleted.round?roundDetailText(_lastDeleted.round):''); persistRounds(_lastDeleted.round?_lastDeleted.round.id:null).then(()=>{ if(currentFileId) renderFilePage(); _showToast('تم التراجع عن الحذف','success'); }); }
+  if(_lastDeleted.type==='task'){ TASKS.push(_lastDeleted.task); logActivity('restore','task', `استرجاع مهمة/موعد محذوف: ${_lastDeleted.task?_lastDeleted.task.title:''}`, _lastDeleted.task?taskDetailText(_lastDeleted.task):''); persistTasks(_lastDeleted.task?_lastDeleted.task.id:null).then(()=>{ if(document.getElementById('page-calendar').classList.contains('active')) renderCalendarPage(); renderNotif(); _showToast('تم التراجع عن الحذف','success'); }); }
   _lastDeleted = null;
 }
 function _showConfirm(msg, {destructive=false, confirmLabel='تأكيد', cancelLabel='إلغاء'}={}){
