@@ -568,6 +568,14 @@
       <select id="statusFilter" onchange="renderFiles()"><option value="">كل الحالات</option><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option></select>
       <select id="priorityFilterHome" onchange="renderFiles()"><option value="">كل الأولويات</option><option value="عاجل">عاجل</option><option value="متوسط">متوسط</option><option value="عادي">عادي</option></select>
       <button class="chip" id="pinnedChip" onclick="togglePinnedFilter()">⭐ المثبتة فقط</button>
+      <select id="fileSort" onchange="renderFiles()">
+        <option value="default">ترتيب حسب: الافتراضي (مثبت + أولوية)</option>
+        <option value="name">ترتيب حسب: الاسم (أ-ي)</option>
+        <option value="opened_desc">ترتيب حسب: الأحدث فتحًا</option>
+        <option value="opened_asc">ترتيب حسب: الأقدم فتحًا</option>
+        <option value="deadline">ترتيب حسب: الأقرب استحقاقًا</option>
+        <option value="updated">ترتيب حسب: آخر تحديث</option>
+      </select>
     </div>
     <div class="file-grid" id="fileGrid"></div>
   </section>
@@ -589,6 +597,14 @@
       </div>
     </div>
     <div class="round-filters" id="roundFilters"></div>
+    <div class="filter-bar" style="margin-bottom:10px;">
+      <select id="roundSort" onchange="renderRounds()">
+        <option value="date_desc">ترتيب حسب: الأحدث أولاً</option>
+        <option value="date_asc">ترتيب حسب: الأقدم أولاً</option>
+        <option value="priority">ترتيب حسب: الأولوية</option>
+        <option value="due">ترتيب حسب: الأقرب استحقاقًا</option>
+      </select>
+    </div>
     <div id="roundsList"></div>
   </section>
 
@@ -618,6 +634,12 @@
       <button class="btn btn-filled btn-sm" onclick="openTaskModal(null, today())">+ موعد / مهمة جديدة</button>
     </div>
     <div class="settings-desc" style="margin-bottom:14px;">سجّل هنا أي موعد أو اجتماع أو مهمة وقتية أو تذكير — كل شي تحتاج ما تفوتك تاريخه، بدون ربطه بملف بالضرورة.</div>
+    <div class="filter-bar">
+      <select id="taskSort" onchange="renderTasksPage()">
+        <option value="date">ترتيب حسب: التاريخ</option>
+        <option value="priority">ترتيب حسب: الأولوية</option>
+      </select>
+    </div>
     <div id="tasksPageList"></div>
   </section>
 
@@ -625,7 +647,14 @@
     <div class="section-head"><h2>جهات الاتصال</h2>
       <button class="btn btn-filled btn-sm" onclick="openContactModal()">+ جهة اتصال جديدة</button>
     </div>
-    <div class="filter-bar"><div class="search-box"><input type="text" id="contactSearch" placeholder="بحث بالاسم أو الدور..." oninput="renderContacts()"></div></div>
+    <div class="filter-bar">
+      <div class="search-box"><input type="text" id="contactSearch" placeholder="بحث بالاسم أو الدور..." oninput="renderContacts()"></div>
+      <select id="contactSort" onchange="renderContacts()">
+        <option value="name">ترتيب حسب: الاسم (أ-ي)</option>
+        <option value="newest">ترتيب حسب: الأحدث إضافة</option>
+        <option value="linked">ترتيب حسب: الأكثر ارتباطًا بالملفات</option>
+      </select>
+    </div>
     <div class="contact-grid" id="contactGrid"></div>
   </section>
 
@@ -644,6 +673,7 @@
         <option value="task">مهام ومواعيد</option>
         <option value="category">تصنيفات</option>
         <option value="group">مجموعات تصنيفات</option>
+        <option value="subfile">مسارات فرعية</option>
         <option value="data">بيانات عامة</option>
       </select>
       <select id="logActionFilter" onchange="renderActivityPage()">
@@ -652,6 +682,10 @@
         <option value="edit">تعديل</option>
         <option value="delete">حذف</option>
         <option value="restore">استرجاع</option>
+      </select>
+      <select id="logSort" onchange="renderActivityPage()">
+        <option value="newest">ترتيب حسب: الأحدث أولاً</option>
+        <option value="oldest">ترتيب حسب: الأقدم أولاً</option>
       </select>
     </div>
     <div id="activityList"></div>
@@ -1701,7 +1735,18 @@ function renderFiles(){
     if(!q) return true;
     return (f.title+f.party+f.notes+(f.tags||[]).join(',')).toLowerCase().includes(q);
   });
-  list.sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0) || ({'عاجل':0,'متوسط':1,'عادي':2}[a.priority]-{'عاجل':0,'متوسط':1,'عادي':2}[b.priority]));
+  const prOrder={'عاجل':0,'متوسط':1,'عادي':2};
+  const sortEl = document.getElementById('fileSort');
+  const sortBy = sortEl? sortEl.value : 'default';
+  const lastRoundDate = (fid)=> ROUNDS.filter(r=>r.fileId===fid).reduce((m,r)=> (r.date&&r.date>m)?r.date:m, '');
+  switch(sortBy){
+    case 'name': list.sort((a,b)=> (a.title||'').localeCompare(b.title||'','ar')); break;
+    case 'opened_desc': list.sort((a,b)=> (b.opened||'').localeCompare(a.opened||'')); break;
+    case 'opened_asc': list.sort((a,b)=> (a.opened||'').localeCompare(b.opened||'')); break;
+    case 'deadline': list.sort((a,b)=> (a.target||'9999-99-99').localeCompare(b.target||'9999-99-99')); break;
+    case 'updated': list.sort((a,b)=> lastRoundDate(b.id).localeCompare(lastRoundDate(a.id))); break;
+    default: list.sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0) || (prOrder[a.priority]-prOrder[b.priority]));
+  }
   const grid = document.getElementById('fileGrid');
   if(!list.length){ grid.innerHTML = `<div class="empty-note">لا توجد ملفات مطابقة.</div><div class="add-file-card" onclick="openFileModal()">+ ملف جديد</div>`; return; }
   grid.innerHTML = list.map(f=>{
@@ -1965,7 +2010,13 @@ function renderTasksPage(){
   updateTasksTabBadge();
   const wrap = document.getElementById('tasksPageList');
   const t = today();
-  const all = TASKS.slice().sort((a,b)=>(a.date+((a.time)||'99:99')).localeCompare(b.date+((b.time)||'99:99')));
+  const prOrder={'عاجل':0,'متوسط':1,'عادي':2};
+  const sortEl = document.getElementById('taskSort');
+  const sortBy = sortEl? sortEl.value : 'date';
+  const byDate = (a,b)=>(a.date+((a.time)||'99:99')).localeCompare(b.date+((b.time)||'99:99'));
+  const byPriority = (a,b)=> (prOrder[a.priority]-prOrder[b.priority]) || byDate(a,b);
+  const sorter = sortBy==='priority' ? byPriority : byDate;
+  const all = TASKS.slice().sort(sorter);
   const overdue = all.filter(x=>!x.done && x.date<t);
   const dueToday = all.filter(x=>!x.done && x.date===t);
   const upcoming = all.filter(x=>!x.done && x.date>t);
@@ -2191,7 +2242,15 @@ function renderRounds(){
   if(roundFilterExec) list = list.filter(r=>r.exec===roundFilterExec);
   if(roundFilterTrack==='__general__') list = list.filter(r=>!r.subFileId);
   else if(roundFilterTrack) list = list.filter(r=>r.subFileId===roundFilterTrack);
-  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const prOrder={'عاجل':0,'متوسط':1,'عادي':2};
+  const sortEl = document.getElementById('roundSort');
+  const sortBy = sortEl? sortEl.value : 'date_desc';
+  switch(sortBy){
+    case 'date_asc': list.sort((a,b)=>(a.date||'').localeCompare(b.date||'')); break;
+    case 'priority': list.sort((a,b)=> (prOrder[a.priority]-prOrder[b.priority]) || (b.date||'').localeCompare(a.date||'')); break;
+    case 'due': list.sort((a,b)=> (a.due||'9999-99-99').localeCompare(b.due||'9999-99-99')); break;
+    default: list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  }
   if(!list.length){ document.getElementById('roundsList').innerHTML = `<div class="empty-note">لا توجد جولات مطابقة — أضف أول جولة لتوثيق ما تم اكتشافه والإجراءات.</div>`; return; }
   document.getElementById('roundsList').innerHTML = list.map(r=>`
     <div class="swipe-row">
@@ -2420,6 +2479,12 @@ function renderHome_soft(){
 function renderContacts(){
   const q = (document.getElementById('contactSearch').value||'').trim().toLowerCase();
   let list = CONTACTS.filter(c=>(c.name+c.role).toLowerCase().includes(q));
+  const linkedCount = (cid)=> FILES.filter(f=>(f.contactIds||[]).includes(cid)).length;
+  const sortEl = document.getElementById('contactSort');
+  const sortBy = sortEl? sortEl.value : 'name';
+  if(sortBy==='newest') list = list.slice().reverse();
+  else if(sortBy==='linked') list = list.slice().sort((a,b)=> linkedCount(b.id)-linkedCount(a.id));
+  else list = list.slice().sort((a,b)=> (a.name||'').localeCompare(b.name||'','ar'));
   const grid = document.getElementById('contactGrid');
   if(!list.length){ grid.innerHTML = `<div class="empty-note">لا توجد جهات اتصال.</div>`; return; }
   grid.innerHTML = list.map(c=>{
@@ -2702,7 +2767,9 @@ function renderActivityPage(){
   const entEl = document.getElementById('logEntityFilter'), actEl = document.getElementById('logActionFilter');
   if(!entEl || !actEl) return;
   const entF = entEl.value, actF = actEl.value;
-  const list = ACTIVITY_LOG.filter(x=> (!entF||x.entity===entF) && (!actF||x.action===actF));
+  const sortEl = document.getElementById('logSort');
+  let list = ACTIVITY_LOG.filter(x=> (!entF||x.entity===entF) && (!actF||x.action===actF));
+  if(sortEl && sortEl.value==='oldest') list = list.slice().reverse();
   const el = document.getElementById('activityList');
   if(!list.length){ el.innerHTML = `<div class="empty-note">لا توجد عمليات مسجّلة بعد.</div>`; return; }
   el.innerHTML = list.map(x=>{
