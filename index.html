@@ -782,6 +782,16 @@
     </div>
 
     <div class="settings-block">
+      <h3 style="margin-bottom:4px;">العبارات المتغيّرة</h3>
+      <div class="settings-desc" style="margin-bottom:10px;">عبارات تظهر بالتناوب في منتصف الشريط العلوي، وتتغيّر تلقائيًا كل 5 دقائق (مثل: وأن ليس للإنسان إلا ما سعى).</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input type="text" id="newQuoteInput" placeholder="اكتب عبارة جديدة..." style="flex:1;" onkeydown="if(event.key==='Enter') addTopbarQuote();">
+        <button class="btn btn-primary btn-sm" onclick="addTopbarQuote()">+ إضافة</button>
+      </div>
+      <div id="quotesList"></div>
+    </div>
+
+    <div class="settings-block">
       <h3 style="margin-bottom:10px;">البيانات</h3>
       <div class="settings-desc">تصدير أو استيراد نسخة احتياطية كاملة من جميع الملفات والجولات وجهات الاتصال، أو إعادة الضبط على البيانات التجريبية.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1315,17 +1325,62 @@ function renderTopbarDate(){
   el.innerHTML = `<span>${g}</span><span class="td-sep">|</span><span>${h}</span>`;
 }
 
-/* ---------- TOPBAR QUOTE (preview) ---------- */
-let TOPBAR_QUOTES = ['وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ', 'لكل مجتهد نصيب'];
+/* ---------- TOPBAR QUOTE ---------- */
+let QUOTES = [];
+const SEED_QUOTES = ['وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ', 'لكل مجتهد نصيب'];
 let _quoteIdx = 0;
 function renderTopbarQuote(){
   const el = document.getElementById('topbarQuote');
-  if(!el || !TOPBAR_QUOTES.length) { if(el) el.innerHTML=''; return; }
-  _quoteIdx = _quoteIdx % TOPBAR_QUOTES.length;
-  el.innerHTML = `<span>${esc(TOPBAR_QUOTES[_quoteIdx])}</span>`;
+  if(!el || !QUOTES.length) { if(el) el.innerHTML=''; return; }
+  _quoteIdx = _quoteIdx % QUOTES.length;
+  el.innerHTML = `<span>${esc(QUOTES[_quoteIdx].text)}</span>`;
 }
 function nextTopbarQuote(){ _quoteIdx++; renderTopbarQuote(); }
 setInterval(nextTopbarQuote, 5*60*1000);
+function persistQuotes(changed, deleted){
+  _addIds(_chgIds.quotes, changed); _addIds(_delIds.quotes, deleted);
+  return _smartPersist('rd2:quotes', ()=>QUOTES, (arr)=>{QUOTES=arr;}, _chgIds.quotes, _delIds.quotes).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function renderQuotesList(){
+  const el = document.getElementById('quotesList');
+  if(!el) return;
+  if(!QUOTES.length){ el.innerHTML = `<div class="empty-note">لا توجد عبارات بعد. أضف أول عبارة أعلاه.</div>`; return; }
+  el.innerHTML = QUOTES.map(q=>`<div class="cat-row">
+      <span class="cname" style="flex:1;font-family:var(--font-display);letter-spacing:1px;">${esc(q.text)}</span>
+      <button class="btn btn-glass btn-sm" onclick="editTopbarQuote('${q.id}')">تعديل</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteTopbarQuote('${q.id}')">حذف</button>
+    </div>`).join('');
+}
+function addTopbarQuote(){
+  const input = document.getElementById('newQuoteInput');
+  const text = input.value.trim();
+  if(!text){ _showToast('اكتب نص العبارة أولاً','error'); return; }
+  const id = uid();
+  QUOTES.push({id, text});
+  input.value='';
+  renderQuotesList(); renderTopbarQuote();
+  persistQuotes(id);
+  _showToast('تمت الإضافة','success');
+}
+function editTopbarQuote(id){
+  const q = QUOTES.find(x=>x.id===id);
+  if(!q) return;
+  const next = prompt('تعديل العبارة:', q.text);
+  if(next===null) return;
+  const text = next.trim();
+  if(!text) return;
+  q.text = text;
+  renderQuotesList(); renderTopbarQuote();
+  persistQuotes(id);
+}
+function deleteTopbarQuote(id){
+  _showConfirm('حذف هذه العبارة؟', {destructive:true, confirmLabel:'حذف'}).then(ok=>{
+    if(!ok) return;
+    QUOTES = QUOTES.filter(x=>x.id!==id);
+    renderQuotesList(); renderTopbarQuote();
+    persistQuotes(null, id);
+  });
+}
 
 const SEED_CATEGORIES = [
   {id:'cat1', name:'قانوني', color:'accent'}, {id:'cat2', name:'مالي', color:'orange'},
@@ -1376,7 +1431,8 @@ function loadIfEmpty(){
     window.storage.get('rd2:tasks').catch(()=>null), window.storage.get('rd2:theme').catch(()=>null),
     window.storage.get(APP_SETTINGS_KEY).catch(()=>null), window.storage.get('rd2:categorygroups').catch(()=>null),
     window.storage.get('rd2:activitylog').catch(()=>null), window.storage.get('rd2:subfiles').catch(()=>null),
-  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf])=>{
+    window.storage.get('rd2:quotes').catch(()=>null),
+  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf,qt])=>{
     if(f&&f.value){try{FILES=JSON.parse(f.value);}catch(e){FILES=[];}}
     if(r&&r.value){try{ROUNDS=JSON.parse(r.value);}catch(e){ROUNDS=[];}}
     if(c&&c.value){try{CONTACTS=JSON.parse(c.value);}catch(e){CONTACTS=[];}}
@@ -1384,11 +1440,13 @@ function loadIfEmpty(){
     if(cgrp&&cgrp.value){try{CATEGORY_GROUPS=JSON.parse(cgrp.value);}catch(e){CATEGORY_GROUPS=[];}}
     if(alog&&alog.value){try{ACTIVITY_LOG=JSON.parse(alog.value);}catch(e){ACTIVITY_LOG=[];}}
     if(sf&&sf.value){try{SUBFILES=JSON.parse(sf.value);}catch(e){SUBFILES=[];}}
+    if(qt&&qt.value){try{QUOTES=JSON.parse(qt.value);}catch(e){QUOTES=[];}}
     if(tk&&tk.value){try{TASKS=JSON.parse(tk.value);}catch(e){TASKS=[];}}
     if(aset&&aset.value){ try{ APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS, JSON.parse(aset.value)); }catch(e){} }
     if(th&&th.value){setTheme(th.value,false);} else { applyAppSettings(); }
     let chain = Promise.resolve();
     if(!CATEGORIES.length){ CATEGORIES = SEED_CATEGORIES.slice(); chain = chain.then(persistCategories); }
+    if(!QUOTES.length){ QUOTES = SEED_QUOTES.map(text=>({id:uid(), text})); chain = chain.then(persistQuotes); }
     if(!CONTACTS.length){ CONTACTS = SEED_CONTACTS.map(c=>({id:uid(),...c})); chain = chain.then(persistContacts); }
     if(!FILES.length){
       FILES = SEED_FILES.map(f=>{
@@ -1463,8 +1521,8 @@ async function _smartPersist(key, getLocal, setLocal, changedIds, deletedIds){
    intended behavior. */
 function _hardPersist(key, arr){ return window.storage.set(key, JSON.stringify(arr)); }
 
-const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set()};
-const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set()};
+const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set()};
+const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set()};
 
 function persistFiles(changed, deleted){
   _addIds(_chgIds.files, changed); _addIds(_delIds.files, deleted);
@@ -2637,6 +2695,7 @@ function renderSettings(){
     return `<div class="cat-row"><span class="cat-dot" style="background:${col.val}"></span><span class="cname">${esc(c.name)} <span style="color:var(--text-3);font-weight:400;">(${count} ملف)</span></span><button class="btn btn-glass btn-sm" onclick="openCatModal('${c.id}')">تعديل</button></div>`;
   }).join('');
   renderCategoryGroups();
+  renderQuotesList();
 }
 function renderCategoryGroups(){
   const el = document.getElementById('catGroupList');
@@ -3087,7 +3146,7 @@ scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'s
 /* ---------- INIT ---------- */
 renderTopbarDate();
 renderTopbarQuote();
-loadIfEmpty().then(()=>{ renderHome(); renderContacts(); renderSettings(); });
+loadIfEmpty().then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
 </script>
 </body>
 </html>
