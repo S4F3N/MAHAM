@@ -266,6 +266,33 @@
   .ac-del{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--surface-3);color:var(--text-3);font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}
   .ac-del:hover{background:var(--red-glow);color:var(--red);}
 
+  /* ---- open-actions controls + grouping ---- */
+  .oc-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .oc-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
+  .oc-btn:hover{background:var(--surface-2);color:var(--text-1);}
+  .oc-btn.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent);}
+  .oc-select{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:var(--font-body);}
+  .oc-groups-pop{position:relative;}
+  .oc-groups-drop{position:absolute;top:calc(100% + 6px);right:0;min-width:220px;background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:0 10px 30px rgba(0,0,0,.3);padding:10px;display:none;z-index:120;}
+  .oc-groups-drop.open{display:block;}
+  .oc-groups-drop label{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 4px;cursor:pointer;border-radius:6px;}
+  .oc-groups-drop label:hover{background:var(--surface-1);}
+
+  .og-section{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;}
+  .og-header{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none;}
+  .og-header:hover{background:var(--surface-2);}
+  .og-header .og-name{font-weight:700;font-size:14px;flex:1;}
+  .og-header .og-count{background:var(--surface-3);color:var(--text-2);font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;}
+  .og-chevron{transition:transform .22s var(--ease-out-quart);color:var(--text-3);font-size:12px;}
+  .og-section.expanded .og-chevron{transform:rotate(180deg);}
+  .og-body{display:none;padding:0 16px 14px;}
+  .og-section.expanded .og-body{display:block;}
+  .og-body-head{display:flex;justify-content:flex-end;margin-bottom:8px;}
+  .og-expand-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;font-size:11px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:4px;}
+  .og-expand-btn:hover{background:var(--surface-2);color:var(--text-1);}
+  .og-body .action-cards{margin-bottom:0;}
+  .og-body .open-list{margin-bottom:0;}
+
   .p-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;}
   .p-dot.عاجل{background:var(--red);} .p-dot.متوسط{background:var(--orange);} .p-dot.عادي{background:var(--text-3);}
 
@@ -582,6 +609,28 @@
     </div>
 
     <div class="section-head"><h2>إجراءات مطلوبة لم تُنفذ بعد</h2></div>
+    <div class="oc-controls" id="openControls">
+      <button class="oc-btn" id="ocGroupToggleBtn" onclick="toggleOpenGrouping()">🗂 تجميع حسب المجموعة</button>
+      <select class="oc-select" id="ocSort" onchange="setOpenSort(this.value)">
+        <option value="default">الترتيب الافتراضي</option>
+        <option value="due">الأقرب استحقاقًا</option>
+        <option value="priority">الأولوية</option>
+        <option value="newest">الأحدث أولاً</option>
+        <option value="oldest">الأقدم أولاً</option>
+      </select>
+      <select class="oc-select" id="ocFilter" onchange="setOpenFilter(this.value)">
+        <option value="">كل الحالات</option>
+        <option value="overdue">المتأخرة فقط</option>
+        <option value="عاجل">العاجلة فقط</option>
+        <option value="لم">لم يُنفذ</option>
+        <option value="جارٍ">جارٍ التنفيذ</option>
+      </select>
+      <div class="oc-groups-pop" id="ocGroupsPop">
+        <button class="oc-btn" onclick="toggleGroupsPop(event)">👁 إظهار/إخفاء المجموعات</button>
+        <div class="oc-groups-drop" id="ocGroupsDrop"></div>
+      </div>
+    </div>
+    <div id="openGrouped"></div>
     <div class="action-cards" id="openList"></div>
 
   </section>
@@ -1303,7 +1352,7 @@ const ACCENT_HEX = {
   purple:{dark:'#bf5af2',light:'#9526c9'}, tc:{dark:'#64d2ff',light:'#0091b3'},
 };
 const APP_SETTINGS_KEY = 'rd2:appsettings';
-const DEFAULT_APP_SETTINGS = {accent:'accent', fontScale:'normal', eyeComfort:false, dueWarnDays:3, quoteFont:'display', quoteSize:19, quoteSpacing:'extended', quoteWeight:600, quoteColor:''};
+const DEFAULT_APP_SETTINGS = {accent:'accent', fontScale:'normal', eyeComfort:false, dueWarnDays:3, quoteFont:'display', quoteSize:19, quoteSpacing:'extended', quoteWeight:600, quoteColor:'', openGrouped:true, openSort:'default', openFilter:'', openHiddenGroups:[]};
 let APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS);
 function hexToRgba(hex, a){
   const h = hex.replace('#','');
@@ -1903,21 +1952,129 @@ function renderMiniCalDrop(){
   drop.innerHTML = html;
   drop.classList.add('open');
 }
-function renderOpenList(){
-  const order={'لم':0,'جارٍ':1}, prOrder={'عاجل':0,'متوسط':1,'عادي':2};
-  let open = pendingRounds().sort((a,b)=> (order[a.exec]-order[b.exec]) || (prOrder[a.priority]-prOrder[b.priority]) || (a.due||'9999').localeCompare(b.due||'9999'));
-  if(!open.length){ document.getElementById('openList').innerHTML = `<div class="empty-note">لا توجد إجراءات معلّقة حاليًا 👍</div>`; return; }
-  document.getElementById('openList').innerHTML = open.map(r=>{
-    const f = fileOf(r.fileId);
-    return `<div class="action-card" onclick="tapNav(event,'open','${r.id}')">
+let _ogExpanded = new Set();
+let _ogViewMode = new Map();
+function _openActionCardHtml(r){
+  const f = fileOf(r.fileId);
+  return `<div class="action-card" onclick="tapNav(event,'open','${r.id}')">
       <button class="ac-del" onclick="event.stopPropagation(); quickDelete('round','${r.id}')" title="حذف">✕</button>
       <div class="ic">${ROUND_TYPES[r.type]||'📌'}</div>
       <div class="ttl"><span class="p-dot ${r.priority}"></span> ${esc((r.actionNeeded||'بدون وصف').slice(0,70))}</div>
       <div class="ac-badges">${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
       <div class="sub">${f?esc(f.title):''}</div>
     </div>`;
+}
+function _openCompactRowHtml(r){
+  const f = fileOf(r.fileId);
+  return `<div class="open-item" onclick="tapNav(event,'open','${r.id}')">
+    <span class="ic">${ROUND_TYPES[r.type]||'📌'}</span>
+    <div style="flex:1;min-width:0;">
+      <div class="ttl">${esc((r.actionNeeded||'بدون وصف').slice(0,70))}</div>
+      <div class="sub">${f?esc(f.title):''} ${r.due?dueBadgeHtml(r.due):''} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+    </div>
+  </div>`;
+}
+function renderOpenList(){
+  const order={'لم':0,'جارٍ':1}, prOrder={'عاجل':0,'متوسط':1,'عادي':2};
+  let open = pendingRounds();
+  const filt = APP_SETTINGS.openFilter||'';
+  if(filt==='overdue') open = open.filter(r=>r.due && daysUntil(r.due)<0);
+  else if(filt==='عاجل') open = open.filter(r=>r.priority==='عاجل');
+  else if(filt==='لم' || filt==='جارٍ') open = open.filter(r=>r.exec===filt);
+
+  const sortMode = APP_SETTINGS.openSort||'default';
+  open = open.slice().sort((a,b)=>{
+    if(sortMode==='due') return (a.due||'9999').localeCompare(b.due||'9999');
+    if(sortMode==='priority') return prOrder[a.priority]-prOrder[b.priority];
+    if(sortMode==='newest') return (b.id||'').localeCompare(a.id||'');
+    if(sortMode==='oldest') return (a.id||'').localeCompare(b.id||'');
+    return (order[a.exec]-order[b.exec]) || (prOrder[a.priority]-prOrder[b.priority]) || (a.due||'9999').localeCompare(b.due||'9999');
+  });
+
+  const sortEl = document.getElementById('ocSort'); if(sortEl) sortEl.value = sortMode;
+  const filterEl = document.getElementById('ocFilter'); if(filterEl) filterEl.value = filt;
+  const groupBtn = document.getElementById('ocGroupToggleBtn'); if(groupBtn) groupBtn.classList.toggle('active', !!APP_SETTINGS.openGrouped);
+
+  const flatEl = document.getElementById('openList');
+  const groupedEl = document.getElementById('openGrouped');
+
+  if(!open.length){
+    flatEl.style.display=''; flatEl.innerHTML = `<div class="empty-note">لا توجد إجراءات معلّقة حاليًا 👍</div>`;
+    groupedEl.innerHTML='';
+    return;
+  }
+
+  if(!APP_SETTINGS.openGrouped){
+    groupedEl.innerHTML='';
+    flatEl.style.display='';
+    flatEl.innerHTML = open.map(_openActionCardHtml).join('');
+    return;
+  }
+
+  flatEl.style.display='none';
+  flatEl.innerHTML='';
+
+  const buckets = new Map();
+  open.forEach(r=>{
+    const f = fileOf(r.fileId);
+    const gid = (f && f.groupId) || 'none';
+    if(!buckets.has(gid)){
+      const g = CATEGORY_GROUPS.find(x=>x.id===gid);
+      buckets.set(gid, {id:gid, name: g ? g.name : 'بدون مجموعة', items:[]});
+    }
+    buckets.get(gid).items.push(r);
+  });
+
+  const hidden = new Set(APP_SETTINGS.openHiddenGroups||[]);
+  const orderedBuckets = Array.from(buckets.values()).sort((a,b)=> b.items.length - a.items.length);
+  const visibleBuckets = orderedBuckets.filter(b=>!hidden.has(b.id));
+
+  if(!visibleBuckets.length){
+    groupedEl.innerHTML = `<div class="empty-note">كل المجموعات مخفية حاليًا — استخدم "إظهار/إخفاء المجموعات" لإظهارها 👁</div>`;
+    return;
+  }
+
+  groupedEl.innerHTML = visibleBuckets.map(b=>{
+    const expanded = _ogExpanded.has(b.id);
+    const viewMode = _ogViewMode.get(b.id)||'compact';
+    let bodyHtml='';
+    if(expanded){
+      bodyHtml = viewMode==='full'
+        ? `<div class="action-cards">${b.items.map(_openActionCardHtml).join('')}</div>`
+        : `<div class="open-list">${b.items.map(_openCompactRowHtml).join('')}</div>`;
+    }
+    return `<div class="og-section ${expanded?'expanded':''}" data-gid="${b.id}">
+      <div class="og-header" onclick="toggleGroupExpand('${b.id}')">
+        <span class="og-chevron">▾</span>
+        <span class="og-name">${esc(b.name)}</span>
+        <span class="og-count">${b.items.length}</span>
+      </div>
+      <div class="og-body">
+        ${expanded ? `<div class="og-body-head"><button class="og-expand-btn" onclick="event.stopPropagation(); toggleGroupView('${b.id}')">${viewMode==='full'?'▲ عرض مصغّر':'▼ عرض كامل'}</button></div>` : ''}
+        ${bodyHtml}
+      </div>
+    </div>`;
   }).join('');
 }
+function toggleOpenGrouping(){ APP_SETTINGS.openGrouped = !APP_SETTINGS.openGrouped; persistAppSettings(); renderOpenList(); }
+function setOpenSort(v){ APP_SETTINGS.openSort=v; persistAppSettings(); renderOpenList(); }
+function setOpenFilter(v){ APP_SETTINGS.openFilter=v; persistAppSettings(); renderOpenList(); }
+function toggleGroupExpand(gid){ if(_ogExpanded.has(gid)) _ogExpanded.delete(gid); else _ogExpanded.add(gid); renderOpenList(); }
+function toggleGroupView(gid){ const cur=_ogViewMode.get(gid)||'compact'; _ogViewMode.set(gid, cur==='compact'?'full':'compact'); renderOpenList(); }
+function toggleGroupsPop(e){ e.stopPropagation(); renderGroupsPopContent(); document.getElementById('ocGroupsDrop').classList.toggle('open'); }
+function renderGroupsPopContent(){
+  const el = document.getElementById('ocGroupsDrop'); if(!el) return;
+  const hidden = new Set(APP_SETTINGS.openHiddenGroups||[]);
+  const allGroups = [...CATEGORY_GROUPS.map(g=>({id:g.id,name:g.name})), {id:'none', name:'بدون مجموعة'}];
+  el.innerHTML = allGroups.map(g=>`<label><input type="checkbox" ${hidden.has(g.id)?'':'checked'} onchange="toggleGroupVisibility('${g.id}')"> ${esc(g.name)}</label>`).join('');
+}
+function toggleGroupVisibility(gid){
+  const hidden = new Set(APP_SETTINGS.openHiddenGroups||[]);
+  if(hidden.has(gid)) hidden.delete(gid); else hidden.add(gid);
+  APP_SETTINGS.openHiddenGroups = Array.from(hidden);
+  persistAppSettings(); renderOpenList(); renderGroupsPopContent();
+}
+document.addEventListener('click', (e)=>{ if(!e.target.closest('#ocGroupsPop')){ const d=document.getElementById('ocGroupsDrop'); if(d) d.classList.remove('open'); } });
 function populateCatFilter(){
   const sel = document.getElementById('catFilter'); const cur = sel.value;
   sel.innerHTML = '<option value="">كل التصنيفات</option>' + CATEGORIES.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
