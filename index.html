@@ -556,6 +556,7 @@
     </div>
     <div class="filter-bar">
       <div class="search-box"><input type="text" id="fileSearch" placeholder="بحث بالاسم أو الطرف..." oninput="renderFiles()"></div>
+      <select id="groupFilter" onchange="renderFiles()"><option value="">كل المجموعات</option></select>
       <select id="catFilter" onchange="renderFiles()"><option value="">كل التصنيفات</option></select>
       <select id="statusFilter" onchange="renderFiles()"><option value="">كل الحالات</option><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option></select>
       <select id="priorityFilterHome" onchange="renderFiles()"><option value="">كل الأولويات</option><option value="عاجل">عاجل</option><option value="متوسط">متوسط</option><option value="عادي">عادي</option></select>
@@ -740,8 +741,11 @@
     <h3 id="fileModalTitle">ملف جديد</h3>
     <input type="hidden" id="fId">
     <div class="form-row"><label>عنوان الملف</label><input type="text" id="fTitle" placeholder="مثال: نزاع إيجار مستودع - البلوي"></div>
-    <div class="form-3col">
+    <div class="form-2col">
+      <div class="form-row"><label>المجموعة</label><select id="fGroup"><option value="">بدون مجموعة</option></select></div>
       <div class="form-row"><label>التصنيف</label><select id="fCategory"></select></div>
+    </div>
+    <div class="form-2col">
       <div class="form-row"><label>الحالة</label><select id="fStatus"><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option></select></div>
       <div class="form-row"><label>الأولوية</label><select id="fPriority"><option value="عاجل">عاجل</option><option value="متوسط" selected>متوسط</option><option value="عادي">عادي</option></select></div>
     </div>
@@ -1334,6 +1338,8 @@ function fileOf(id){ return FILES.find(f=>f.id===id); }
 function contactOf(id){ return CONTACTS.find(c=>c.id===id); }
 function catOf(name){ return CATEGORIES.find(c=>c.name===name) || {name, color:'accent'}; }
 function catBadge(name){ const c = catOf(name); const col=COLORS.find(x=>x.name===c.color)||COLORS[0]; return `<span class="badge" style="background:${col.glow};color:${col.val}">${esc(name)}</span>`; }
+function groupOf(id){ return id? CATEGORY_GROUPS.find(g=>g.id===id) : null; }
+function groupBadge(id){ const g = groupOf(id); if(!g) return ''; return `<span class="badge" style="background:var(--surface-3);color:var(--text-2)">📁 ${esc(g.name)}</span>`; }
 function pendingRounds(){ return ROUNDS.filter(r=>r.exec!=='تم'); }
 function isFileAtRisk(f){ const rs=ROUNDS.filter(r=>r.fileId===f.id); return rs.some(r=> r.exec!=='تم' && r.due && daysUntil(r.due)<0); }
 function nextActionFor(fileId){
@@ -1447,7 +1453,7 @@ function goToCalendarDay(dateStr){
 
 /* ---------- HOME ---------- */
 function renderHome(){ renderStats(); renderChart(); renderMiniCal(); renderOpenList(); renderNotif(); }
-function renderFilesPage(){ populateCatFilter(); renderFiles(); }
+function renderFilesPage(){ populateCatFilter(); populateGroupFilter(); renderFiles(); }
 function renderStats(){
   const activeFiles = FILES.filter(f=>f.status==='نشط').length;
   const open = pendingRounds();
@@ -1557,11 +1563,17 @@ function populateCatFilter(){
   sel.innerHTML = '<option value="">كل التصنيفات</option>' + CATEGORIES.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
   sel.value = cur;
 }
+function populateGroupFilter(){
+  const sel = document.getElementById('groupFilter'); const cur = sel.value;
+  sel.innerHTML = '<option value="">كل المجموعات</option>' + CATEGORY_GROUPS.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  sel.value = cur;
+}
 function togglePinnedFilter(){ pinnedOnly=!pinnedOnly; document.getElementById('pinnedChip').classList.toggle('active',pinnedOnly); renderFiles(); }
 function renderFiles(){
   const q=(document.getElementById('fileSearch').value||'').trim().toLowerCase();
-  const catF=document.getElementById('catFilter').value, stF=document.getElementById('statusFilter').value, prF=document.getElementById('priorityFilterHome').value;
+  const grpF=document.getElementById('groupFilter').value, catF=document.getElementById('catFilter').value, stF=document.getElementById('statusFilter').value, prF=document.getElementById('priorityFilterHome').value;
   let list = FILES.filter(f=>{
+    if(grpF && f.groupId!==grpF) return false;
     if(catF && f.category!==catF) return false;
     if(stF && f.status!==stF) return false;
     if(prF && f.priority!==prF) return false;
@@ -1582,7 +1594,7 @@ function renderFiles(){
       <button class="swipe-del-btn" onclick="event.stopPropagation(); quickDelete('file','${f.id}')">🗑<br>حذف</button>
       <div class="swipeable-inner file-card" onclick="tapNav(event,'file','${f.id}')">
         <div class="f-top"><span class="p-dot ${f.priority}"></span><span class="f-title">${esc(f.title)}</span>${f.pinned?'<span class="star">⭐</span>':''}</div>
-        <div class="f-badges">${catBadge(f.category)}<span class="badge status-${f.status}">${f.status}</span></div>
+        <div class="f-badges">${groupBadge(f.groupId)}${catBadge(f.category)}<span class="badge status-${f.status}">${f.status}</span></div>
         <div class="f-bar"><div class="f-fill" style="transform:scaleX(${pct})"></div></div>
         <div class="f-meta"><span>${rs.length} جولة</span><span>${last?'آخر تحديث '+fmtDate(last.date):'بدون جولات'}</span></div>
         ${(f.tags&&f.tags.length)?`<div class="f-tags">${f.tags.slice(0,3).map(t=>`<span class="tag-chip">${esc(t)}</span>`).join('')}</div>`:''}
@@ -1896,6 +1908,7 @@ function quickAddRound(){
 /* ---------- FILE MODAL ---------- */
 function populateFileFormSelects(){
   document.getElementById('fCategory').innerHTML = CATEGORIES.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+  document.getElementById('fGroup').innerHTML = '<option value="">بدون مجموعة</option>' + CATEGORY_GROUPS.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
   document.getElementById('fContactsList').innerHTML = CONTACTS.length? CONTACTS.map(c=>`<label><input type="checkbox" value="${c.id}" class="fContactChk"> ${esc(c.name)} ${c.role?'— '+esc(c.role):''}</label>`).join('') : `<div class="empty-note" style="padding:6px 0;">لا توجد جهات اتصال بعد</div>`;
 }
 function openFileModal(id){
@@ -1906,6 +1919,7 @@ function openFileModal(id){
     document.getElementById('fileModalTitle').innerText = 'تعديل الملف';
     document.getElementById('fTitle').value = f.title;
     document.getElementById('fCategory').value = f.category;
+    document.getElementById('fGroup').value = f.groupId||'';
     document.getElementById('fStatus').value = f.status;
     document.getElementById('fPriority').value = f.priority||'متوسط';
     document.getElementById('fParty').value = f.party||'';
@@ -1934,6 +1948,7 @@ function collectFileForm(){
   return {
     title: document.getElementById('fTitle').value.trim(),
     category: document.getElementById('fCategory').value,
+    groupId: document.getElementById('fGroup').value,
     status: document.getElementById('fStatus').value,
     priority: document.getElementById('fPriority').value,
     party: document.getElementById('fParty').value.trim(),
@@ -1998,7 +2013,7 @@ function renderFilePage(){
     <div class="fh-top">
       <div>
         <h2>${esc(f.title)} <span onclick="togglePin('${f.id}',event)" style="cursor:pointer">${f.pinned?'⭐':'☆'}</span></h2>
-        <div class="fh-badges"><span class="p-dot ${f.priority}"></span> ${catBadge(f.category)}<span class="badge status-${f.status}">${f.status}</span> ${risk?'<span class="badge due-late">⚠ يحتاج انتباه</span>':''}</div>
+        <div class="fh-badges"><span class="p-dot ${f.priority}"></span> ${groupBadge(f.groupId)}${catBadge(f.category)}<span class="badge status-${f.status}">${f.status}</span> ${risk?'<span class="badge due-late">⚠ يحتاج انتباه</span>':''}</div>
         ${(function(){
           const na = nextActionFor(f.id);
           if(!na) return '';
@@ -2319,8 +2334,10 @@ function deleteGroup(id, fromModal){
     if(!ok) return;
     const _g = CATEGORY_GROUPS.find(g=>g.id===id);
     CATEGORY_GROUPS = CATEGORY_GROUPS.filter(g=>g.id!==id);
-    logActivity('delete','group', `حذف مجموعة تصنيفات: ${_g?_g.name:''}`);
-    persistCategoryGroups().then(()=>{ if(fromModal) closeGroupModal(); renderCategoryGroups(); _showToast('تم الحذف'); });
+    let filesCleared = 0;
+    FILES.forEach(f=>{ if(f.groupId===id){ f.groupId=''; filesCleared++; } });
+    logActivity('delete','group', `حذف مجموعة تصنيفات: ${_g?_g.name:''}${filesCleared?` (وإزالة ربطها من ${filesCleared} ملف)`:''}`);
+    Promise.all([persistCategoryGroups(), filesCleared?persistFiles():Promise.resolve()]).then(()=>{ if(fromModal) closeGroupModal(); renderCategoryGroups(); if(document.getElementById('page-files').classList.contains('active')) renderFiles(); _showToast('تم الحذف'); });
   });
 }
 function addCatToGroup(groupId, catId){
@@ -2397,6 +2414,7 @@ const LOG_ACTION_ICONS = {add:'✚', edit:'✎', delete:'🗑', restore:'↺', e
 const LOG_ENTITY_LABELS = {file:'ملف', round:'جولة متابعة', contact:'جهة اتصال', task:'مهمة/موعد', category:'تصنيف', group:'مجموعة تصنيفات', data:'بيانات عامة'};
 function fileDetailText(d){
   const l=[];
+  if(d.groupId){ const g=groupOf(d.groupId); if(g) l.push(`المجموعة: ${g.name}`); }
   if(d.category) l.push(`التصنيف: ${d.category}`);
   if(d.status) l.push(`الحالة: ${d.status}`);
   if(d.priority) l.push(`الأولوية: ${d.priority}`);
