@@ -309,6 +309,13 @@
   .fh-actions{display:flex;gap:6px;flex-wrap:wrap;}
 
   .round-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .subfile-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .subfile-chip{background:var(--surface-1);border:1px solid var(--border);border-radius:20px;padding:7px 8px 7px 12px;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--text-1);}
+  .subfile-chip:hover{background:var(--surface-2);}
+  .subfile-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .subfile-chip .sf-count{opacity:.7;font-size:11px;}
+  .subfile-chip .sf-edit{opacity:.55;font-size:11px;padding:2px 4px;border-radius:50%;}
+  .subfile-chip .sf-edit:hover{opacity:1;background:rgba(0,0,0,.15);}
 
   .round-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:17px 19px;margin-bottom:13px;backdrop-filter:var(--blur);border-right:4px solid var(--text-3);}
   .round-card.exec-تم{background:rgba(48,209,88,0.04);border-color:rgba(48,209,88,0.4);}
@@ -570,6 +577,11 @@
     <button class="back-btn" onclick="goToFilesPage()">→ رجوع للملفات</button>
     <div class="file-header" id="fileHeaderBox"></div>
 
+    <div class="section-head"><h3 style="font-size:14px;">المسارات الفرعية</h3>
+      <button class="btn btn-glass btn-sm" onclick="openSubfileModal()">+ مسار جديد</button>
+    </div>
+    <div class="subfile-chips" id="subfileChips"></div>
+
     <div class="section-head"><h2>سجل الجولات</h2>
       <div style="display:flex;gap:6px;">
         <button class="btn btn-glass btn-sm" onclick="window.print()">🖨 طباعة التقرير</button>
@@ -775,6 +787,7 @@
     <div class="modal-handle"></div>
     <h3 id="roundModalTitle">جولة متابعة جديدة</h3>
     <input type="hidden" id="rId">
+    <div class="form-row"><label>المسار الفرعي (اختياري)</label><select id="rSubfile"><option value="">عام — بدون مسار محدد</option></select></div>
     <div class="form-3col">
       <div class="form-row"><label>تاريخ الجولة</label><input type="date" id="rDate"></div>
       <div class="form-row"><label>نوع الجولة</label>
@@ -806,6 +819,26 @@
       <button class="btn btn-danger" id="rDeleteBtn" onclick="deleteRound()" style="display:none">حذف الجولة</button>
       <button class="btn btn-glass" onclick="closeRoundModal()">إلغاء</button>
       <button class="btn btn-filled" onclick="saveRound()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBFILE (SUB-TRACK) MODAL -->
+<div class="overlay" id="subfileOverlay">
+  <div class="modal narrow">
+    <div class="modal-handle"></div>
+    <h3 id="subfileModalTitle">مسار فرعي جديد</h3>
+    <input type="hidden" id="sfId">
+    <div class="form-row"><label>اسم المسار / الفرع</label><input type="text" id="sfTitle" placeholder="مثال: المسار الجزائي"></div>
+    <div class="form-2col">
+      <div class="form-row"><label>الحالة</label><select id="sfStatus"><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option></select></div>
+      <div class="form-row"><label>الأولوية</label><select id="sfPriority"><option value="عاجل">عاجل</option><option value="متوسط" selected>متوسط</option><option value="عادي">عادي</option></select></div>
+    </div>
+    <div class="form-row"><label>ملاحظات</label><textarea id="sfNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="sfDeleteBtn" onclick="deleteSubfile()" style="display:none">حذف المسار</button>
+      <button class="btn btn-glass" onclick="closeSubfileModal()">إلغاء</button>
+      <button class="btn btn-filled" onclick="saveSubfile()">حفظ</button>
     </div>
   </div>
 </div>
@@ -1200,10 +1233,10 @@ function renderAppearanceControls(){
   }
 }
 
-let FILES=[], ROUNDS=[], CONTACTS=[], CATEGORIES=[], CATEGORY_GROUPS=[], TASKS=[], ACTIVITY_LOG=[], currentFileId=null, pinnedOnly=false;
+let FILES=[], ROUNDS=[], CONTACTS=[], CATEGORIES=[], CATEGORY_GROUPS=[], TASKS=[], ACTIVITY_LOG=[], SUBFILES=[], currentFileId=null, pinnedOnly=false;
 let calMonth = new Date(); calMonth.setDate(1);
 let selectedDay = new Date().toISOString().slice(0,10);
-let roundFilterExec='', roundFilterType='';
+let roundFilterExec='', roundFilterType='', roundFilterTrack='';
 let _lastDeleted=null;
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const today = () => new Date().toISOString().slice(0,10);
@@ -1256,14 +1289,15 @@ function loadIfEmpty(){
     window.storage.get('rd2:contacts').catch(()=>null), window.storage.get('rd2:categories').catch(()=>null),
     window.storage.get('rd2:tasks').catch(()=>null), window.storage.get('rd2:theme').catch(()=>null),
     window.storage.get(APP_SETTINGS_KEY).catch(()=>null), window.storage.get('rd2:categorygroups').catch(()=>null),
-    window.storage.get('rd2:activitylog').catch(()=>null),
-  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog])=>{
+    window.storage.get('rd2:activitylog').catch(()=>null), window.storage.get('rd2:subfiles').catch(()=>null),
+  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf])=>{
     if(f&&f.value){try{FILES=JSON.parse(f.value);}catch(e){FILES=[];}}
     if(r&&r.value){try{ROUNDS=JSON.parse(r.value);}catch(e){ROUNDS=[];}}
     if(c&&c.value){try{CONTACTS=JSON.parse(c.value);}catch(e){CONTACTS=[];}}
     if(cat&&cat.value){try{CATEGORIES=JSON.parse(cat.value);}catch(e){CATEGORIES=[];}}
     if(cgrp&&cgrp.value){try{CATEGORY_GROUPS=JSON.parse(cgrp.value);}catch(e){CATEGORY_GROUPS=[];}}
     if(alog&&alog.value){try{ACTIVITY_LOG=JSON.parse(alog.value);}catch(e){ACTIVITY_LOG=[];}}
+    if(sf&&sf.value){try{SUBFILES=JSON.parse(sf.value);}catch(e){SUBFILES=[];}}
     if(tk&&tk.value){try{TASKS=JSON.parse(tk.value);}catch(e){TASKS=[];}}
     if(aset&&aset.value){ try{ APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS, JSON.parse(aset.value)); }catch(e){} }
     if(th&&th.value){setTheme(th.value,false);} else { applyAppSettings(); }
@@ -1343,8 +1377,8 @@ async function _smartPersist(key, getLocal, setLocal, changedIds, deletedIds){
    intended behavior. */
 function _hardPersist(key, arr){ return window.storage.set(key, JSON.stringify(arr)); }
 
-const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set()};
-const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set()};
+const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set()};
+const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set()};
 
 function persistFiles(changed, deleted){
   _addIds(_chgIds.files, changed); _addIds(_delIds.files, deleted);
@@ -1365,6 +1399,10 @@ function persistCategories(changed, deleted){
 function persistCategoryGroups(changed, deleted){
   _addIds(_chgIds.groups, changed); _addIds(_delIds.groups, deleted);
   return _smartPersist('rd2:categorygroups', ()=>CATEGORY_GROUPS, (arr)=>{CATEGORY_GROUPS=arr;}, _chgIds.groups, _delIds.groups).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistSubfiles(changed, deleted){
+  _addIds(_chgIds.subfiles, changed); _addIds(_delIds.subfiles, deleted);
+  return _smartPersist('rd2:subfiles', ()=>SUBFILES, (arr)=>{SUBFILES=arr;}, _chgIds.subfiles, _delIds.subfiles).catch(()=>_showToast('تعذر الحفظ','error'));
 }
 function persistActivityLog(){ return window.storage.set('rd2:activitylog', JSON.stringify(ACTIVITY_LOG)).catch(()=>{}); }
 function logActivity(action, entity, summary, detail){
@@ -1420,6 +1458,8 @@ function catOf(name){ return CATEGORIES.find(c=>c.name===name) || {name, color:'
 function catBadge(name){ const c = catOf(name); const col=COLORS.find(x=>x.name===c.color)||COLORS[0]; return `<span class="badge" style="background:${col.glow};color:${col.val}">${esc(name)}</span>`; }
 function groupOf(id){ return id? CATEGORY_GROUPS.find(g=>g.id===id) : null; }
 function groupBadge(id){ const g = groupOf(id); if(!g) return ''; return `<span class="badge" style="background:var(--surface-3);color:var(--text-2)">📁 ${esc(g.name)}</span>`; }
+function subfileOf(id){ return id? SUBFILES.find(s=>s.id===id) : null; }
+function subfileBadge(id){ const s = subfileOf(id); if(!s) return ''; return `<span class="badge" style="background:var(--surface-3);color:var(--text-2)">🧭 ${esc(s.title)}</span>`; }
 function pendingRounds(){ return ROUNDS.filter(r=>r.exec!=='تم'); }
 function isFileAtRisk(f){ const rs=ROUNDS.filter(r=>r.fileId===f.id); return rs.some(r=> r.exec!=='تم' && r.due && daysUntil(r.due)<0); }
 function nextActionFor(fileId){
@@ -1512,7 +1552,7 @@ function goToFile(id){
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-file').classList.add('active');
-  currentFileId=id; roundFilterExec=''; roundFilterType='';
+  currentFileId=id; roundFilterExec=''; roundFilterType=''; roundFilterTrack='';
   renderFilePage();
 }
 function goToCalendarDay(dateStr){
@@ -2075,15 +2115,17 @@ function togglePin(id, ev){
 function deleteFile(){ deleteFileById(document.getElementById('fId').value, true); }
 function deleteFileById(id, fromModal){
   const relatedRounds = ROUNDS.filter(r=>r.fileId===id);
+  const relatedSubfiles = SUBFILES.filter(s=>s.fileId===id);
   const f = FILES.find(x=>x.id===id);
   _showConfirm(relatedRounds.length? `هذا الملف يحتوي ${relatedRounds.length} جولة متابعة. سيتم حذفها معه. متابعة؟` : 'حذف هذا الملف؟', {destructive:true, confirmLabel:'حذف'}).then(ok=>{
     if(!ok) return;
     haptic();
-    _lastDeleted = {type:'file', file:f, rounds:relatedRounds};
+    _lastDeleted = {type:'file', file:f, rounds:relatedRounds, subfiles:relatedSubfiles};
     FILES = FILES.filter(x=>x.id!==id);
     ROUNDS = ROUNDS.filter(x=>x.fileId!==id);
+    SUBFILES = SUBFILES.filter(x=>x.fileId!==id);
     logActivity('delete','file', `حذف ملف: ${f?f.title:''}${relatedRounds.length?` (مع ${relatedRounds.length} جولة متابعة)`:''}`, f?fileDetailText(f):'');
-    Promise.all([persistFiles(null, id), persistRounds(null, relatedRounds.map(r=>r.id))]).then(()=>{ if(fromModal) closeFileModal(); if(currentFileId===id) goToFilesPage(); else renderFiles(); _showToastUndo('تم حذف الملف'); });
+    Promise.all([persistFiles(null, id), persistRounds(null, relatedRounds.map(r=>r.id)), persistSubfiles(null, relatedSubfiles.map(s=>s.id))]).then(()=>{ if(fromModal) closeFileModal(); if(currentFileId===id) goToFilesPage(); else renderFiles(); _showToastUndo('تم حذف الملف'); });
   });
 }
 
@@ -2124,12 +2166,31 @@ function renderFilePage(){
     <span class="chip ${roundFilterExec==='جارٍ'?'active':''}" onclick="setRoundFilter('exec','جارٍ')">جارٍ</span>
     <span class="chip ${roundFilterExec==='تم'?'active':''}" onclick="setRoundFilter('exec','تم')">تم</span>
   `;
+  renderSubfileChips();
   renderRounds();
 }
 function setRoundFilter(kind,val){ if(kind==='exec') roundFilterExec = (roundFilterExec===val? '' : val); renderFilePage(); }
+function setRoundTrackFilter(val){ roundFilterTrack = val; renderFilePage(); }
+function renderSubfileChips(){
+  const el = document.getElementById('subfileChips');
+  if(!el) return;
+  const subs = SUBFILES.filter(s=>s.fileId===currentFileId);
+  const allRounds = ROUNDS.filter(r=>r.fileId===currentFileId);
+  const generalCount = allRounds.filter(r=>!r.subFileId).length;
+  let html = `<span class="subfile-chip ${roundFilterTrack===''?'active':''}" onclick="setRoundTrackFilter('')">الكل <span class="sf-count">(${allRounds.length})</span></span>`;
+  html += `<span class="subfile-chip ${roundFilterTrack==='__general__'?'active':''}" onclick="setRoundTrackFilter('__general__')">عام <span class="sf-count">(${generalCount})</span></span>`;
+  html += subs.map(s=>{
+    const cnt = allRounds.filter(r=>r.subFileId===s.id).length;
+    return `<span class="subfile-chip ${roundFilterTrack===s.id?'active':''}" onclick="setRoundTrackFilter('${s.id}')"><span class="p-dot ${s.priority}"></span> ${esc(s.title)} <span class="sf-count">(${cnt})</span><span class="sf-edit" onclick="event.stopPropagation(); openSubfileModal('${s.id}')">✎</span></span>`;
+  }).join('');
+  if(!subs.length) html += `<span class="empty-note" style="padding:6px 4px;">لا توجد مسارات فرعية بعد — أضف مسارًا لو الملف ماشي على أكثر من طريق</span>`;
+  el.innerHTML = html;
+}
 function renderRounds(){
   let list = ROUNDS.filter(r=>r.fileId===currentFileId);
   if(roundFilterExec) list = list.filter(r=>r.exec===roundFilterExec);
+  if(roundFilterTrack==='__general__') list = list.filter(r=>!r.subFileId);
+  else if(roundFilterTrack) list = list.filter(r=>r.subFileId===roundFilterTrack);
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(!list.length){ document.getElementById('roundsList').innerHTML = `<div class="empty-note">لا توجد جولات مطابقة — أضف أول جولة لتوثيق ما تم اكتشافه والإجراءات.</div>`; return; }
   document.getElementById('roundsList').innerHTML = list.map(r=>`
@@ -2137,7 +2198,7 @@ function renderRounds(){
     <button class="swipe-del-btn" onclick="event.stopPropagation(); quickDelete('round','${r.id}')">🗑<br>حذف</button>
     <div class="swipeable-inner round-card exec-${r.exec} p-${r.priority}" id="round-${r.id}">
       <div class="rc-top">
-        <div class="rc-top-left"><span class="rc-date">${ROUND_TYPES[r.type]||'📌'} ${fmtDate(r.date)}</span><span class="rc-type">${esc(r.type)}</span></div>
+        <div class="rc-top-left"><span class="rc-date">${ROUND_TYPES[r.type]||'📌'} ${fmtDate(r.date)}</span><span class="rc-type">${esc(r.type)}</span>${subfileBadge(r.subFileId)}</div>
         <span class="exec-pill ${r.exec}">${r.exec==='تم'?'تم التنفيذ':(r.exec==='جارٍ'?'جارٍ التنفيذ':'لم يُنفذ بعد')}</span>
       </div>
       <div class="rc-fields">
@@ -2172,7 +2233,78 @@ function markExecuted(id){
 }
 function scheduleFollowUp(id){
   const r = ROUNDS.find(x=>x.id===id);
-  openRoundModal(null, {date: r.due||today(), type:'تحديث داخلي', priority:r.priority, finding:'متابعة: '+(r.actionNeeded||''), responsible:r.responsible});
+  openRoundModal(null, {date: r.due||today(), type:'تحديث داخلي', priority:r.priority, finding:'متابعة: '+(r.actionNeeded||''), responsible:r.responsible, subFileId:r.subFileId});
+}
+
+/* ---------- SUBFILES (SUB-TRACKS) ---------- */
+function openSubfileModal(id){
+  document.getElementById('sfId').value = id||'';
+  if(id){
+    const s = SUBFILES.find(x=>x.id===id);
+    document.getElementById('subfileModalTitle').innerText = 'تعديل المسار';
+    document.getElementById('sfTitle').value = s.title||'';
+    document.getElementById('sfStatus').value = s.status||'نشط';
+    document.getElementById('sfPriority').value = s.priority||'متوسط';
+    document.getElementById('sfNotes').value = s.notes||'';
+    document.getElementById('sfDeleteBtn').style.display='inline-flex';
+  } else {
+    document.getElementById('subfileModalTitle').innerText = 'مسار فرعي جديد';
+    document.getElementById('sfTitle').value = '';
+    document.getElementById('sfStatus').value = 'نشط';
+    document.getElementById('sfPriority').value = 'متوسط';
+    document.getElementById('sfNotes').value = '';
+    document.getElementById('sfDeleteBtn').style.display='none';
+  }
+  document.getElementById('subfileOverlay').classList.add('open');
+}
+function closeSubfileModal(){ document.getElementById('subfileOverlay').classList.remove('open'); }
+function subfileDetailText(d){
+  const l=[];
+  if(d.status) l.push(`الحالة: ${d.status}`);
+  if(d.priority) l.push(`الأولوية: ${d.priority}`);
+  if(d.notes) l.push(`ملاحظات: ${d.notes}`);
+  return l.join('\n');
+}
+function saveSubfile(){
+  const id = document.getElementById('sfId').value;
+  const title = document.getElementById('sfTitle').value.trim();
+  if(!title){ _showToast('الرجاء إدخال اسم المسار','error'); return; }
+  const data = {
+    title,
+    status: document.getElementById('sfStatus').value,
+    priority: document.getElementById('sfPriority').value,
+    notes: document.getElementById('sfNotes').value.trim(),
+  };
+  const _f = fileOf(currentFileId);
+  let savedId = id;
+  if(id){
+    const idx = SUBFILES.findIndex(s=>s.id===id);
+    SUBFILES[idx] = {...SUBFILES[idx], ...data};
+    logActivity('edit','subfile', `تعديل مسار فرعي: ${title}${_f?' — '+_f.title:''}`, subfileDetailText(data));
+  } else {
+    savedId = uid();
+    SUBFILES.push({id:savedId, fileId: currentFileId, ...data});
+    logActivity('add','subfile', `إضافة مسار فرعي جديد: ${title}${_f?' — '+_f.title:''}`, subfileDetailText(data));
+  }
+  persistSubfiles(savedId).then(()=>{ closeSubfileModal(); renderFilePage(); _showToast('تم الحفظ','success'); });
+}
+function deleteSubfile(){
+  const id = document.getElementById('sfId').value;
+  const s = SUBFILES.find(x=>x.id===id);
+  const roundCount = ROUNDS.filter(r=>r.subFileId===id).length;
+  _showConfirm(roundCount? `يوجد ${roundCount} جولة مرتبطة بهذا المسار — ستبقى الجولات لكن ستصبح "عامة" بدون مسار محدد. متابعة؟` : 'حذف هذا المسار الفرعي؟', {destructive:true, confirmLabel:'حذف'}).then(ok=>{
+    if(!ok) return;
+    SUBFILES = SUBFILES.filter(x=>x.id!==id);
+    const affectedRoundIds = [];
+    ROUNDS.forEach(r=>{ if(r.subFileId===id){ r.subFileId=''; affectedRoundIds.push(r.id); } });
+    logActivity('delete','subfile', `حذف مسار فرعي: ${s?s.title:''}${affectedRoundIds.length?` (وتحويل ${affectedRoundIds.length} جولة إلى عامة)`:''}`, s?subfileDetailText(s):'');
+    Promise.all([persistSubfiles(null, id), affectedRoundIds.length?persistRounds(affectedRoundIds):Promise.resolve()]).then(()=>{
+      closeSubfileModal();
+      if(roundFilterTrack===id) roundFilterTrack='';
+      renderFilePage();
+      _showToast('تم الحذف');
+    });
+  });
 }
 
 /* ---------- ROUND MODAL ---------- */
@@ -2187,8 +2319,15 @@ function populateRoundContacts(selectedIds){
   selectedIds = selectedIds||[];
   document.getElementById('rContactsList').innerHTML = CONTACTS.length? CONTACTS.map(c=>`<label><input type="checkbox" value="${c.id}" class="rContactChk" ${selectedIds.includes(c.id)?'checked':''}> ${esc(c.name)} ${c.role?'— '+esc(c.role):''}</label>`).join('') : `<div class="empty-note" style="padding:6px 0;">لا توجد جهات اتصال بعد</div>`;
 }
+function populateRoundSubfiles(selectedId){
+  const sel = document.getElementById('rSubfile');
+  const subs = SUBFILES.filter(s=>s.fileId===currentFileId);
+  sel.innerHTML = '<option value="">عام — بدون مسار محدد</option>' + subs.map(s=>`<option value="${s.id}">${esc(s.title)}</option>`).join('');
+  sel.value = selectedId||'';
+}
 function openRoundModal(id, prefill){
   document.getElementById('rId').value = id||'';
+  populateRoundSubfiles(id ? (ROUNDS.find(x=>x.id===id)||{}).subFileId : (prefill&&prefill.subFileId));
   if(id){
     const r = ROUNDS.find(x=>x.id===id);
     document.getElementById('roundModalTitle').innerText = 'تعديل جولة المتابعة';
@@ -2230,6 +2369,7 @@ function saveRound(){
   const id = document.getElementById('rId').value;
   const contactIds = Array.from(document.querySelectorAll('.rContactChk:checked')).map(el=>el.value);
   const data = {
+    subFileId: document.getElementById('rSubfile').value,
     date: document.getElementById('rDate').value || today(),
     type: document.getElementById('rType').value,
     priority: document.getElementById('rPriority').value,
@@ -2506,7 +2646,7 @@ function deleteCategory(){
 /* ---------- ACTIVITY LOG ---------- */
 const LOG_ACTION_LABELS = {add:'إضافة', edit:'تعديل', delete:'حذف', restore:'استرجاع', export:'تصدير', import:'استيراد', reset:'إعادة ضبط'};
 const LOG_ACTION_ICONS = {add:'✚', edit:'✎', delete:'🗑', restore:'↺', export:'⬇', import:'⬆', reset:'⟲'};
-const LOG_ENTITY_LABELS = {file:'ملف', round:'جولة متابعة', contact:'جهة اتصال', task:'مهمة/موعد', category:'تصنيف', group:'مجموعة تصنيفات', data:'بيانات عامة'};
+const LOG_ENTITY_LABELS = {file:'ملف', round:'جولة متابعة', contact:'جهة اتصال', task:'مهمة/موعد', category:'تصنيف', group:'مجموعة تصنيفات', subfile:'مسار فرعي', data:'بيانات عامة'};
 function fileDetailText(d){
   const l=[];
   if(d.groupId){ const g=groupOf(d.groupId); if(g) l.push(`المجموعة: ${g.name}`); }
@@ -2523,6 +2663,7 @@ function fileDetailText(d){
 }
 function roundDetailText(d){
   const l=[];
+  if(d.subFileId){ const s=subfileOf(d.subFileId); if(s) l.push(`المسار الفرعي: ${s.title}`); }
   if(d.type) l.push(`النوع: ${d.type}`);
   if(d.priority) l.push(`الأولوية: ${d.priority}`);
   if(d.exec) l.push(`التنفيذ: ${d.exec==='لم'?'لم يُنفذ':'جارٍ'}`);
@@ -2585,7 +2726,7 @@ function clearActivityLog(){
 
 /* ---------- BACKUP / RESET ---------- */
 function exportBackup(){
-  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,exportedAt:new Date().toISOString()};
+  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,exportedAt:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download='نسخة-احتياطية-المتابعة.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -2601,11 +2742,11 @@ function importBackup(ev){
       const data = JSON.parse(reader.result);
       _showConfirm('سيتم استبدال جميع البيانات الحالية بالنسخة المستوردة. متابعة؟', {destructive:true, confirmLabel:'استيراد'}).then(ok=>{
         if(!ok) return;
-        FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[];
+        FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[];
         logActivity('import','data', `استيراد نسخة احتياطية (${FILES.length} ملف، ${ROUNDS.length} جولة، ${CONTACTS.length} جهة اتصال)`);
         // Explicit full replace requested by the user — bypass the
         // merge-safe persist path and write these arrays as-is.
-        Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS)]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
+        Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
       });
     } catch(e){ _showToast('ملف غير صالح','error'); }
   };
@@ -2615,9 +2756,9 @@ function importBackup(ev){
 function resetAllData(){
   _showConfirm('سيتم حذف كل البيانات الحالية والعودة للبيانات التجريبية الافتراضية. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'إعادة التعيين'}).then(ok=>{
     if(!ok) return;
-    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[];
+    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[]; SUBFILES=[];
     logActivity('reset','data', 'إعادة تعيين جميع بيانات البرنامج بالكامل');
-    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
+    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
   });
 }
 
@@ -2643,7 +2784,7 @@ function _showToastUndo(msg){
 }
 function undoLastDelete(){
   if(!_lastDeleted) return;
-  if(_lastDeleted.type==='file'){ FILES.push(_lastDeleted.file); ROUNDS.push(...(_lastDeleted.rounds||[])); logActivity('restore','file', `استرجاع ملف محذوف: ${_lastDeleted.file?_lastDeleted.file.title:''}`, _lastDeleted.file?fileDetailText(_lastDeleted.file):''); Promise.all([persistFiles(_lastDeleted.file?_lastDeleted.file.id:null), persistRounds((_lastDeleted.rounds||[]).map(r=>r.id))]).then(()=>{ goToFilesPage(); _showToast('تم التراجع عن الحذف','success'); }); }
+  if(_lastDeleted.type==='file'){ FILES.push(_lastDeleted.file); ROUNDS.push(...(_lastDeleted.rounds||[])); SUBFILES.push(...(_lastDeleted.subfiles||[])); logActivity('restore','file', `استرجاع ملف محذوف: ${_lastDeleted.file?_lastDeleted.file.title:''}`, _lastDeleted.file?fileDetailText(_lastDeleted.file):''); Promise.all([persistFiles(_lastDeleted.file?_lastDeleted.file.id:null), persistRounds((_lastDeleted.rounds||[]).map(r=>r.id)), persistSubfiles((_lastDeleted.subfiles||[]).map(s=>s.id))]).then(()=>{ goToFilesPage(); _showToast('تم التراجع عن الحذف','success'); }); }
   if(_lastDeleted.type==='round'){ ROUNDS.push(_lastDeleted.round); logActivity('restore','round', `استرجاع جولة متابعة محذوفة`, _lastDeleted.round?roundDetailText(_lastDeleted.round):''); persistRounds(_lastDeleted.round?_lastDeleted.round.id:null).then(()=>{ if(currentFileId) renderFilePage(); _showToast('تم التراجع عن الحذف','success'); }); }
   if(_lastDeleted.type==='task'){ TASKS.push(_lastDeleted.task); logActivity('restore','task', `استرجاع مهمة/موعد محذوف: ${_lastDeleted.task?_lastDeleted.task.title:''}`, _lastDeleted.task?taskDetailText(_lastDeleted.task):''); persistTasks(_lastDeleted.task?_lastDeleted.task.id:null).then(()=>{ if(document.getElementById('page-calendar').classList.contains('active')) renderCalendarPage(); renderNotif(); _showToast('تم التراجع عن الحذف','success'); }); }
   _lastDeleted = null;
