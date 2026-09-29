@@ -278,25 +278,32 @@
   .oc-groups-drop label{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 4px;cursor:pointer;border-radius:6px;}
   .oc-groups-drop label:hover{background:var(--surface-1);}
 
-  .og-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;margin-bottom:6px;}
-  @media (max-width:1100px){ .og-grid{grid-template-columns:repeat(3,1fr);} }
+  .og-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;align-items:start;margin-bottom:6px;}
+  @media (max-width:1400px){ .og-grid{grid-template-columns:repeat(5,1fr);} }
+  @media (max-width:1180px){ .og-grid{grid-template-columns:repeat(4,1fr);} }
+  @media (max-width:900px){ .og-grid{grid-template-columns:repeat(3,1fr);} }
   @media (max-width:640px){ .og-grid{grid-template-columns:repeat(2,1fr);} }
   .og-section{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;align-self:start;min-width:0;width:100%;}
-  .og-header .og-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .og-body .action-cards{grid-template-columns:1fr;}
-  .og-header{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none;}
+  .og-header{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;user-select:none;}
   .og-header:hover{background:var(--surface-2);}
-  .og-header .og-name{font-weight:700;font-size:14px;flex:1;}
-  .og-header .og-count{background:var(--surface-3);color:var(--text-2);font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;}
-  .og-chevron{transition:transform .22s var(--ease-out-quart);color:var(--text-3);font-size:12px;}
+  .og-header .og-name{font-weight:700;font-size:12.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .og-header .og-count{background:var(--surface-3);color:var(--text-2);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;}
+  .og-chevron{transition:transform .22s var(--ease-out-quart);color:var(--text-3);font-size:11px;flex-shrink:0;}
   .og-section.expanded .og-chevron{transform:rotate(180deg);}
-  .og-body{display:none;padding:0 16px 14px;}
+  .og-body{display:none;padding:0 10px 10px;}
   .og-section.expanded .og-body{display:block;}
-  .og-body-head{display:flex;justify-content:flex-end;margin-bottom:8px;}
-  .og-expand-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;font-size:11px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:4px;}
-  .og-expand-btn:hover{background:var(--surface-2);color:var(--text-1);}
-  .og-body .action-cards{margin-bottom:0;}
-  .og-body .open-list{margin-bottom:0;}
+  .og-item-list{display:flex;flex-direction:column;}
+  .og-item{border-top:1px solid var(--border);}
+  .og-item:first-child{border-top:none;}
+  .og-item-head{display:flex;align-items:center;gap:7px;padding:8px 2px;cursor:pointer;border-radius:6px;}
+  .og-item-head:hover{background:var(--surface-2);}
+  .og-item-head .ttl{flex:1;font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .og-item-chevron{font-size:9px;color:var(--text-3);flex-shrink:0;transition:transform .2s;}
+  .og-item.expanded .og-item-chevron{transform:rotate(180deg);}
+  .og-item-detail{display:none;padding:2px 2px 10px;}
+  .og-item.expanded .og-item-detail{display:block;}
+  .og-item-detail .ac-badges{display:flex;flex-wrap:wrap;gap:4px;}
+  .og-item-detail .sub{font-size:11px;color:var(--text-2);}
 
   .p-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;}
   .p-dot.عاجل{background:var(--red);} .p-dot.متوسط{background:var(--orange);} .p-dot.عادي{background:var(--text-3);}
@@ -1958,7 +1965,6 @@ function renderMiniCalDrop(){
   drop.classList.add('open');
 }
 let _ogExpanded = new Set();
-let _ogViewMode = new Map();
 function _openActionCardHtml(r){
   const f = fileOf(r.fileId);
   return `<div class="action-card" onclick="tapNav(event,'open','${r.id}')">
@@ -1968,16 +1974,6 @@ function _openActionCardHtml(r){
       <div class="ac-badges">${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
       <div class="sub">${f?esc(f.title):''}</div>
     </div>`;
-}
-function _openCompactRowHtml(r){
-  const f = fileOf(r.fileId);
-  return `<div class="open-item" onclick="tapNav(event,'open','${r.id}')">
-    <span class="ic">${ROUND_TYPES[r.type]||'📌'}</span>
-    <div style="flex:1;min-width:0;">
-      <div class="ttl">${esc((r.actionNeeded||'بدون وصف').slice(0,70))}</div>
-      <div class="sub">${f?esc(f.title):''} ${r.due?dueBadgeHtml(r.due):''} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
-    </div>
-  </div>`;
 }
 function renderOpenList(){
   const order={'لم':0,'جارٍ':1}, prOrder={'عاجل':0,'متوسط':1,'عادي':2};
@@ -2041,31 +2037,42 @@ function renderOpenList(){
 
   groupedEl.innerHTML = `<div class="og-grid">` + visibleBuckets.map(b=>{
     const expanded = _ogExpanded.has(b.id);
-    const viewMode = _ogViewMode.get(b.id)||'compact';
-    let bodyHtml='';
-    if(expanded){
-      bodyHtml = viewMode==='full'
-        ? `<div class="action-cards">${b.items.map(_openActionCardHtml).join('')}</div>`
-        : `<div class="open-list">${b.items.map(_openCompactRowHtml).join('')}</div>`;
-    }
+    const bodyHtml = expanded ? `<div class="og-item-list">${b.items.map(_openHeadlineItemHtml).join('')}</div>` : '';
     return `<div class="og-section ${expanded?'expanded':''}" data-gid="${b.id}">
       <div class="og-header" onclick="toggleGroupExpand('${b.id}')">
         <span class="og-chevron">▾</span>
         <span class="og-name">${esc(b.name)}</span>
         <span class="og-count">${b.items.length}</span>
       </div>
-      <div class="og-body">
-        ${expanded ? `<div class="og-body-head"><button class="og-expand-btn" onclick="event.stopPropagation(); toggleGroupView('${b.id}')">${viewMode==='full'?'▲ عرض مصغّر':'▼ عرض كامل'}</button></div>` : ''}
-        ${bodyHtml}
-      </div>
+      <div class="og-body">${bodyHtml}</div>
     </div>`;
   }).join('') + `</div>`;
 }
+let _ogItemExpanded = new Set();
+function _openHeadlineItemHtml(r){
+  const opened = _ogItemExpanded.has(r.id);
+  const f = fileOf(r.fileId);
+  return `<div class="og-item ${opened?'expanded':''}" data-rid="${r.id}">
+    <div class="og-item-head" onclick="toggleActionItem('${r.id}')">
+      <span class="og-item-chevron">▾</span>
+      <span class="p-dot ${r.priority}"></span>
+      <span class="ttl">${esc((r.actionNeeded||'بدون وصف').trim() || 'بدون وصف')}</span>
+    </div>
+    <div class="og-item-detail">
+      <div class="ac-badges">${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+      <div class="sub" style="margin:6px 0 8px;">${f?esc(f.title):''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-glass btn-sm" onclick="event.stopPropagation(); goToFile('${r.fileId}')">فتح الملف</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); quickDelete('round','${r.id}')">حذف</button>
+      </div>
+    </div>
+  </div>`;
+}
+function toggleActionItem(rid){ if(_ogItemExpanded.has(rid)) _ogItemExpanded.delete(rid); else _ogItemExpanded.add(rid); renderOpenList(); }
 function toggleOpenGrouping(){ APP_SETTINGS.openGrouped = !APP_SETTINGS.openGrouped; persistAppSettings(); renderOpenList(); }
 function setOpenSort(v){ APP_SETTINGS.openSort=v; persistAppSettings(); renderOpenList(); }
 function setOpenFilter(v){ APP_SETTINGS.openFilter=v; persistAppSettings(); renderOpenList(); }
 function toggleGroupExpand(gid){ if(_ogExpanded.has(gid)) _ogExpanded.delete(gid); else _ogExpanded.add(gid); renderOpenList(); }
-function toggleGroupView(gid){ const cur=_ogViewMode.get(gid)||'compact'; _ogViewMode.set(gid, cur==='compact'?'full':'compact'); renderOpenList(); }
 function toggleGroupsPop(e){ e.stopPropagation(); renderGroupsPopContent(); document.getElementById('ocGroupsDrop').classList.toggle('open'); }
 function renderGroupsPopContent(){
   const el = document.getElementById('ocGroupsDrop'); if(!el) return;
