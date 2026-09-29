@@ -83,15 +83,14 @@
     position:sticky;top:0;z-index:300;
     background:var(--bg-topbar);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
     border-bottom:1px solid var(--border);
-    padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    padding:12px 24px;display:flex;align-items:center;justify-content:flex-start;gap:14px;flex-wrap:wrap;
   }
   .brand{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;}
   .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent-glow);}
   .brand h1{font-size:19px;font-weight:700;}
-  .topbar-date{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:4px 12px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);line-height:1.35;}
-  .topbar-date .td-g{font-size:11.5px;font-weight:700;color:var(--text-1);white-space:nowrap;}
-  .topbar-date .td-h{font-size:10px;color:var(--text-3);white-space:nowrap;}
-  @media (max-width:760px){ .topbar-date{display:none;} }
+  .topbar-date{display:flex;align-items:center;gap:8px;flex-shrink:0;padding:0 12px;height:36px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);white-space:nowrap;font-size:11.5px;font-weight:700;color:var(--text-1);}
+  .topbar-date .td-sep{color:var(--text-3);font-weight:400;}
+  @media (max-width:920px){ .topbar-date{display:none;} }
   .topbar-mid{flex:1;max-width:360px;position:relative;min-width:140px;}
   .topbar-mid input{width:100%;padding-right:32px;}
   .topbar-mid .si{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px;pointer-events:none;}
@@ -103,7 +102,7 @@
   .search-drop .sd-item small{display:block;color:var(--text-2);font-size:11px;margin-top:2px;}
   .search-drop .sd-empty{padding:16px;color:var(--text-3);font-size:12.5px;text-align:center;}
 
-  .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-inline-start:auto;}
   .icon-btn{
     width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface-1);
     display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;
@@ -522,12 +521,12 @@
 
 <header class="topbar">
   <div class="brand" onclick="goHome()"><span class="dot"></span><h1>مهام صَفوان</h1></div>
-  <div class="topbar-date" id="topbarDate"></div>
   <div class="topbar-mid">
     <input type="text" id="globalSearch" placeholder="بحث شامل: ملفات، جولات، جهات اتصال..." oninput="renderGlobalSearch()" onfocus="renderGlobalSearch()">
     <span class="si">⌕</span>
     <div class="search-drop" id="searchDrop"></div>
   </div>
+  <div class="topbar-date" id="topbarDate"></div>
   <div class="topbar-right">
     <div class="sync-pill" id="syncPill" onclick="document.querySelector('nav.tabs button[data-tab=settings]').click()">
       <span class="sync-dot"></span><span id="syncLabel">—</span>
@@ -1301,9 +1300,14 @@ function renderTopbarDate(){
   const el = document.getElementById('topbarDate');
   if(!el) return;
   const now = new Date();
-  const g = now.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'long',day:'numeric'});
-  const h = now.toLocaleDateString('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'long',day:'numeric'});
-  el.innerHTML = `<span class="td-g">${g}</span><span class="td-h">${h}</span>`;
+  const part = (parts,type)=> (parts.find(p=>p.type===type)||{}).value || '';
+  const gParts = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}).formatToParts(now);
+  const gNum = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{month:'numeric'}).format(now);
+  const hParts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long',year:'numeric'}).formatToParts(now);
+  const hNum = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{month:'numeric'}).format(now);
+  const g = `${part(gParts,'day')} . ${part(gParts,'month')}(${gNum}) . ${part(gParts,'year')}م`;
+  const h = `${part(hParts,'day')} . ${part(hParts,'month')}(${hNum}) . ${part(hParts,'year')}هـ`;
+  el.innerHTML = `<span>${g}</span><span class="td-sep">|</span><span>${h}</span>`;
 }
 
 const SEED_CATEGORIES = [
