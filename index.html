@@ -935,6 +935,7 @@ const DEFAULT_FB_CONFIG = {
 let _cache = {};
 let _loadPromise = null;
 let _saveTimer = null;
+let _dirtyKeys = new Set();
 let fbApp = null, fbAuth = null, fbDb = null, fbUser = null;
 
 function getFbConfig(){ try{ const raw = localStorage.getItem(FB_CONFIG_KEY); if(raw) return JSON.parse(raw); }catch(e){} return DEFAULT_FB_CONFIG; }
@@ -1004,8 +1005,20 @@ function scheduleSave(){
 }
 function pushRemote(){
   if(!fbUser || !fbDb) return;
-  fbDb.collection(FB_COLLECTION).doc(fbUser.uid).set(_cache, {merge:false}).then(function(){
-    setStatus('synced');
+  const keys = Array.from(_dirtyKeys);
+  if(!keys.length){ setStatus('synced'); return; }
+  const partial = {};
+  keys.forEach(function(k){ partial[k] = _cache[k]; });
+  // Only write the fields that actually changed on THIS device/tab, merged
+  // into the remote document rather than replacing it wholesale. A full
+  // {merge:false} overwrite here would clobber any keys another open tab
+  // or device had written in the meantime (a real data-loss risk when the
+  // app is open in more than one place at once); merge:true keeps every
+  // other field on the server untouched.
+  fbDb.collection(FB_COLLECTION).doc(fbUser.uid).set(partial, {merge:true}).then(function(){
+    keys.forEach(function(k){ _dirtyKeys.delete(k); });
+    setStatus(_dirtyKeys.size ? 'saving' : 'synced');
+    if(_dirtyKeys.size){ _saveTimer = setTimeout(pushRemote, 200); }
   }).catch(function(){
     setStatus(navigator.onLine === false ? 'offline' : 'error');
   });
@@ -1020,6 +1033,7 @@ window.storage = {
   set: async function(key, value){
     await ensureLoaded();
     _cache[key] = value;
+    _dirtyKeys.add(key);
     scheduleSave();
     return true;
   }
