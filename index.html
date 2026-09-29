@@ -30,6 +30,8 @@
     --red-glow:    rgba(94,92,230,0.2);
     --orange:      #ff9f0a;
     --orange-glow: rgba(255,159,10,0.2);
+    --blue:        #0a84ff;
+    --blue-glow:   rgba(10,132,255,0.2);
     --purple:      #bf5af2;
     --purple-glow: rgba(191,90,242,0.2);
     --tc:          #64d2ff;
@@ -64,6 +66,8 @@
     --red-glow:    rgba(74,66,209,0.15);
     --orange:      #c9720a;
     --orange-glow: rgba(201,114,10,0.15);
+    --blue:        #0071e3;
+    --blue-glow:   rgba(0,113,227,0.15);
     --purple:      #9526c9;
     --purple-glow: rgba(149,38,201,0.14);
     --tc:          #0091b3;
@@ -302,7 +306,8 @@
   .og-item-detail .sub{font-size:11px;color:var(--text-2);}
 
   .p-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;}
-  .p-dot.عاجل{background:var(--red);} .p-dot.متوسط{background:var(--orange);} .p-dot.عادي{background:var(--text-3);}
+  .p-dot.عاجل{background:var(--orange);} .p-dot.متوسط{background:var(--blue);} .p-dot.عادي{background:var(--text-3);}
+  .p-dot.done{background:var(--green) !important;}
 
   .file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px;}
   .file-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:17px;cursor:pointer;transition:transform .18s var(--ease-out-quart),background .15s;backdrop-filter:var(--blur);position:relative;}
@@ -2187,7 +2192,7 @@ function renderTodayAgenda(){
       <div class="swipeable-inner" style="display:flex;gap:10px;align-items:flex-start;background:transparent;">
         <input type="checkbox" class="tchk" onclick="event.stopPropagation()" onchange="toggleTaskDone('${x.id}')">
         <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}'); toggleTodayDrop(false);">
-          <div class="ttitle">${TASK_TYPES[x.type]||'✅'} <span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
+          <div class="ttitle ${x.done?'done':''}">${TASK_TYPES[x.type]||'✅'} <span class="p-dot ${x.priority} ${x.done?'done':''}"></span> ${esc(x.title)}</div>
           <div class="tmeta">${x.time?`<span class="time-badge">${x.time}</span>`:''} ${f?esc(f.title):''}</div>
         </div>
       </div>
@@ -2270,7 +2275,7 @@ function renderDayPanel(){
       <div class="swipeable-inner task-row" style="background:var(--surface-2);border-radius:var(--radius-sm);">
         <input type="checkbox" class="tchk" ${x.done?'checked':''} onchange="toggleTaskDone('${x.id}')">
         <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}')">
-          <div class="ttitle ${x.done?'done':''}">${TASK_TYPES[x.type]||'✅'} <span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
+          <div class="ttitle ${x.done?'done':''}">${TASK_TYPES[x.type]||'✅'} <span class="p-dot ${x.priority} ${x.done?'done':''}"></span> ${esc(x.title)}</div>
           <div class="tmeta">${x.time?`<span class="time-badge">${x.time}</span>`:'بدون وقت محدد'} ${f?'· '+esc(f.title):''}</div>
         </div>
       </div>
@@ -2405,7 +2410,7 @@ function renderTasksPage(){
       <div class="swipeable-inner" style="display:flex;gap:10px;align-items:flex-start;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 14px;margin-bottom:8px;">
         <input type="checkbox" class="tchk" ${x.done?'checked':''} onclick="event.stopPropagation()" onchange="toggleTaskDone('${x.id}')">
         <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}')">
-          <div class="ttitle">${icon} <span class="p-dot ${x.priority}"></span> ${esc(x.title)}</div>
+          <div class="ttitle ${x.done?'done':''}">${icon} <span class="p-dot ${x.priority} ${x.done?'done':''}"></span> ${esc(x.title)}</div>
           <div class="tmeta" style="margin-top:4px;">${x.time?`<span class="time-badge">${x.time}</span>`:''} <span class="badge">${fmtDate(x.date)}</span> ${f?('· '+esc(f.title)):''}</div>
         </div>
       </div>
