@@ -91,6 +91,10 @@
   .topbar-date{display:flex;align-items:center;gap:8px;flex-shrink:0;padding:0 12px;height:36px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);white-space:nowrap;font-size:11.5px;font-weight:700;color:var(--text-1);}
   .topbar-date .td-sep{color:var(--text-3);font-weight:400;}
   @media (max-width:920px){ .topbar-date{display:none;} }
+  .topbar-quote{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 10px;}
+  .topbar-quote span{font-family:var(--font-display);font-size:16.5px;font-weight:600;letter-spacing:2.5px;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;opacity:0;animation:quoteFade .6s ease forwards;}
+  @keyframes quoteFade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
+  @media (max-width:1180px){ .topbar-quote{display:none;} }
   .topbar-mid{flex:1;max-width:360px;position:relative;min-width:140px;}
   .topbar-mid input{width:100%;padding-right:32px;}
   .topbar-mid .si{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px;pointer-events:none;}
@@ -526,8 +530,9 @@
     <span class="si">⌕</span>
     <div class="search-drop" id="searchDrop"></div>
   </div>
-  <div class="topbar-date" id="topbarDate"></div>
+  <div class="topbar-quote" id="topbarQuote"></div>
   <div class="topbar-right">
+    <div class="topbar-date" id="topbarDate"></div>
     <div class="sync-pill" id="syncPill" onclick="document.querySelector('nav.tabs button[data-tab=settings]').click()">
       <span class="sync-dot"></span><span id="syncLabel">—</span>
     </div>
@@ -1309,6 +1314,18 @@ function renderTopbarDate(){
   const h = `${part(hParts,'day')} . ${part(hParts,'month')}(${hNum}) . ${part(hParts,'year')}هـ`;
   el.innerHTML = `<span>${g}</span><span class="td-sep">|</span><span>${h}</span>`;
 }
+
+/* ---------- TOPBAR QUOTE (preview) ---------- */
+let TOPBAR_QUOTES = ['وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ', 'لكل مجتهد نصيب'];
+let _quoteIdx = 0;
+function renderTopbarQuote(){
+  const el = document.getElementById('topbarQuote');
+  if(!el || !TOPBAR_QUOTES.length) { if(el) el.innerHTML=''; return; }
+  _quoteIdx = _quoteIdx % TOPBAR_QUOTES.length;
+  el.innerHTML = `<span>${esc(TOPBAR_QUOTES[_quoteIdx])}</span>`;
+}
+function nextTopbarQuote(){ _quoteIdx++; renderTopbarQuote(); }
+setInterval(nextTopbarQuote, 5*60*1000);
 
 const SEED_CATEGORIES = [
   {id:'cat1', name:'قانوني', color:'accent'}, {id:'cat2', name:'مالي', color:'orange'},
@@ -3069,6 +3086,7 @@ scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'s
 
 /* ---------- INIT ---------- */
 renderTopbarDate();
+renderTopbarQuote();
 loadIfEmpty().then(()=>{ renderHome(); renderContacts(); renderSettings(); });
 </script>
 </body>
