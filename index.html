@@ -443,6 +443,7 @@
   .form-row input,.form-row select,.form-row textarea{width:100%;}
   .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .form-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  .form-4col{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap;}
   .att-row{display:flex;gap:8px;margin-bottom:6px;}
   .att-row input{flex:1;}
@@ -451,7 +452,7 @@
   .color-pick{display:flex;gap:8px;flex-wrap:wrap;}
   .color-pick .c-op{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
   .color-pick .c-op.sel{border-color:var(--text-1);}
-  @media(max-width:640px){.form-2col,.form-3col{grid-template-columns:1fr;}}
+  @media(max-width:640px){.form-2col,.form-3col,.form-4col{grid-template-columns:1fr;}}
 
   #_toastContainer{position:fixed;bottom:20px;left:0;right:0;z-index:9999;display:flex;flex-direction:column-reverse;align-items:center;gap:8px;pointer-events:none;}
   ._toast{background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);color:var(--text-1);padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;box-shadow:0 4px 28px rgba(0,0,0,.35);animation:_toastIn .2s ease;pointer-events:auto;display:flex;align-items:center;gap:12px;}
@@ -977,9 +978,10 @@
     <div class="form-row"><label>ما الذي تم اكتشافه / ملاحظته في هذه الجولة</label><textarea id="rFinding"></textarea></div>
     <div class="form-row"><label>الإجراء المتخذ (ما تم عمله فعليًا حتى الآن)</label><textarea id="rActionTaken"></textarea></div>
     <div class="form-row"><label>الإجراء المطلوب (الخطوة القادمة)</label><textarea id="rActionNeeded"></textarea></div>
-    <div class="form-3col">
+    <div class="form-4col">
       <div class="form-row"><label>حالة تنفيذ الإجراء</label><select id="rExec"><option value="لم">لم يُنفذ بعد</option><option value="جارٍ">جارٍ التنفيذ</option><option value="تم">تم التنفيذ</option></select></div>
-      <div class="form-row"><label>موعد استحقاق الإجراء</label><input type="date" id="rDue"></div>
+      <div class="form-row"><label>تاريخ التنفيذ (بداية العمل)</label><input type="date" id="rExecDate"></div>
+      <div class="form-row"><label>تاريخ الانتهاء (آخر موعد)</label><input type="date" id="rDue"></div>
       <div class="form-row"><label>المسؤول عن التنفيذ</label><input type="text" id="rResponsible"></div>
     </div>
     <div class="form-row"><label>الموصى به</label><textarea id="rRecommend"></textarea></div>
@@ -1811,6 +1813,17 @@ function groupBadge(id){ const g = groupOf(id); if(!g) return ''; return `<span 
 function subfileOf(id){ return id? SUBFILES.find(s=>s.id===id) : null; }
 function subfileBadge(id){ const s = subfileOf(id); if(!s) return ''; return `<span class="badge" style="background:var(--surface-3);color:var(--text-2)">🧭 ${esc(s.title)}</span>`; }
 function pendingRounds(){ return ROUNDS.filter(r=>r.exec!=='تم'); }
+/* A round counts as "due" on a given date if that date falls anywhere
+   between its تاريخ التنفيذ (execDate, when set) and تاريخ الانتهاء (due) —
+   inclusive of both ends. A round with only `due` set (no execDate) keeps
+   the old exact-match behavior: it's "due" only on that single day. */
+function roundIsDueOn(r, dateStr){
+  if(!r || r.exec==='تم') return false;
+  const start = r.execDate || r.due;
+  const end = r.due || r.execDate;
+  if(!start || !end) return false;
+  return start<=dateStr && dateStr<=end;
+}
 function isFileAtRisk(f){ const rs=ROUNDS.filter(r=>r.fileId===f.id); return rs.some(r=> r.exec!=='تم' && r.due && daysUntil(r.due)<0); }
 function nextActionFor(fileId){
   const rs = ROUNDS.filter(r=>r.fileId===fileId && r.exec!=='تم' && r.actionNeeded);
@@ -1925,22 +1938,34 @@ function goToCalendarDay(dateStr){
 function renderHome(){ renderStats(); renderChart(); renderTodayCard(); renderMiniCal(); renderOpenList(); renderNotif(); }
 function renderTodayCard(){
   const t = today();
-  const tTasks = TASKS.filter(x=>x.date===t).sort((a,b)=>{
-    if(!!a.done!==!!b.done) return a.done?1:-1;
-    return (a.time||'99:99').localeCompare(b.time||'99:99');
+  const tTasks = TASKS.filter(x=>x.date===t).map(x=>Object.assign({_kind:'task'}, x));
+  const tRounds = pendingRounds().filter(r=>roundIsDueOn(r,t)).map(r=>Object.assign({_kind:'round'}, r));
+  const items = tTasks.concat(tRounds).sort((a,b)=>{
+    const aDone = a._kind==='task' && !!a.done, bDone = b._kind==='task' && !!b.done;
+    if(aDone!==bDone) return aDone?1:-1;
+    const at = a._kind==='task' ? (a.time||'99:99') : '99:99';
+    const bt = b._kind==='task' ? (b.time||'99:99') : '99:99';
+    return at.localeCompare(bt);
   });
   const el = document.getElementById('todayCard');
   if(!el) return;
   let html = `<div class="today-card-title">🗓️ مهام اليوم — ${fmtDate(t)}</div>`;
-  if(!tTasks.length){
-    html += `<div class="today-card-empty">لا مهام مسجّلة اليوم 👍</div>`;
+  if(!items.length){
+    html += `<div class="today-card-empty">لا مهام أو إجراءات مستحقة اليوم 👍</div>`;
   } else {
-    html += `<div class="today-card-list">` + tTasks.map((x,i)=>{
+    html += `<div class="today-card-list">` + items.map((x,i)=>{
       const f = fileOf(x.fileId);
-      return `<div class="today-card-row ${x.done?'done':''}" onclick="openTaskModal('${x.id}')">
+      if(x._kind==='task'){
+        return `<div class="today-card-row ${x.done?'done':''}" onclick="openTaskModal('${x.id}')">
+          <span class="today-card-num">${i+1}</span>
+          <span class="today-card-txt">${TASK_TYPES[x.type]||'✅'} ${esc(x.title)}${f?' — '+esc(f.title):''}</span>
+          ${x.time?`<span class="today-card-time">${x.time}</span>`:''}
+        </div>`;
+      }
+      return `<div class="today-card-row" onclick="goToFile('${x.fileId}')">
         <span class="today-card-num">${i+1}</span>
-        <span class="today-card-txt">${TASK_TYPES[x.type]||'✅'} ${esc(x.title)}${f?' — '+esc(f.title):''}</span>
-        ${x.time?`<span class="today-card-time">${x.time}</span>`:''}
+        <span class="today-card-txt">${ROUND_TYPES[x.type]||'📌'} ${esc((x.actionNeeded||'إجراء بلا وصف').slice(0,60))}${f?' — '+esc(f.title):''}</span>
+        <span class="today-card-time">إجراء</span>
       </div>`;
     }).join('') + `</div>`;
   }
@@ -2043,7 +2068,7 @@ function _openActionCardHtml(r){
       <button class="ac-del" onclick="event.stopPropagation(); quickDelete('round','${r.id}')" title="حذف">✕</button>
       <div class="ic">${ROUND_TYPES[r.type]||'📌'}</div>
       <div class="ttl"><span class="p-dot ${r.priority}"></span> ${esc((r.actionNeeded||'بدون وصف').slice(0,70))}</div>
-      <div class="ac-badges">${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+      <div class="ac-badges">${r.execDate?'<span class="badge">🚩 بدء '+fmtDate(r.execDate)+'</span>':''}${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
       <div class="sub">${f?esc(f.title):''}</div>
     </div>`;
 }
@@ -2131,7 +2156,7 @@ function _openHeadlineItemHtml(r){
       <span class="ttl">${esc((r.actionNeeded||'بدون وصف').trim() || 'بدون وصف')}</span>
     </div>
     <div class="og-item-detail">
-      <div class="ac-badges">${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+      <div class="ac-badges">${r.execDate?'<span class="badge">🚩 بدء '+fmtDate(r.execDate)+'</span>':''}${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
       <div class="sub" style="margin:6px 0 8px;">${f?esc(f.title):''}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn btn-glass btn-sm" onclick="event.stopPropagation(); goToFile('${r.fileId}')">فتح الملف</button>
@@ -2250,7 +2275,7 @@ document.addEventListener('click', (e)=>{ if(!e.target.closest('.notif-wrap')) t
 function renderTodayAgenda(){
   const t = today();
   const tTasks = TASKS.filter(x=>x.date===t && !x.done).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
-  const tRounds = ROUNDS.filter(r=>r.due===t && r.exec!=='تم');
+  const tRounds = pendingRounds().filter(r=>roundIsDueOn(r,t));
   const total = tTasks.length + tRounds.length;
   const badge = document.getElementById('todayBadge');
   if(total){ badge.style.display='flex'; badge.textContent = total>9?'9+':total; } else { badge.style.display='none'; }
@@ -2716,6 +2741,7 @@ function renderRounds(){
         ${r.suggest?`<div class="rc-field"><div class="lbl">اقتراحات إضافية</div><div class="val">${esc(r.suggest)}</div></div>`:''}
       </div>
       <div class="rc-meta-row">
+        ${r.execDate?`<span class="badge">🚩 بدء ${fmtDate(r.execDate)}</span>`:''}
         ${r.due?dueBadgeHtml(r.due):''}
         ${r.responsible?`<span class="badge">👤 ${esc(r.responsible)}</span>`:''}
         ${r.amount?`<span class="badge">💰 ${Number(r.amount).toLocaleString('ar-SA')} ﷼</span>`:''}
@@ -2842,6 +2868,7 @@ function openRoundModal(id, prefill){
     document.getElementById('rType').value = r.type||'أخرى';
     document.getElementById('rPriority').value = r.priority||'متوسط';
     document.getElementById('rExec').value = r.exec;
+    document.getElementById('rExecDate').value = r.execDate||'';
     document.getElementById('rDue').value = r.due||'';
     document.getElementById('rResponsible').value = r.responsible||'';
     document.getElementById('rAmount').value = r.amount||'';
@@ -2859,7 +2886,8 @@ function openRoundModal(id, prefill){
     document.getElementById('rType').value = (prefill&&prefill.type)||'تحديث داخلي';
     document.getElementById('rPriority').value = (prefill&&prefill.priority)||'متوسط';
     document.getElementById('rExec').value = 'لم';
-    document.getElementById('rDue').value='';
+    document.getElementById('rExecDate').value = (prefill&&prefill.execDate)||'';
+    document.getElementById('rDue').value = (prefill&&prefill.due)||'';
     document.getElementById('rResponsible').value = (prefill&&prefill.responsible)||'';
     document.getElementById('rAmount').value='';
     document.getElementById('rFinding').value = (prefill&&prefill.finding)||'';
@@ -2881,6 +2909,7 @@ function saveRound(){
     type: document.getElementById('rType').value,
     priority: document.getElementById('rPriority').value,
     exec: document.getElementById('rExec').value,
+    execDate: document.getElementById('rExecDate').value,
     due: document.getElementById('rDue').value,
     responsible: document.getElementById('rResponsible').value.trim(),
     amount: document.getElementById('rAmount').value,
@@ -3182,7 +3211,8 @@ function roundDetailText(d){
   if(d.priority) l.push(`الأولوية: ${d.priority}`);
   if(d.exec) l.push(`التنفيذ: ${d.exec==='لم'?'لم يُنفذ':'جارٍ'}`);
   if(d.date) l.push(`تاريخ الجولة: ${fmtDate(d.date)}`);
-  if(d.due) l.push(`الموعد المستحق: ${fmtDate(d.due)}`);
+  if(d.execDate) l.push(`تاريخ التنفيذ: ${fmtDate(d.execDate)}`);
+  if(d.due) l.push(`تاريخ الانتهاء: ${fmtDate(d.due)}`);
   if(d.responsible) l.push(`المسؤول: ${d.responsible}`);
   if(d.amount) l.push(`المبلغ: ${d.amount}`);
   if(d.finding) l.push(`النتيجة/الوصف: ${d.finding}`);
