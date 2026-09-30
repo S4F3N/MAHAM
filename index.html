@@ -2658,6 +2658,17 @@ function togglePin(id, ev){
 function toggleFileCompleted(id){
   const f = FILES.find(x=>x.id===id); if(!f) return;
   const wasCompleted = f.status==='مكتملة';
+  if(wasCompleted){ _applyFileCompletedToggle(id); return; }
+  const unfinished = ROUNDS.filter(r=>r.fileId===id && r.exec!=='تم');
+  if(unfinished.length){
+    _showConfirm(`هذا الملف فيه ${unfinished.length} جولة/إجراء لم يُنفذ أو لم ينتهِ بعد. تصنيفه كمكتمل سيخفي هذه الإجراءات من مهام اليوم والتنبيهات. تريد المتابعة؟`, {confirmLabel:'تصنيف كمكتملة'}).then(ok=>{ if(ok) _applyFileCompletedToggle(id); });
+  } else {
+    _applyFileCompletedToggle(id);
+  }
+}
+function _applyFileCompletedToggle(id){
+  const f = FILES.find(x=>x.id===id); if(!f) return;
+  const wasCompleted = f.status==='مكتملة';
   haptic();
   if(wasCompleted){
     f.status = f._preCompleteStatus || 'نشط';
