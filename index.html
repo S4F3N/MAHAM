@@ -164,7 +164,7 @@
   .stat-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px 16px;backdrop-filter:var(--blur);}
   .stat-card b{display:block;font-family:var(--font-display);font-size:24px;font-weight:700;}
   .stat-card span{font-size:11.5px;color:var(--text-2);}
-  .stat-card.red b{color:var(--red);} .stat-card.orange b{color:var(--orange);} .stat-card.accent b{color:var(--accent);} .stat-card.green b{color:var(--green);}
+  .stat-card.red b{color:var(--red);} .stat-card.orange b{color:var(--orange);} .stat-card.accent b{color:var(--accent);} .stat-card.green b{color:var(--green);} .stat-card.blue b{color:var(--blue);}
 
   .chart-box{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:26px;backdrop-filter:var(--blur);}
   .chart-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12px;}
@@ -354,6 +354,8 @@
   .badge.status-نشط{background:var(--green-glow);color:var(--green);}
   .badge.status-متوقف{background:var(--orange-glow);color:var(--orange);}
   .badge.status-مغلق{background:var(--surface-3);color:var(--text-2);}
+  .badge.status-مكتملة{background:var(--blue-glow);color:var(--blue);}
+  .file-card .f-complete-btn{font-size:14px;flex-shrink:0;cursor:pointer;}
   .badge.due-late{background:var(--red-glow);color:var(--red);}
   .badge.due-soon{background:var(--orange-glow);color:var(--orange);}
 
@@ -658,7 +660,7 @@
       <div class="search-box"><input type="text" id="fileSearch" placeholder="بحث بالاسم أو الطرف..." oninput="renderFiles()"></div>
       <select id="groupFilter" onchange="renderFiles()"><option value="">كل المجموعات</option></select>
       <select id="catFilter" onchange="renderFiles()"><option value="">كل التصنيفات</option></select>
-      <select id="statusFilter" onchange="renderFiles()"><option value="">كل الحالات</option><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option></select>
+      <select id="statusFilter" onchange="renderFiles()"><option value="">كل الحالات</option><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option><option value="مكتملة">مكتملة</option></select>
       <select id="priorityFilterHome" onchange="renderFiles()"><option value="">كل الأولويات</option><option value="عاجل">عاجل</option><option value="متوسط">متوسط</option><option value="عادي">عادي</option></select>
       <button class="chip" id="pinnedChip" onclick="togglePinnedFilter()">⭐ المثبتة فقط</button>
       <select id="fileSort" onchange="renderFiles()">
@@ -938,7 +940,7 @@
       <div class="form-row"><label>التصنيف</label><select id="fCategory"></select></div>
     </div>
     <div class="form-2col">
-      <div class="form-row"><label>الحالة</label><select id="fStatus"><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option></select></div>
+      <div class="form-row"><label>الحالة</label><select id="fStatus"><option value="نشط">نشط</option><option value="متوقف">متوقف</option><option value="مغلق">مغلق</option><option value="مكتملة">مكتملة</option></select></div>
       <div class="form-row"><label>الأولوية</label><select id="fPriority"><option value="عاجل">عاجل</option><option value="متوسط" selected>متوسط</option><option value="عادي">عادي</option></select></div>
     </div>
     <div class="form-2col">
@@ -1974,6 +1976,7 @@ function renderTodayCard(){
 function renderFilesPage(){ populateCatFilter(); populateGroupFilter(); renderFiles(); }
 function renderStats(){
   const activeFiles = FILES.filter(f=>f.status==='نشط').length;
+  const completedFiles = FILES.filter(f=>f.status==='مكتملة').length;
   const open = pendingRounds();
   const overdue = open.filter(r=>r.due && daysUntil(r.due)<0).length;
   const inProgress = open.filter(r=>r.exec==='جارٍ').length;
@@ -1981,7 +1984,7 @@ function renderStats(){
     <div class="stat-card"><b>${activeFiles}</b><span>ملف نشط</span></div>
     <div class="stat-card red"><b>${overdue}</b><span>إجراء متأخر</span></div>
     <div class="stat-card orange"><b>${inProgress}</b><span>جارٍ تنفيذه</span></div>
-    <div class="stat-card accent"><b>${ROUNDS.length}</b><span>إجمالي الجولات</span></div>
+    <div class="stat-card blue"><b>${completedFiles}</b><span>الملفات المكتملة</span></div>
   `;
   animateStatNumbers();
 }
@@ -2230,7 +2233,7 @@ function renderFiles(){
     return `<div class="swipe-row">
       <button class="swipe-del-btn" onclick="event.stopPropagation(); quickDelete('file','${f.id}')">🗑<br>حذف</button>
       <div class="swipeable-inner file-card" onclick="tapNav(event,'file','${f.id}')">
-        <div class="f-top"><span class="p-dot ${f.priority}"></span><span class="f-title">${esc(f.title)}</span>${f.pinned?'<span class="star">⭐</span>':''}</div>
+        <div class="f-top"><span class="p-dot ${f.priority}"></span><span class="f-title">${esc(f.title)}</span>${f.pinned?'<span class="star">⭐</span>':''}<span class="f-complete-btn" onclick="event.stopPropagation(); toggleFileCompleted('${f.id}')" title="${f.status==='مكتملة'?'إعادة فتح الملف':'تصنيف كمكتملة'}">${f.status==='مكتملة'?'↺':'✅'}</span></div>
         <div class="f-badges">${groupBadge(f.groupId)}${catBadge(f.category)}<span class="badge status-${f.status}">${f.status}</span></div>
         <div class="f-bar"><div class="f-fill" style="transform:scaleX(${pct})"></div></div>
         <div class="f-meta"><span>${rs.length} جولة</span><span>${last?'آخر تحديث '+fmtDate(last.date):'بدون جولات'}</span></div>
@@ -2636,6 +2639,24 @@ function togglePin(id, ev){
   logActivity('edit','file', `${f.pinned?'تثبيت':'إلغاء تثبيت'} ملف: ${f.title}`);
   persistFiles(id).then(renderFiles);
 }
+function toggleFileCompleted(id){
+  const f = FILES.find(x=>x.id===id); if(!f) return;
+  const wasCompleted = f.status==='مكتملة';
+  haptic();
+  if(wasCompleted){
+    f.status = f._preCompleteStatus || 'نشط';
+    delete f._preCompleteStatus;
+  } else {
+    f._preCompleteStatus = f.status;
+    f.status = 'مكتملة';
+  }
+  logActivity('edit','file', `${wasCompleted?'إعادة فتح':'تصنيف كمكتملة'} — ${f.title}`);
+  persistFiles(id).then(()=>{
+    if(currentFileId===id) renderFilePage();
+    renderHome_soft();
+    _showToast(wasCompleted?'تمت إعادة فتح الملف':'تم تصنيف الملف كمكتملة','success');
+  });
+}
 function deleteFile(){ deleteFileById(document.getElementById('fId').value, true); }
 function deleteFileById(id, fromModal){
   const relatedRounds = ROUNDS.filter(r=>r.fileId===id);
@@ -2670,6 +2691,7 @@ function renderFilePage(){
         })()}
       </div>
       <div class="fh-actions">
+        <button class="btn btn-glass btn-sm" onclick="toggleFileCompleted('${f.id}')">${f.status==='مكتملة'?'↺ إعادة فتح':'✅ تصنيف كمكتملة'}</button>
         <button class="btn btn-glass btn-sm" onclick="openFileModal('${f.id}')">تعديل</button>
         <button class="btn btn-danger btn-sm" onclick="document.getElementById('fId').value='${f.id}'; deleteFile();">حذف</button>
       </div>
