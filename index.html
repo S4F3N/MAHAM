@@ -1814,7 +1814,18 @@ function groupOf(id){ return id? CATEGORY_GROUPS.find(g=>g.id===id) : null; }
 function groupBadge(id){ const g = groupOf(id); if(!g) return ''; return `<span class="badge" style="background:var(--surface-3);color:var(--text-2)">📁 ${esc(g.name)}</span>`; }
 function subfileOf(id){ return id? SUBFILES.find(s=>s.id===id) : null; }
 function subfileBadge(id){ const s = subfileOf(id); if(!s) return ''; return `<span class="badge" style="background:var(--surface-3);color:var(--text-2)">🧭 ${esc(s.title)}</span>`; }
-function pendingRounds(){ return ROUNDS.filter(r=>r.exec!=='تم'); }
+/* Rounds belonging to a file already marked "مكتملة" (completed) are
+   excluded here — this is the single shared list behind "مهام اليوم",
+   the notifications badge, the home stats, and the "إجراءات مطلوبة لم
+   تُنفذ بعد" grouped section, so completing a file quietly clears all of
+   them at once instead of needing to be handled in each place separately. */
+function pendingRounds(){
+  return ROUNDS.filter(r=>{
+    if(r.exec==='تم') return false;
+    const f = fileOf(r.fileId);
+    return !f || f.status!=='مكتملة';
+  });
+}
 /* A round counts as "due" on a given date if that date falls anywhere
    between its تاريخ التنفيذ (execDate, when set) and تاريخ الانتهاء (due) —
    inclusive of both ends. A round with only `due` set (no execDate) keeps
@@ -1826,8 +1837,13 @@ function roundIsDueOn(r, dateStr){
   if(!start || !end) return false;
   return start<=dateStr && dateStr<=end;
 }
-function isFileAtRisk(f){ const rs=ROUNDS.filter(r=>r.fileId===f.id); return rs.some(r=> r.exec!=='تم' && r.due && daysUntil(r.due)<0); }
+function isFileAtRisk(f){
+  if(f.status==='مكتملة') return false;
+  const rs=ROUNDS.filter(r=>r.fileId===f.id); return rs.some(r=> r.exec!=='تم' && r.due && daysUntil(r.due)<0);
+}
 function nextActionFor(fileId){
+  const _f = fileOf(fileId);
+  if(_f && _f.status==='مكتملة') return null;
   const rs = ROUNDS.filter(r=>r.fileId===fileId && r.exec!=='تم' && r.actionNeeded);
   if(!rs.length) return null;
   rs.sort((a,b)=>{
