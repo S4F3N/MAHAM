@@ -1190,6 +1190,7 @@ function ensureLoaded(){
             _cache = snap.exists ? (snap.data() || {}) : {};
             writeLocalCache(_cache);
             setStatus('synced');
+            startRealtimeSync();
             resolve();
           }).catch(function(){
             _cache = readLocalCache();
@@ -1198,6 +1199,7 @@ function ensureLoaded(){
           });
         } else {
           fbUser = null;
+          stopRealtimeSync();
           _cache = readLocalCache();
           setStatus('local');
           resolve();
@@ -1308,6 +1310,7 @@ function openSetupFromSettings(){
 }
 function doFirebaseSignOut(){
   if(fbAuth){ fbAuth.signOut(); }
+  stopRealtimeSync();
   fbUser = null;
   try{ localStorage.removeItem(FB_EMAIL_KEY); }catch(e){}
   setStatus('local');
@@ -1694,6 +1697,74 @@ function logActivity(action, entity, summary, detail){
 function persistTasks(changed, deleted){
   _addIds(_chgIds.tasks, changed); _addIds(_delIds.tasks, deleted);
   return _smartPersist('rd2:tasks', ()=>TASKS, (arr)=>{TASKS=arr;}, _chgIds.tasks, _delIds.tasks).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+
+/* ---------- live cross-device sync ----------
+   The functions above only pull fresh remote data at the moment THIS
+   device saves something. If a second device is open at the same time
+   and adds data, this device never hears about it until its own next
+   save (or a manual reload) — so two open tabs/devices can sit out of
+   sync for a while. This listener keeps every open device listening to
+   the Firestore doc live: whenever another device pushes a change, it
+   arrives here within about a second and is merged in without touching
+   any field this device has an unsaved local change for (that field's
+   key stays in _dirtyKeys until this device's own pending save
+   completes, and _smartPersist always re-merges with the freshest
+   remote copy at that point, so nothing gets lost either way). */
+const _remoteKeyMap = {
+  'rd2:files': (v)=>{FILES=v;},
+  'rd2:rounds': (v)=>{ROUNDS=v;},
+  'rd2:contacts': (v)=>{CONTACTS=v;},
+  'rd2:categories': (v)=>{CATEGORIES=v;},
+  'rd2:categorygroups': (v)=>{CATEGORY_GROUPS=v;},
+  'rd2:tasks': (v)=>{TASKS=v;},
+  'rd2:subfiles': (v)=>{SUBFILES=v;},
+  'rd2:quotes': (v)=>{QUOTES=v;},
+  'rd2:activitylog': (v)=>{ACTIVITY_LOG=v;},
+};
+let _fbUnsub = null;
+function startRealtimeSync(){
+  if(_fbUnsub || !fbUser || !fbDb) return;
+  const docRef = fbDb.collection(FB_COLLECTION).doc(fbUser.uid);
+  _fbUnsub = docRef.onSnapshot({includeMetadataChanges:true}, function(snap){
+    if(snap.metadata.hasPendingWrites) return; // our own optimistic echo — the confirmed one follows right after
+    if(!snap.exists) return;
+    _handleRemoteSnapshot(snap.data() || {});
+  }, function(){ /* transient listen error — the next successful save still re-syncs via _smartPersist */ });
+}
+function stopRealtimeSync(){ if(_fbUnsub){ _fbUnsub(); _fbUnsub=null; } }
+function _handleRemoteSnapshot(data){
+  let changed = false;
+  Object.keys(_remoteKeyMap).forEach(function(key){
+    if(_dirtyKeys.has(key)) return; // local change queued but not pushed yet — don't clobber it
+    const raw = data[key];
+    if(raw==null || _cache[key]===raw) return;
+    let parsed;
+    try{ parsed = JSON.parse(raw); }catch(e){ return; }
+    _cache[key] = raw;
+    _remoteKeyMap[key](parsed);
+    changed = true;
+  });
+  if(!changed) return;
+  writeLocalCache(_cache);
+  _reRenderAfterRemoteChange();
+  if(typeof _showToast==='function') _showToast('تحديث من جهاز آخر');
+}
+function _reRenderAfterRemoteChange(){
+  renderNotif();
+  if(document.getElementById('page-file').classList.contains('active')){
+    if(currentFileId && FILES.find(f=>f.id===currentFileId)) renderFilePage();
+    else { currentFileId=null; goToFilesPage(); }
+    return;
+  }
+  const tabs = ['home','files','tasks','calendar','contacts','activity','settings'];
+  const active = tabs.find(function(t){ const el=document.getElementById('page-'+t); return el && el.classList.contains('active'); });
+  if(active==='home') renderHome();
+  else if(active==='files') renderFilesPage();
+  else if(active==='tasks') renderTasksPage();
+  else if(active==='calendar') renderCalendarPage();
+  else if(active==='contacts') renderContacts();
+  else if(active==='activity') renderActivityPage();
 }
 
 function systemPrefersDark(){ return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
