@@ -857,6 +857,20 @@
     </div>
 
     <div class="settings-block">
+      <h3 style="margin-bottom:4px;">المساعد الذكي (OpenAI)</h3>
+      <div class="settings-desc" style="margin-bottom:10px;">يُستخدم مفتاح OpenAI مباشرة من هذا المتصفح لتشغيل التلخيص والاقتراح والبحث الذكي والمحادثة. يُخزَّن المفتاح فقط في تخزين هذا المتصفح (localStorage) على جهازك، ولا يُرفع لـ GitHub أو أي سيرفر. إذا استخدمت متصفحًا أو جهازًا آخر، تحتاج تدخله مرة ثانية هناك.</div>
+      <div class="settings-desc" id="aiKeyStatusLine" style="margin-bottom:10px;font-weight:600;">—</div>
+      <div class="settings-row">
+        <label>مفتاح OpenAI API</label>
+        <input type="password" class="num-input-sm" id="aiKeyInput" placeholder="sk-..." style="width:220px;" autocomplete="off">
+      </div>
+      <div class="setup-actions" style="margin-top:4px;">
+        <button class="btn btn-glass btn-sm" onclick="saveAIKey()">حفظ المفتاح</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAIKey()">حذف المفتاح</button>
+      </div>
+    </div>
+
+    <div class="settings-block">
       <div class="section-head"><h3>التصنيفات</h3><button class="btn btn-glass btn-sm" onclick="openCatModal()">+ تصنيف جديد</button></div>
       <div id="catList"></div>
     </div>
@@ -3139,6 +3153,7 @@ function quickDelete(kind, id){
 /* ---------- SETTINGS / CATEGORIES ---------- */
 function renderSettings(){
   renderAppearanceControls();
+  renderAIKeyStatus();
   document.getElementById('catList').innerHTML = CATEGORIES.map(c=>{
     const col = COLORS.find(x=>x.name===c.color)||COLORS[0];
     const count = FILES.filter(f=>f.category===c.name).length;
@@ -3595,33 +3610,96 @@ window.addEventListener('scroll', ()=>{
 scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'smooth'}); haptic(6); });
 
 /* ---------- AI ASSISTANT ---------- */
-/* All AI features go through one Cloud Function (aiAssist) that holds the
-   OpenAI API key server-side — the key never touches the browser. The
-   function requires a signed-in Firebase user (checks the ID token), so
-   these features only work while logged in with Firebase (see المزامنة في
-   الإعدادات), same requirement as cross-device sync. */
-const AI_FN_URL = 'https://us-central1-maham-3d4d7.cloudfunctions.net/aiAssist';
+/* All AI features call the OpenAI API directly from the browser using a key
+   the user pastes into الإعدادات, stored only in this browser's localStorage
+   (never written to index.html/git, never sent anywhere except api.openai.com).
+   There is no backend proxy — this keeps the app 100% static/free (no Firebase
+   Blaze billing plan needed), at the cost of the key living in this browser's
+   storage rather than behind a server. */
+const AI_KEY_STORAGE = 'maham_openai_key';
+const AI_MODEL = 'gpt-4o-mini';
 let AI_CHAT_HISTORY = [];
 
+function getAIKey(){ try{ return localStorage.getItem(AI_KEY_STORAGE) || ''; }catch(e){ return ''; } }
+function renderAIKeyStatus(){
+  const line = document.getElementById('aiKeyStatusLine');
+  const input = document.getElementById('aiKeyInput');
+  if(!line) return;
+  const key = getAIKey();
+  if(key){
+    line.textContent = '✅ المفتاح مفعّل (ينتهي بـ ...' + key.slice(-4) + ')';
+    line.style.color = 'var(--green)';
+    if(input) input.value = '';
+    if(input) input.placeholder = 'sk-••••••••' + key.slice(-4);
+  } else {
+    line.textContent = 'لم يتم إدخال مفتاح بعد — ميزات الذكاء الاصطناعي معطّلة.';
+    line.style.color = 'var(--text-2)';
+    if(input){ input.value=''; input.placeholder='sk-...'; }
+  }
+}
+function saveAIKey(){
+  const v = document.getElementById('aiKeyInput').value.trim();
+  if(!v){ _showToast('اكتب المفتاح أولًا','error'); return; }
+  try{ localStorage.setItem(AI_KEY_STORAGE, v); }catch(e){ _showToast('تعذر حفظ المفتاح بهذا المتصفح','error'); return; }
+  renderAIKeyStatus();
+  _showToast('تم حفظ المفتاح بنجاح','success');
+}
+function clearAIKey(){
+  try{ localStorage.removeItem(AI_KEY_STORAGE); }catch(e){}
+  renderAIKeyStatus();
+  _showToast('تم حذف المفتاح');
+}
+
+function _aiSystemPrompt(mode){
+  switch(mode){
+    case 'summarize':
+      return 'أنت مساعد قانوني يلخص ملفات وجولات متابعة قضايا بالعربية الفصحى، بإيجاز ودقة، دون اختلاق أي معلومة غير موجودة في البيانات المعطاة. اذكر الحالة الراهنة وآخر المستجدات والإجراء القادم المطلوب إن وُجد، في فقرات قصيرة واضحة.';
+    case 'suggest':
+      return 'أنت مساعد قانوني. بناءً على وصف جولة متابعة (ما تم اكتشافه والإجراء المتخذ)، اقترح نص "الإجراء المطلوب" (الخطوة القادمة) بإيجاز، وحدد أولوية مناسبة من (عاجل/متوسط/عادي) مع سبب مختصر. أعد الرد بصيغة JSON فقط بالحقول التالية بالضبط: {"actionNeeded": "...", "priority": "عاجل|متوسط|عادي", "reason": "..."}.';
+    case 'search':
+      return 'أنت مساعد بحث ذكي داخل قائمة ملفات قضايا. يُعطى لك سؤال المستخدم وقائمة مختصرة بالملفات (JSON). أعد JSON فقط بصيغة {"matches":[{"id":"...","reason":"..."}]} مرتبة من الأكثر صلة للأقل، ولا تُدرج ملفًا غير ذي صلة فعليًا. إن لم يوجد أي ملف مطابق أعد {"matches":[]}.';
+    case 'chat':
+    default:
+      return 'أنت مساعد ذكي داخل برنامج "مهام صَفوان" لمتابعة ملفات قضايا قانونية. تجيب بالعربية بإيجاز ووضوح بناءً فقط على بيانات السياق المعطاة لك (الملفات، حالتها، الإجراءات المستحقة). إذا لم تكفِ المعلومات المعطاة للإجابة بثقة، قل ذلك صراحة بدل التخمين أو اختلاق تفاصيل.';
+  }
+}
+
 async function callAI(mode, message, context){
-  if(!fbUser || !fbAuth || !fbAuth.currentUser){
-    _showToast('سجّل دخولك بحساب Firebase أولاً لتفعيل ميزات الذكاء الاصطناعي (من الإعدادات)','error');
+  const key = getAIKey();
+  if(!key){
+    _showToast('أدخل مفتاح OpenAI أولًا من الإعدادات لتفعيل ميزات الذكاء الاصطناعي','error');
     return null;
   }
-  let idToken;
-  try{ idToken = await fbAuth.currentUser.getIdToken(); }
-  catch(e){ _showToast('تعذر التحقق من تسجيل الدخول','error'); return null; }
+  const messages = [{ role:'system', content:_aiSystemPrompt(mode) }];
+  if(context){
+    messages.push({ role:'system', content:'بيانات السياق (JSON):\n' + JSON.stringify(context).slice(0,60000) });
+  }
+  if(mode==='chat'){
+    AI_CHAT_HISTORY.slice(-10).forEach(h=>{
+      if(h && (h.role==='user'||h.role==='assistant') && h.content){
+        messages.push({ role:h.role, content:String(h.content).slice(0,4000) });
+      }
+    });
+  }
+  messages.push({ role:'user', content:String(message).slice(0,8000) });
+  const wantsJson = mode==='suggest' || mode==='search';
+  const body = { model:AI_MODEL, messages, temperature: mode==='chat'?0.4:0.2 };
+  if(wantsJson) body.response_format = { type:'json_object' };
   try{
-    const res = await fetch(AI_FN_URL, {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+idToken },
-      body: JSON.stringify({ mode, message, context, history: mode==='chat'? AI_CHAT_HISTORY.slice(-10) : undefined }),
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+      body: JSON.stringify(body),
     });
     const data = await res.json().catch(()=>({}));
-    if(!res.ok){ _showToast('تعذر الاتصال بالمساعد الذكي: '+(data.error||res.status),'error'); return null; }
-    return data.content || '';
+    if(!res.ok){
+      const msg = (data.error && data.error.message) || res.status;
+      _showToast('تعذر الاتصال بـ OpenAI: '+msg,'error');
+      return null;
+    }
+    return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
   }catch(e){
-    _showToast('تعذر الاتصال بالمساعد الذكي — تحقق من الاتصال بالإنترنت','error');
+    _showToast('تعذر الاتصال بـ OpenAI — تحقق من الاتصال بالإنترنت','error');
     return null;
   }
 }
