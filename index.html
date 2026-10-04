@@ -556,6 +556,8 @@
   #_pwSheet input[type=password]{width:100%;margin-bottom:9px;}
   #_pwSheetError{font-size:12.5px;color:var(--red);margin-bottom:9px;display:none;}
   #_pwSheetError.show{display:block;}
+  #_pwSheetForgotLink{display:block;text-align:center;font-size:12px;color:var(--accent);text-decoration:none;margin-bottom:14px;cursor:pointer;}
+  #_pwSheetForgotLink:hover{text-decoration:underline;}
 
   /* ---- swipe-to-delete rows ---- */
   .swipe-row{position:relative;overflow:hidden;border-radius:var(--radius-lg);}
@@ -1345,6 +1347,7 @@
     <input type="password" id="_pwSheetInput" placeholder="كلمة مرور الحماية" autocomplete="off">
     <input type="password" id="_pwSheetInput2" placeholder="تأكيد كلمة المرور" autocomplete="off" style="display:none;">
     <div id="_pwSheetError"></div>
+    <a href="javascript:void(0)" id="_pwSheetForgotLink" style="display:none;">نسيت كلمة المرور؟</a>
     <div class="sheet-btns"><button id="_pwSheetCancelBtn">إلغاء</button><button id="_pwSheetConfirmBtn">تأكيد</button></div>
   </div>
 </div>
@@ -3724,6 +3727,7 @@ function _showPasswordConfirm(msg, {destructive=true, confirmLabel='تأكيد',
     const errEl = document.getElementById('_pwSheetError');
     const confirmBtn = document.getElementById('_pwSheetConfirmBtn');
     const cancelBtn = document.getElementById('_pwSheetCancelBtn');
+    const forgotLink = document.getElementById('_pwSheetForgotLink');
     const isSetup = !PROTECT_PW_CACHE;
     msgEl.textContent = msg;
     setupNote.style.display = isSetup ? 'block' : 'none';
@@ -3733,9 +3737,20 @@ function _showPasswordConfirm(msg, {destructive=true, confirmLabel='تأكيد',
     errEl.classList.remove('show'); errEl.textContent='';
     confirmBtn.textContent = confirmLabel; confirmBtn.className = destructive?'_destructive':'';
     cancelBtn.textContent = cancelLabel;
+    forgotLink.style.display = isSetup ? 'none' : 'block';
     overlay.classList.add('open');
     setTimeout(()=>{ try{ input1.focus(); }catch(e){} }, 60);
-    const done=(v)=>{ document.removeEventListener('keydown', onKey); overlay.classList.remove('open'); resolve(v); };
+    const done=(v)=>{ document.removeEventListener('keydown', onKey); forgotLink.onclick=null; overlay.classList.remove('open'); resolve(v); };
+    forgotLink.onclick = ()=>{
+      done(false);
+      _showConfirm('سيتم إلغاء كلمة مرور الحماية الحالية فورًا بدون الحاجة لمعرفتها، حتى تقدر تعيّن كلمة مرور جديدة. تأكد أنك صاحب الجهاز/الحساب. متابعة؟', {destructive:true, confirmLabel:'إلغاء كلمة المرور'}).then(ok=>{
+        if(!ok) return;
+        PROTECT_PW_CACHE = '';
+        window.storage.set(PROTECT_PW_KEY, '');
+        renderProtectSettings();
+        _showToast('تم إلغاء كلمة المرور. ستُطلب منك تعيين كلمة مرور جديدة عند أول عملية حساسة.','success');
+      });
+    };
     const tryConfirm=()=>{
       const v1 = input1.value, v2 = input2.value;
       if(isSetup){
