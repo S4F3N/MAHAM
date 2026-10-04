@@ -438,7 +438,6 @@
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:700;padding:18px;}
   .overlay.open{display:flex;}
   .modal{background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:24px;}
-  .ai-chat-modal{display:flex;flex-direction:column;height:78vh;}
   .ai-msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:6px 2px;margin-bottom:8px;}
   .ai-msg{max-width:85%;padding:9px 13px;border-radius:var(--radius-md);font-size:13.5px;line-height:1.65;white-space:pre-wrap;}
   .ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-left-radius:4px;}
@@ -446,6 +445,62 @@
   .ai-msg.loading{opacity:.65;font-style:italic;}
   .ai-msg.error{align-self:flex-start;background:var(--red-glow);color:var(--red);}
   .ai-input-row{display:flex;gap:8px;flex-shrink:0;}
+
+  /* ---- AI full-page app ---- */
+  .ai-app-overlay{position:fixed;inset:0;background:var(--bg);display:none;z-index:900;}
+  .ai-app-overlay.open{display:flex;}
+  .ai-app-shell{display:flex;width:100%;height:100%;}
+  .ai-sidebar{width:280px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface-1);border-left:1px solid var(--border);padding:12px;gap:10px;overflow:hidden;}
+  .ai-sidebar-search{width:100%;box-sizing:border-box;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);font-size:13px;}
+  .ai-sidebar-tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:2px;}
+  .ai-sidebar-tabs button{flex:1;border:none;background:none;padding:7px 4px;font-size:11.5px;font-weight:600;color:var(--text-2);border-radius:8px;cursor:pointer;font-family:var(--font-body);}
+  .ai-sidebar-tabs button.active{background:var(--accent);color:#fff;}
+  .ai-sidebar-body{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;}
+  .ai-conv-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;border:1px solid transparent;}
+  .ai-conv-item:hover{background:var(--surface-2);}
+  .ai-conv-item.active{background:var(--surface-3);border-color:var(--border);}
+  .ai-conv-item .ac-title{flex:1;font-size:12.5px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ai-conv-item .ac-sub{font-size:10.5px;color:var(--text-3);}
+  .ai-conv-item .ac-x{opacity:.5;font-size:12px;padding:2px 4px;}
+  .ai-conv-item .ac-x:hover{opacity:1;}
+  .ai-sidebar-section-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0;}
+  .ai-sidebar-section-head h4{margin:0;font-size:11.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .ai-sidebar-empty{color:var(--text-3);font-size:12px;padding:14px 6px;text-align:center;}
+  .ai-item-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;font-size:12.5px;}
+  .ai-item-card b{display:block;font-size:13px;margin-bottom:3px;}
+  .ai-item-card .ai-item-actions{display:flex;gap:6px;margin-top:6px;}
+  .ai-item-actions button{font-size:11px;padding:3px 8px;border-radius:7px;border:1px solid var(--border);background:var(--surface-1);color:var(--text-2);cursor:pointer;}
+  .ai-memory-box{width:100%;box-sizing:border-box;min-height:200px;resize:vertical;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);font-size:12.5px;font-family:var(--font-body);line-height:1.6;}
+  .ai-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .ai-main-header{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .ai-sidebar-toggle{display:none;}
+  .ai-conv-title{flex:1;min-width:80px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ai-agent-select{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-1);font-size:12px;padding:6px 8px;max-width:160px;}
+  .ai-autospeak-toggle{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--text-2);cursor:pointer;}
+  .ai-msgs-full{flex:1;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:12px;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box;}
+  .ai-msg-wrap{display:flex;flex-direction:column;max-width:78%;}
+  .ai-msg-wrap.user{align-self:flex-end;align-items:flex-end;}
+  .ai-msg-wrap.assistant{align-self:flex-start;align-items:flex-start;}
+  .ai-msg-quote{font-size:11px;color:var(--text-3);border-right:2px solid var(--border);padding:3px 8px;margin-bottom:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ai-msg-attachments{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+  .ai-attach-chip{display:flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:4px 9px;font-size:11px;color:var(--text-2);cursor:pointer;}
+  .ai-attach-chip img{width:20px;height:20px;object-fit:cover;border-radius:4px;}
+  .ai-msg-actions{display:flex;gap:6px;margin-top:3px;opacity:.55;}
+  .ai-msg-actions button{border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-2);padding:2px 4px;}
+  .ai-msg-actions button:hover{opacity:1;color:var(--text-1);}
+  .ai-quote-preview{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 11px;margin:0 16px 6px;max-width:900px;width:calc(100% - 32px);box-sizing:border-box;align-self:center;font-size:12px;color:var(--text-2);}
+  .ai-quote-preview .aq-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ai-attach-preview{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px;max-width:900px;width:calc(100% - 32px);margin:0 auto;box-sizing:border-box;}
+  .ai-input-row-full{display:flex;align-items:flex-end;gap:8px;padding:12px 16px 16px;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box;}
+  .ai-input-row-full textarea{flex:1;resize:none;min-height:40px;max-height:140px;padding:10px 13px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);font-size:13.5px;font-family:var(--font-body);line-height:1.5;}
+  #aiMicBtn.recording{background:var(--orange);color:#fff;}
+  @media (max-width:760px){
+    .ai-sidebar{position:fixed;inset:0 20% 0 0;z-index:40;transform:translateX(105%);transition:transform .2s ease;box-shadow:0 0 30px rgba(0,0,0,.3);}
+    [dir="rtl"] .ai-sidebar{inset:0 0 0 20%;transform:translateX(-105%);}
+    .ai-sidebar.open{transform:translateX(0);}
+    .ai-sidebar-toggle{display:inline-flex;}
+    .ai-conv-title{font-size:13px;}
+  }
   .ai-input-row input{flex:1;}
   .ai-result-text{white-space:pre-wrap;line-height:1.85;font-size:14px;color:var(--text-1);}
   .ai-search-hit{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 13px;margin-bottom:8px;cursor:pointer;}
@@ -580,6 +635,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- Used only by the AI assistant's file-attachment feature, to extract text from PDF/Word files client-side before sending to OpenAI. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.13.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 
@@ -604,7 +662,7 @@
       <div class="icon-btn" id="notifBtn" title="التنبيهات">🔔<span class="notif-badge" id="notifBadge" style="display:none"></span></div>
       <div class="notif-drop" id="notifDrop"></div>
     </div>
-    <div class="icon-btn" id="aiBtn" title="المساعد الذكي" onclick="openAIChat()">🤖</div>
+    <div class="icon-btn" id="aiBtn" title="المساعد الذكي" onclick="openAIApp()">🤖</div>
     <div class="icon-btn" id="themeToggle" title="تبديل المظهر">🌙</div>
   </div>
 </header>
@@ -1141,22 +1199,46 @@
   </div>
 </div>
 
-<!-- AI CHAT MODAL -->
-<div class="overlay" id="aiChatOverlay">
-  <div class="modal ai-chat-modal">
-    <div class="modal-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-      <h3 style="margin:0;">🤖 المساعد الذكي</h3>
-      <div class="seg-control" id="aiChatModeControl">
-        <button type="button" class="active" data-val="cases" onclick="setAIChatMode('cases')">قضاياي فقط</button>
-        <button type="button" data-val="general" onclick="setAIChatMode('general')">عام</button>
+<!-- AI ASSISTANT — FULL PAGE APP -->
+<div class="ai-app-overlay" id="aiAppOverlay">
+  <div class="ai-app-shell">
+    <div class="ai-sidebar" id="aiSidebar">
+      <div class="ai-sidebar-top">
+        <button class="btn btn-filled btn-sm" style="width:100%;" onclick="aiNewConversation()">+ محادثة جديدة</button>
       </div>
+      <input type="text" class="ai-sidebar-search" id="aiSidebarSearch" placeholder="🔍 بحث بالمحادثات..." oninput="renderAISidebar()">
+      <div class="ai-sidebar-tabs" id="aiSidebarTabs">
+        <button type="button" class="active" data-tab="chats" onclick="aiSidebarTab('chats')">محادثات</button>
+        <button type="button" data-tab="projects" onclick="aiSidebarTab('projects')">مشاريع</button>
+        <button type="button" data-tab="agents" onclick="aiSidebarTab('agents')">وكلاء</button>
+        <button type="button" data-tab="memory" onclick="aiSidebarTab('memory')">الذاكرة</button>
+      </div>
+      <div class="ai-sidebar-body" id="aiSidebarBody"></div>
     </div>
-    <div class="ai-msgs" id="aiMsgs"></div>
-    <div class="ai-input-row">
-      <input type="text" id="aiChatInput" placeholder="اسأل عن ملفاتك وجولاتك ومهامك..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAIChat(); }">
-      <button class="btn btn-filled btn-sm" onclick="sendAIChat()">إرسال</button>
-      <button class="btn btn-glass btn-sm" onclick="clearAIChatHistory()" title="مسح سجل المحادثة">🗑</button>
+    <div class="ai-main">
+      <div class="ai-main-header">
+        <button class="icon-btn ai-sidebar-toggle" onclick="document.getElementById('aiSidebar').classList.toggle('open')" title="القائمة">☰</button>
+        <div class="ai-conv-title" id="aiConvTitleDisplay" onclick="aiRenameCurrentConv()" title="اضغط لإعادة التسمية">محادثة جديدة</div>
+        <select id="aiConvAgentSelect" class="ai-agent-select" onchange="aiSetConvAgent(this.value)">
+          <option value="">🤖 المساعد الافتراضي</option>
+        </select>
+        <label class="ai-autospeak-toggle" title="قراءة ردود المساعد صوتيًا تلقائيًا">
+          <input type="checkbox" id="aiAutoSpeakToggle" onchange="AI_AUTO_SPEAK=this.checked;">🔊 تلقائي
+        </label>
+        <button class="icon-btn" onclick="aiArchiveCurrentConv()" title="أرشفة المحادثة">📦</button>
+        <button class="icon-btn" onclick="aiDeleteCurrentConv()" title="حذف المحادثة">🗑</button>
+        <button class="icon-btn" onclick="closeAIApp()" title="إغلاق">✕</button>
+      </div>
+      <div class="ai-msgs-full" id="aiMsgsFull"></div>
+      <div class="ai-quote-preview" id="aiQuotePreview" style="display:none;"></div>
+      <div class="ai-attach-preview" id="aiAttachPreview"></div>
+      <div class="ai-input-row-full">
+        <button class="icon-btn" onclick="document.getElementById('aiFileInput').click()" title="إرفاق ملف (صورة / PDF / Word / نص)">📎</button>
+        <input type="file" id="aiFileInput" multiple style="display:none;" accept="image/*,.pdf,.docx,.txt,.md" onchange="aiHandleFileSelect(event)">
+        <button class="icon-btn" id="aiMicBtn" onclick="aiToggleVoiceInput()" title="إدخال صوتي">🎙</button>
+        <textarea id="aiInputFull" rows="1" placeholder="اكتب رسالتك... (Enter للإرسال، Shift+Enter لسطر جديد)" onkeydown="aiHandleInputKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px';"></textarea>
+        <button class="btn btn-filled btn-sm" onclick="sendAIChatFull()">إرسال</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1370,7 +1452,7 @@ function doFirebaseLogin(mode){
     const overlay = document.getElementById('setupOverlay');
     ensureLoaded().then(function(){
       if(overlay) overlay.classList.remove('open');
-      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof loadAIChatState==='function') return loadAIChatState(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); });
+      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof loadAIAppState==='function') return loadAIAppState(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); });
       updateAccountLine();
       if(typeof _showToast==='function') _showToast('تم تسجيل الدخول بنجاح');
     });
@@ -3616,49 +3698,75 @@ window.addEventListener('scroll', ()=>{
 });
 scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'smooth'}); haptic(6); });
 
-/* ---------- AI ASSISTANT ---------- */
+/* ---------- AI ASSISTANT (full-page app) ---------- */
 /* All AI features call the OpenAI API directly from the browser (no backend
    proxy — keeps the app 100% static/free, no Firebase Blaze billing plan
-   needed). The key itself is stored through window.storage ('rd2:aikey'),
-   the SAME mechanism the rest of the app's data uses: a local cache always,
-   plus — while signed in with Firebase (see المزامنة في الإعدادات) — synced
-   to this user's own Firestore document, protected by the same security
-   rule as everything else (`request.auth.uid == uid`, nobody else can read
-   it). That's what makes it follow you to every device automatically
-   WITHOUT the key ever being written into this file or pushed to GitHub
-   (GitHub's own push protection blocks that outright, and the repo/site are
-   public, so a key hardcoded in the source would be readable by anyone). */
+   needed). The key, conversations, projects, agents and memory are all
+   stored through window.storage, the SAME mechanism the rest of the app's
+   data uses: a local cache always, plus — while signed in with Firebase
+   (see المزامنة في الإعدادات) — synced to this user's own Firestore
+   document, protected by the same security rule as everything else
+   (`request.auth.uid == uid`, nobody else can read it). That's what makes
+   everything here follow you to every device automatically WITHOUT any key
+   or chat content ever being written into this file or pushed to GitHub.
+
+   One deliberate limit: attached IMAGES are kept in memory for the current
+   browser session only and are NOT persisted to Firestore (their base64 data
+   would be too large and risks hitting Firestore's 1MB-per-document limit —
+   which is shared with every other collection in this app, so bloating it
+   could break data sync entirely). After a full page reload, past image
+   attachments show as a small "📎 filename" placeholder chip instead of the
+   actual picture, but the conversation text (including what GPT said about
+   that image) is preserved. PDF/Word/text attachments are extracted to plain
+   text client-side before sending, and that extracted text IS persisted
+   normally (it's just text, same as any other message content). */
 const AI_KEY_KEY = 'rd2:aikey';
-const AI_CHAT_HISTORY_KEY = 'rd2:aichathistory';
-const AI_CHAT_MODE_KEY = 'rd2:aichatmode';
+const AI_CONV_KEY = 'rd2:aiconversations';
+const AI_PROJECTS_KEY = 'rd2:aiprojects';
+const AI_AGENTS_KEY = 'rd2:aiagents';
+const AI_MEMORY_KEY = 'rd2:aimemory';
+const AI_LAST_CONV_KEY = 'rd2:ailastconv';
 const AI_MODEL = 'gpt-4o';
-let AI_CHAT_HISTORY = []; // full persisted conversation log — never auto-cleared, syncs via Firestore like everything else
-let AI_CHAT_MODE = 'cases'; // 'cases' = answers only from app data; 'general' = full general-purpose assistant
+
 let AI_KEY_CACHE = '';
+let AI_CONVERSATIONS = [];   // {id,title,agentId,projectId,archived,createdAt,updatedAt,messages:[...]}
+let AI_PROJECTS = [];        // {id,name,instructions}
+let AI_AGENTS = [];          // {id,name,instructions,icon}
+let AI_MEMORY_TEXT = '';
+let AI_CURRENT_CONV_ID = null;
+let AI_SIDEBAR_TAB = 'chats';
+let AI_SHOW_ARCHIVE = false;
+let AI_PENDING_ATTACHMENTS = []; // [{name,mime,kind:'image'|'text',dataUrl?,text?}]
+let AI_PENDING_QUOTE = null;     // {role,text}
+let AI_AUTO_SPEAK = false;
+let AI_RECOGNITION = null;
+let AI_RECOGNIZING = false;
 
 function getAIKey(){ return AI_KEY_CACHE || ''; }
 async function loadAIKey(){
   try{ const r = await window.storage.get(AI_KEY_KEY); AI_KEY_CACHE = (r && r.value) || ''; }catch(e){}
 }
-async function loadAIChatState(){
-  try{ const r = await window.storage.get(AI_CHAT_HISTORY_KEY); if(r && r.value){ AI_CHAT_HISTORY = JSON.parse(r.value) || []; } }catch(e){}
-  try{ const m = await window.storage.get(AI_CHAT_MODE_KEY); if(m && m.value){ AI_CHAT_MODE = m.value; } }catch(e){}
+async function loadAIAppState(){
+  try{ const r = await window.storage.get(AI_CONV_KEY); AI_CONVERSATIONS = (r && r.value) ? (JSON.parse(r.value)||[]) : []; }catch(e){ AI_CONVERSATIONS = []; }
+  try{ const r = await window.storage.get(AI_PROJECTS_KEY); AI_PROJECTS = (r && r.value) ? (JSON.parse(r.value)||[]) : []; }catch(e){ AI_PROJECTS = []; }
+  try{ const r = await window.storage.get(AI_AGENTS_KEY); AI_AGENTS = (r && r.value) ? (JSON.parse(r.value)||[]) : []; }catch(e){ AI_AGENTS = []; }
+  try{ const r = await window.storage.get(AI_MEMORY_KEY); AI_MEMORY_TEXT = (r && r.value) || ''; }catch(e){ AI_MEMORY_TEXT = ''; }
+  try{ const r = await window.storage.get(AI_LAST_CONV_KEY); AI_CURRENT_CONV_ID = (r && r.value) || null; }catch(e){}
+  if(!AI_CONVERSATIONS.find(c=>c.id===AI_CURRENT_CONV_ID)) AI_CURRENT_CONV_ID = null;
 }
-function _persistAIChatHistory(){ return window.storage.set(AI_CHAT_HISTORY_KEY, JSON.stringify(AI_CHAT_HISTORY)).catch(()=>{}); }
-function setAIChatMode(mode){
-  AI_CHAT_MODE = mode;
-  window.storage.set(AI_CHAT_MODE_KEY, mode).catch(()=>{});
-  const ctrl = document.getElementById('aiChatModeControl');
-  if(ctrl) ctrl.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.val===mode));
+function _persistAIConversations(){ return window.storage.set(AI_CONV_KEY, JSON.stringify(_aiStripImagesForPersist(AI_CONVERSATIONS))).catch(()=>{}); }
+function _persistAIProjects(){ return window.storage.set(AI_PROJECTS_KEY, JSON.stringify(AI_PROJECTS)).catch(()=>{}); }
+function _persistAIAgents(){ return window.storage.set(AI_AGENTS_KEY, JSON.stringify(AI_AGENTS)).catch(()=>{}); }
+function _persistAIMemory(){ return window.storage.set(AI_MEMORY_KEY, AI_MEMORY_TEXT).catch(()=>{}); }
+function _persistAILastConv(){ return window.storage.set(AI_LAST_CONV_KEY, AI_CURRENT_CONV_ID||'').catch(()=>{}); }
+// Strip image dataUrls before writing to storage — see the note at the top of this section.
+function _aiStripImagesForPersist(convs){
+  return convs.map(c=>({ ...c, messages:(c.messages||[]).map(m=>({
+    ...m,
+    attachments: (m.attachments||[]).map(a=> a.kind==='image' ? {name:a.name, mime:a.mime, kind:'image', dataUrl:null} : a),
+  })) }));
 }
-function clearAIChatHistory(){
-  AI_CHAT_HISTORY = [];
-  _persistAIChatHistory();
-  const el = document.getElementById('aiMsgs');
-  if(el) el.innerHTML = '';
-  _aiAppendMsg('assistant','تم مسح سجل المحادثة. أهلًا من جديد!');
-  _showToast('تم مسح سجل المحادثة');
-}
+
 function renderAIKeyStatus(){
   const line = document.getElementById('aiKeyStatusLine');
   const input = document.getElementById('aiKeyInput');
@@ -3691,6 +3799,21 @@ async function clearAIKey(){
   _showToast('تم حذف المفتاح');
 }
 
+/* Compact summaries so payloads sent to the AI stay small and relevant —
+   full notes/attachments aren't needed for chat/search, just enough to
+   answer "what's going on with X" or "find files about Y". */
+function _aiFileSummary(f){
+  const na = nextActionFor(f.id);
+  const rs = ROUNDS.filter(r=>r.fileId===f.id);
+  return {
+    id:f.id, title:f.title, status:f.status, priority:f.priority, category:f.category,
+    party:f.party, tags:f.tags||[], roundsCount:rs.length,
+    overdue: rs.filter(r=>r.exec!=='تم' && r.due && daysUntil(r.due)<0).length,
+    nextAction: na ? {actionNeeded:na.actionNeeded, due:na.due, exec:na.exec} : null,
+  };
+}
+function buildAIFilesContext(){ return FILES.map(_aiFileSummary); }
+
 function _aiSystemPrompt(mode){
   switch(mode){
     case 'summarize':
@@ -3699,12 +3822,8 @@ function _aiSystemPrompt(mode){
       return 'أنت مساعد قانوني. بناءً على وصف جولة متابعة (ما تم اكتشافه والإجراء المتخذ)، اقترح نص "الإجراء المطلوب" (الخطوة القادمة) بإيجاز، وحدد أولوية مناسبة من (عاجل/متوسط/عادي) مع سبب مختصر. أعد الرد بصيغة JSON فقط بالحقول التالية بالضبط: {"actionNeeded": "...", "priority": "عاجل|متوسط|عادي", "reason": "..."}.';
     case 'search':
       return 'أنت مساعد بحث ذكي داخل قائمة ملفات قضايا. يُعطى لك سؤال المستخدم وقائمة مختصرة بالملفات (JSON). أعد JSON فقط بصيغة {"matches":[{"id":"...","reason":"..."}]} مرتبة من الأكثر صلة للأقل، ولا تُدرج ملفًا غير ذي صلة فعليًا. إن لم يوجد أي ملف مطابق أعد {"matches":[]}.';
-    case 'chat':
     default:
-      if(AI_CHAT_MODE==='general'){
-        return 'أنت مساعد ذكي عام (مثل ChatGPT) تجيب بالعربية بوضوح وإيجاز على أي سؤال يطرحه المستخدم، سواء كان متعلقًا ببرنامجه "مهام صَفوان" لمتابعة القضايا أو سؤالًا عامًا تمامًا (قانوني عام، صياغة، ترجمة، معلومات عامة... إلخ). معك أيضًا بيانات ملفات المستخدم وقضاياه بصيغة JSON ضمن السياق — استخدمها فقط عندما يكون السؤال متعلقًا بها، وإلا جاوب من معرفتك العامة بثقة دون أي تردد أو اعتذار غير ضروري.';
-      }
-      return 'أنت مساعد ذكي داخل برنامج "مهام صَفوان" لمتابعة ملفات قضايا قانونية. تجيب بالعربية بإيجاز ووضوح بناءً فقط على بيانات السياق المعطاة لك (الملفات، حالتها، الإجراءات المستحقة). إذا لم تكفِ المعلومات المعطاة للإجابة بثقة، قل ذلك صراحة بدل التخمين أو اختلاق تفاصيل.';
+      return 'أنت مساعد ذكي عام تجيب بالعربية بوضوح وإيجاز، وتقدر تجاوب على أي سؤال (قانوني عام أو غير ذلك). لديك اطلاع على بيانات ملفات المستخدم وقضاياه بصيغة JSON ضمن السياق — استخدمها عندما يكون السؤال متعلقًا بها.';
   }
 }
 
@@ -3718,21 +3837,14 @@ async function callAI(mode, message, context){
   if(context){
     messages.push({ role:'system', content:'بيانات السياق (JSON):\n' + JSON.stringify(context).slice(0,60000) });
   }
-  if(mode==='chat'){
-    // AI_CHAT_HISTORY already has this turn's user message pushed by the
-    // caller, so just replay the last 10 as-is instead of appending the
-    // current message again below (that used to double it up).
-    AI_CHAT_HISTORY.slice(-10).forEach(h=>{
-      if(h && (h.role==='user'||h.role==='assistant') && h.content){
-        messages.push({ role:h.role, content:String(h.content).slice(0,4000) });
-      }
-    });
-  } else {
-    messages.push({ role:'user', content:String(message).slice(0,8000) });
-  }
+  messages.push({ role:'user', content:String(message).slice(0,8000) });
   const wantsJson = mode==='suggest' || mode==='search';
-  const body = { model:AI_MODEL, messages, temperature: mode==='chat'?0.4:0.2 };
+  const body = { model:AI_MODEL, messages, temperature:0.2 };
   if(wantsJson) body.response_format = { type:'json_object' };
+  return _aiRequest(key, body);
+}
+
+async function _aiRequest(key, body){
   try{
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
@@ -3751,60 +3863,411 @@ async function callAI(mode, message, context){
     return null;
   }
 }
-/* Compact summaries so payloads sent to the AI stay small and relevant —
-   full notes/attachments aren't needed for chat/search, just enough to
-   answer "what's going on with X" or "find files about Y". */
-function _aiFileSummary(f){
-  const na = nextActionFor(f.id);
-  const rs = ROUNDS.filter(r=>r.fileId===f.id);
-  return {
-    id:f.id, title:f.title, status:f.status, priority:f.priority, category:f.category,
-    party:f.party, tags:f.tags||[], roundsCount:rs.length,
-    overdue: rs.filter(r=>r.exec!=='تم' && r.due && daysUntil(r.due)<0).length,
-    nextAction: na ? {actionNeeded:na.actionNeeded, due:na.due, exec:na.exec} : null,
-  };
-}
-function buildAIFilesContext(){ return FILES.map(_aiFileSummary); }
 
-/* ---- chat panel ---- */
-function openAIChat(){
-  document.getElementById('aiChatOverlay').classList.add('open');
-  const ctrl = document.getElementById('aiChatModeControl');
-  if(ctrl) ctrl.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.val===AI_CHAT_MODE));
-  const el = document.getElementById('aiMsgs');
-  if(el){
-    el.innerHTML = '';
-    if(AI_CHAT_HISTORY.length){
-      AI_CHAT_HISTORY.forEach(h=>{ if(h && h.role && h.content) _aiAppendMsg(h.role, h.content); });
-    } else {
-      _aiAppendMsg('assistant','أهلًا! اسألني عن ملفاتك، الجولات المتأخرة، أو أي شيء مسجّل في البرنامج — أو بدّل لوضع "عام" لأسأل أي شي ثاني.');
-    }
+/* ===================== FULL-PAGE AI APP ===================== */
+
+function uidShort(){ return 'a'+Math.random().toString(36).slice(2,10); }
+
+function openAIApp(){
+  document.getElementById('aiAppOverlay').classList.add('open');
+  if(typeof pdfjsLib!=='undefined'){ try{ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }catch(e){} }
+  renderAIAgentSelect();
+  if(!AI_CURRENT_CONV_ID || !AI_CONVERSATIONS.find(c=>c.id===AI_CURRENT_CONV_ID)){
+    const firstActive = AI_CONVERSATIONS.find(c=>!c.archived);
+    if(firstActive){ AI_CURRENT_CONV_ID = firstActive.id; } else { aiNewConversation(); return; }
   }
-  setTimeout(()=>document.getElementById('aiChatInput').focus(), 150);
+  renderAISidebar();
+  renderAIConversation();
 }
-function _aiAppendMsg(role, text, cls){
-  const el = document.getElementById('aiMsgs');
-  const div = document.createElement('div');
-  div.className = 'ai-msg '+role+(cls?' '+cls:'');
-  div.textContent = text;
-  el.appendChild(div);
+function closeAIApp(){ document.getElementById('aiAppOverlay').classList.remove('open'); aiStopVoiceInput(); }
+
+function aiSidebarTab(tab){
+  AI_SIDEBAR_TAB = tab;
+  document.querySelectorAll('#aiSidebarTabs button').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+  renderAISidebar();
+}
+function toggleAIArchiveView(){ AI_SHOW_ARCHIVE = !AI_SHOW_ARCHIVE; renderAISidebar(); }
+
+function renderAISidebar(){
+  const body = document.getElementById('aiSidebarBody');
+  if(!body) return;
+  if(AI_SIDEBAR_TAB==='chats') return _renderAIChatsTab(body);
+  if(AI_SIDEBAR_TAB==='projects') return _renderAIProjectsTab(body);
+  if(AI_SIDEBAR_TAB==='agents') return _renderAIAgentsTab(body);
+  if(AI_SIDEBAR_TAB==='memory') return _renderAIMemoryTab(body);
+}
+function _renderAIChatsTab(body){
+  const q = (document.getElementById('aiSidebarSearch').value||'').trim().toLowerCase();
+  let list = AI_CONVERSATIONS.filter(c=> !!c.archived === AI_SHOW_ARCHIVE);
+  if(q){
+    list = list.filter(c=> (c.title||'').toLowerCase().includes(q) || (c.messages||[]).some(m=>(m.content||'').toLowerCase().includes(q)));
+  }
+  list = list.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const archBtn = `<div class="ai-sidebar-section-head"><h4>${AI_SHOW_ARCHIVE?'الأرشيف':'المحادثات'}</h4><button class="btn btn-glass btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="toggleAIArchiveView()">${AI_SHOW_ARCHIVE?'↩ رجوع':'📦 الأرشيف'}</button></div>`;
+  if(!list.length){ body.innerHTML = archBtn + `<div class="ai-sidebar-empty">${AI_SHOW_ARCHIVE?'لا توجد محادثات مؤرشفة':'لا توجد محادثات بعد'}</div>`; return; }
+  body.innerHTML = archBtn + list.map(c=>{
+    const agent = AI_AGENTS.find(a=>a.id===c.agentId);
+    const proj = AI_PROJECTS.find(p=>p.id===c.projectId);
+    const sub = [agent?('🤖 '+agent.name):'', proj?('📁 '+proj.name):''].filter(Boolean).join(' · ');
+    return `<div class="ai-conv-item ${c.id===AI_CURRENT_CONV_ID?'active':''}" onclick="aiOpenConversation('${c.id}')">
+      <div style="flex:1;min-width:0;">
+        <div class="ac-title">${esc(c.title||'محادثة جديدة')}</div>
+        ${sub?`<div class="ac-sub">${esc(sub)}</div>`:''}
+      </div>
+      <span class="ac-x" onclick="event.stopPropagation(); ${AI_SHOW_ARCHIVE?`aiUnarchiveConv('${c.id}')`:`aiArchiveConv('${c.id}')`}" title="${AI_SHOW_ARCHIVE?'إلغاء الأرشفة':'أرشفة'}">${AI_SHOW_ARCHIVE?'↩':'📦'}</span>
+      <span class="ac-x" onclick="event.stopPropagation(); aiDeleteConv('${c.id}')" title="حذف">🗑</span>
+    </div>`;
+  }).join('');
+}
+function _renderAIProjectsTab(body){
+  const head = `<div class="ai-sidebar-section-head"><h4>مشاريع</h4><button class="btn btn-glass btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="aiCreateProject()">+ جديد</button></div>`;
+  if(!AI_PROJECTS.length){ body.innerHTML = head + `<div class="ai-sidebar-empty">لا توجد مشاريع بعد. أنشئ مشروعًا لتجميع محادثات حول موضوع واحد (مثل قضية معينة) بتعليمات ثابتة تُطبّق على كل محادثاته.</div>`; return; }
+  body.innerHTML = head + AI_PROJECTS.map(p=>`
+    <div class="ai-item-card">
+      <b>📁 ${esc(p.name)}</b>
+      <div style="color:var(--text-2);">${esc((p.instructions||'').slice(0,80))}${(p.instructions||'').length>80?'…':''}</div>
+      <div class="ai-item-actions">
+        <button onclick="aiNewConversation(null,'${p.id}')">+ محادثة بهذا المشروع</button>
+        <button onclick="aiEditProject('${p.id}')">تعديل</button>
+        <button onclick="aiDeleteProject('${p.id}')">حذف</button>
+      </div>
+    </div>`).join('');
+}
+function _renderAIAgentsTab(body){
+  const head = `<div class="ai-sidebar-section-head"><h4>وكلاء مخصصون</h4><button class="btn btn-glass btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="aiCreateAgent()">+ جديد</button></div>`;
+  if(!AI_AGENTS.length){ body.innerHTML = head + `<div class="ai-sidebar-empty">لا يوجد وكلاء بعد. الوكيل شخصية مساعد بتعليمات ثابتة خاصة (مثل "محامي عقود" أو "باحث قانوني") تقدر تختارها لأي محادثة.</div>`; return; }
+  body.innerHTML = head + AI_AGENTS.map(a=>`
+    <div class="ai-item-card">
+      <b>${esc(a.icon||'🤖')} ${esc(a.name)}</b>
+      <div style="color:var(--text-2);">${esc((a.instructions||'').slice(0,80))}${(a.instructions||'').length>80?'…':''}</div>
+      <div class="ai-item-actions">
+        <button onclick="aiNewConversation('${a.id}')">+ محادثة بهذا الوكيل</button>
+        <button onclick="aiEditAgent('${a.id}')">تعديل</button>
+        <button onclick="aiDeleteAgent('${a.id}')">حذف</button>
+      </div>
+    </div>`).join('');
+}
+function _renderAIMemoryTab(body){
+  body.innerHTML = `
+    <div class="ai-sidebar-section-head"><h4>الذاكرة الدائمة</h4></div>
+    <div class="ai-sidebar-empty" style="text-align:right;padding:0 2px 8px;">معلومات تحب إن المساعد يتذكرها دائمًا في كل محادثاتك (مثل: "أنا مدير الشؤون القانونية بشركة أوشن"، أو أسلوب معيّن تفضله بالردود).</div>
+    <textarea class="ai-memory-box" id="aiMemoryBox" placeholder="اكتب هنا أي معلومة دائمة تبي المساعد يراعيها...">${esc(AI_MEMORY_TEXT)}</textarea>
+    <button class="btn btn-filled btn-sm" style="margin-top:8px;" onclick="aiSaveMemory()">حفظ الذاكرة</button>
+  `;
+}
+function aiSaveMemory(){
+  AI_MEMORY_TEXT = document.getElementById('aiMemoryBox').value;
+  _persistAIMemory();
+  _showToast('تم حفظ الذاكرة بنجاح','success');
+}
+
+function aiCreateProject(){
+  const name = prompt('اسم المشروع:'); if(!name) return;
+  const instructions = prompt('تعليمات/سياق ثابت لهذا المشروع (اختياري):') || '';
+  AI_PROJECTS.push({id:uidShort(), name:name.trim(), instructions:instructions.trim()});
+  _persistAIProjects(); renderAISidebar();
+}
+function aiEditProject(id){
+  const p = AI_PROJECTS.find(x=>x.id===id); if(!p) return;
+  const name = prompt('اسم المشروع:', p.name); if(!name) return;
+  const instructions = prompt('تعليمات/سياق ثابت لهذا المشروع:', p.instructions||'') ?? p.instructions;
+  p.name = name.trim(); p.instructions = (instructions||'').trim();
+  _persistAIProjects(); renderAISidebar();
+}
+function aiDeleteProject(id){
+  AI_PROJECTS = AI_PROJECTS.filter(p=>p.id!==id);
+  AI_CONVERSATIONS.forEach(c=>{ if(c.projectId===id) c.projectId=null; });
+  _persistAIProjects(); _persistAIConversations(); renderAISidebar();
+}
+function aiCreateAgent(){
+  const name = prompt('اسم الوكيل:'); if(!name) return;
+  const instructions = prompt('تعليمات هذا الوكيل (شخصيته ودوره):') || '';
+  AI_AGENTS.push({id:uidShort(), name:name.trim(), instructions:instructions.trim(), icon:'🤖'});
+  _persistAIAgents(); renderAISidebar(); renderAIAgentSelect();
+}
+function aiEditAgent(id){
+  const a = AI_AGENTS.find(x=>x.id===id); if(!a) return;
+  const name = prompt('اسم الوكيل:', a.name); if(!name) return;
+  const instructions = prompt('تعليمات هذا الوكيل:', a.instructions||'') ?? a.instructions;
+  a.name = name.trim(); a.instructions = (instructions||'').trim();
+  _persistAIAgents(); renderAISidebar(); renderAIAgentSelect();
+}
+function aiDeleteAgent(id){
+  AI_AGENTS = AI_AGENTS.filter(a=>a.id!==id);
+  AI_CONVERSATIONS.forEach(c=>{ if(c.agentId===id) c.agentId=null; });
+  _persistAIAgents(); _persistAIConversations(); renderAISidebar(); renderAIAgentSelect();
+}
+function renderAIAgentSelect(){
+  const sel = document.getElementById('aiConvAgentSelect');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">🤖 المساعد الافتراضي</option>' + AI_AGENTS.map(a=>`<option value="${a.id}">${esc(a.icon||'🤖')} ${esc(a.name)}</option>`).join('');
+  sel.value = current;
+}
+
+function aiNewConversation(agentId, projectId){
+  const conv = { id:uidShort(), title:'محادثة جديدة', agentId:agentId||null, projectId:projectId||null, archived:false, createdAt:Date.now(), updatedAt:Date.now(), messages:[] };
+  AI_CONVERSATIONS.unshift(conv);
+  AI_CURRENT_CONV_ID = conv.id;
+  _persistAIConversations(); _persistAILastConv();
+  if(!document.getElementById('aiAppOverlay').classList.contains('open')) document.getElementById('aiAppOverlay').classList.add('open');
+  renderAIAgentSelect();
+  renderAISidebar();
+  renderAIConversation();
+}
+function aiCurrentConv(){ return AI_CONVERSATIONS.find(c=>c.id===AI_CURRENT_CONV_ID) || null; }
+function aiOpenConversation(id){
+  AI_CURRENT_CONV_ID = id;
+  _persistAILastConv();
+  document.getElementById('aiSidebar').classList.remove('open');
+  renderAISidebar();
+  renderAIConversation();
+}
+function aiRenameCurrentConv(){
+  const c = aiCurrentConv(); if(!c) return;
+  const t = prompt('اسم المحادثة:', c.title||''); if(t==null) return;
+  c.title = t.trim() || 'محادثة جديدة'; c.updatedAt = Date.now();
+  _persistAIConversations(); renderAISidebar(); renderAIConversation();
+}
+function aiArchiveConv(id){ const c=AI_CONVERSATIONS.find(x=>x.id===id); if(!c) return; c.archived=true; _persistAIConversations(); renderAISidebar(); if(id===AI_CURRENT_CONV_ID){ const n=AI_CONVERSATIONS.find(x=>!x.archived); AI_CURRENT_CONV_ID=n?n.id:null; _persistAILastConv(); renderAIConversation(); } }
+function aiUnarchiveConv(id){ const c=AI_CONVERSATIONS.find(x=>x.id===id); if(!c) return; c.archived=false; _persistAIConversations(); renderAISidebar(); }
+function aiArchiveCurrentConv(){ const c=aiCurrentConv(); if(c) aiArchiveConv(c.id); }
+function aiDeleteConv(id){
+  const go = ()=>{ AI_CONVERSATIONS = AI_CONVERSATIONS.filter(c=>c.id!==id); _persistAIConversations();
+    if(id===AI_CURRENT_CONV_ID){ const n=AI_CONVERSATIONS.find(c=>!c.archived); AI_CURRENT_CONV_ID=n?n.id:null; _persistAILastConv(); renderAIConversation(); }
+    renderAISidebar(); };
+  if(typeof _showConfirm==='function') _showConfirm('حذف هذه المحادثة نهائيًا؟', {destructive:true, confirmLabel:'حذف'}).then(ok=>{ if(ok) go(); });
+  else if(confirm('حذف هذه المحادثة نهائيًا؟')) go();
+}
+function aiDeleteCurrentConv(){ const c=aiCurrentConv(); if(c) aiDeleteConv(c.id); }
+function aiSetConvAgent(agentId){ const c=aiCurrentConv(); if(!c) return; c.agentId = agentId||null; c.updatedAt=Date.now(); _persistAIConversations(); renderAISidebar(); }
+
+function renderAIConversation(){
+  const c = aiCurrentConv();
+  document.getElementById('aiConvTitleDisplay').textContent = c ? (c.title||'محادثة جديدة') : 'لا توجد محادثة';
+  renderAIAgentSelect();
+  const sel = document.getElementById('aiConvAgentSelect'); if(sel) sel.value = c?(c.agentId||''):'';
+  const el = document.getElementById('aiMsgsFull');
+  if(!el) return;
+  if(!c || !c.messages.length){
+    el.innerHTML = `<div class="ai-sidebar-empty" style="margin:auto;">أهلًا${fbUser?'':''}! اكتب رسالتك بالأسفل للبدء — تقدر ترفق صور أو ملفات PDF/Word، تستخدم الميكروفون، أو تختار وكيلًا مخصصًا من الأعلى.</div>`;
+    return;
+  }
+  el.innerHTML = c.messages.map(m=>_aiRenderMsgHtml(m)).join('');
   el.scrollTop = el.scrollHeight;
-  return div;
 }
-async function sendAIChat(){
-  const input = document.getElementById('aiChatInput');
-  const msg = input.value.trim();
-  if(!msg) return;
-  input.value = '';
-  _aiAppendMsg('user', msg);
-  AI_CHAT_HISTORY.push({role:'user', content:msg});
-  const loadingEl = _aiAppendMsg('assistant', 'جارٍ التفكير...', 'loading');
-  const reply = await callAI('chat', msg, {files: buildAIFilesContext(), today: today()});
-  loadingEl.remove();
-  if(reply==null){ AI_CHAT_HISTORY.pop(); return; } // drop the unanswered user turn so a retry doesn't double it up
-  _aiAppendMsg('assistant', reply);
-  AI_CHAT_HISTORY.push({role:'assistant', content:reply});
-  _persistAIChatHistory();
+function _aiRenderMsgHtml(m){
+  const quoteHtml = m.quoted ? `<div class="ai-msg-quote">${esc(String(m.quoted).slice(0,120))}</div>` : '';
+  const attHtml = (m.attachments&&m.attachments.length) ? `<div class="ai-msg-attachments">${m.attachments.map(a=>
+    a.kind==='image'
+      ? (a.dataUrl ? `<span class="ai-attach-chip"><img src="${a.dataUrl}">${esc(a.name)}</span>` : `<span class="ai-attach-chip">📎 ${esc(a.name)} (غير محفوظة بعد التحديث)</span>`)
+      : `<span class="ai-attach-chip" onclick="alert(${JSON.stringify((a.text||'').slice(0,4000))})">📄 ${esc(a.name)}</span>`
+  ).join('')}</div>` : '';
+  const actions = m.role==='assistant'
+    ? `<div class="ai-msg-actions"><button onclick="aiQuoteMessage('${m.id}')" title="اقتباس/رد">↩ اقتباس</button><button onclick="aiSpeakText(${JSON.stringify(m.content||'')})" title="قراءة صوتية">🔊</button></div>`
+    : `<div class="ai-msg-actions"><button onclick="aiQuoteMessage('${m.id}')" title="اقتباس/رد">↩ اقتباس</button></div>`;
+  return `<div class="ai-msg-wrap ${m.role}">${quoteHtml}${attHtml}<div class="ai-msg ${m.role}${m.id==='__loading__'?' loading':''}">${esc(m.content||'')}</div>${m.id!=='__loading__'?actions:''}</div>`;
+}
+function aiQuoteMessage(msgId){
+  const c = aiCurrentConv(); if(!c) return;
+  const m = c.messages.find(x=>x.id===msgId); if(!m) return;
+  AI_PENDING_QUOTE = { role:m.role, text:m.content||'' };
+  const box = document.getElementById('aiQuotePreview');
+  box.style.display = 'flex';
+  box.innerHTML = `<span class="aq-text">↩ ${esc((m.content||'').slice(0,140))}</span><button class="icon-btn" style="width:24px;height:24px;" onclick="aiClearQuote()">✕</button>`;
+  document.getElementById('aiInputFull').focus();
+}
+function aiClearQuote(){ AI_PENDING_QUOTE = null; const box=document.getElementById('aiQuotePreview'); box.style.display='none'; box.innerHTML=''; }
+
+/* ---- attachments ---- */
+function aiHandleFileSelect(ev){
+  const files = Array.from(ev.target.files||[]);
+  ev.target.value = '';
+  files.forEach(aiProcessAttachedFile);
+}
+async function aiProcessAttachedFile(file){
+  const chip = {name:file.name, mime:file.type, kind:'text', text:''};
+  try{
+    if(file.type.startsWith('image/')){
+      const dataUrl = await _aiResizeImage(file);
+      AI_PENDING_ATTACHMENTS.push({name:file.name, mime:file.type, kind:'image', dataUrl});
+      _renderAIAttachPreview();
+      return;
+    }
+    if(file.type==='application/pdf' || file.name.toLowerCase().endsWith('.pdf')){
+      chip.text = await _aiExtractPdfText(file);
+    } else if(file.name.toLowerCase().endsWith('.docx')){
+      chip.text = await _aiExtractDocxText(file);
+    } else {
+      chip.text = await file.text();
+    }
+    chip.text = (chip.text||'').slice(0,20000);
+    AI_PENDING_ATTACHMENTS.push(chip);
+    _renderAIAttachPreview();
+  }catch(e){
+    _showToast('تعذرت قراءة الملف: '+file.name,'error');
+  }
+}
+function _aiResizeImage(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = ()=>{
+        const maxDim = 1280;
+        let {width,height} = img;
+        if(width>maxDim || height>maxDim){ const r = Math.min(maxDim/width, maxDim/height); width=Math.round(width*r); height=Math.round(height*r); }
+        const canvas = document.createElement('canvas');
+        canvas.width=width; canvas.height=height;
+        canvas.getContext('2d').drawImage(img,0,0,width,height);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+async function _aiExtractPdfText(file){
+  if(typeof pdfjsLib==='undefined') return '[تعذر تحميل مكتبة قراءة PDF]';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  let text = '';
+  const maxPages = Math.min(pdf.numPages, 25);
+  for(let i=1;i<=maxPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ') + '\n\n';
+    if(text.length>20000) break;
+  }
+  return text;
+}
+async function _aiExtractDocxText(file){
+  if(typeof mammoth==='undefined') return '[تعذر تحميل مكتبة قراءة Word]';
+  const buf = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({arrayBuffer:buf});
+  return result.value||'';
+}
+function _renderAIAttachPreview(){
+  const el = document.getElementById('aiAttachPreview');
+  if(!el) return;
+  el.innerHTML = AI_PENDING_ATTACHMENTS.map((a,i)=>
+    a.kind==='image'
+      ? `<span class="ai-attach-chip"><img src="${a.dataUrl}">${esc(a.name)}<b onclick="aiRemovePendingAttachment(${i})" style="cursor:pointer;">✕</b></span>`
+      : `<span class="ai-attach-chip">📄 ${esc(a.name)}<b onclick="aiRemovePendingAttachment(${i})" style="cursor:pointer;">✕</b></span>`
+  ).join('');
+}
+function aiRemovePendingAttachment(i){ AI_PENDING_ATTACHMENTS.splice(i,1); _renderAIAttachPreview(); }
+
+/* ---- voice input/output ---- */
+function aiToggleVoiceInput(){ AI_RECOGNIZING ? aiStopVoiceInput() : aiStartVoiceInput(); }
+function aiStartVoiceInput(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ _showToast('المتصفح لا يدعم الإدخال الصوتي','error'); return; }
+  AI_RECOGNITION = new SR();
+  AI_RECOGNITION.lang = 'ar-SA';
+  AI_RECOGNITION.interimResults = false;
+  AI_RECOGNITION.continuous = true;
+  AI_RECOGNITION.onresult = (e)=>{
+    let transcript = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){ transcript += e.results[i][0].transcript; }
+    const input = document.getElementById('aiInputFull');
+    input.value = (input.value ? input.value+' ' : '') + transcript;
+  };
+  AI_RECOGNITION.onerror = ()=>{ aiStopVoiceInput(); };
+  AI_RECOGNITION.onend = ()=>{ if(AI_RECOGNIZING){ try{ AI_RECOGNITION.start(); }catch(e){} } };
+  try{ AI_RECOGNITION.start(); AI_RECOGNIZING = true; document.getElementById('aiMicBtn').classList.add('recording'); }
+  catch(e){ _showToast('تعذر تشغيل الميكروفون','error'); }
+}
+function aiStopVoiceInput(){
+  AI_RECOGNIZING = false;
+  if(AI_RECOGNITION){ try{ AI_RECOGNITION.onend=null; AI_RECOGNITION.stop(); }catch(e){} }
+  const btn = document.getElementById('aiMicBtn'); if(btn) btn.classList.remove('recording');
+}
+function aiSpeakText(text){
+  if(!window.speechSynthesis || !text) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ar-SA';
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---- sending a message ---- */
+function aiHandleInputKey(ev){
+  if(ev.key==='Enter' && !ev.shiftKey){ ev.preventDefault(); sendAIChatFull(); }
+}
+function _aiBuildSystemPrompt(conv){
+  const parts = [];
+  const agent = conv.agentId ? AI_AGENTS.find(a=>a.id===conv.agentId) : null;
+  if(agent){
+    parts.push(`أنت وكيل مخصص اسمه "${agent.name}". تعليماتك: ${agent.instructions||'بدون تعليمات إضافية.'} أجب بالعربية ما لم يُطلب غير ذلك، وكن مفيدًا ومباشرًا.`);
+  } else {
+    parts.push(_aiSystemPrompt('chat'));
+  }
+  const project = conv.projectId ? AI_PROJECTS.find(p=>p.id===conv.projectId) : null;
+  if(project && project.instructions){
+    parts.push(`هذه المحادثة ضمن مشروع "${project.name}": ${project.instructions}`);
+  }
+  if(AI_MEMORY_TEXT && AI_MEMORY_TEXT.trim()){
+    parts.push('معلومات دائمة يجب مراعاتها عن المستخدم وسياق عمله:\n' + AI_MEMORY_TEXT.trim());
+  }
+  return parts.join('\n\n');
+}
+async function sendAIChatFull(){
+  const conv = aiCurrentConv(); if(!conv) return;
+  const input = document.getElementById('aiInputFull');
+  const text = input.value.trim();
+  if(!text && !AI_PENDING_ATTACHMENTS.length) return;
+  const key = getAIKey();
+  if(!key){ _showToast('أدخل مفتاح OpenAI أولًا من الإعدادات','error'); return; }
+
+  const attachments = AI_PENDING_ATTACHMENTS; AI_PENDING_ATTACHMENTS = []; _renderAIAttachPreview();
+  const quoted = AI_PENDING_QUOTE ? AI_PENDING_QUOTE.text : null; aiClearQuote();
+  input.value=''; input.style.height='auto';
+
+  const userMsg = { id:uidShort(), role:'user', content:text, attachments, quoted, ts:Date.now() };
+  conv.messages.push(userMsg);
+  if(conv.title==='محادثة جديدة' && text){ conv.title = text.slice(0,42); }
+  conv.updatedAt = Date.now();
+  renderAIConversation(); renderAISidebar();
+
+  conv.messages.push({ id:'__loading__', role:'assistant', content:'جارٍ التفكير...', attachments:[], quoted:null, ts:Date.now() });
+  renderAIConversation();
+
+  // Build the OpenAI request: system + persisted history (text-only, last 16) + this turn (with images as vision content if any)
+  const sys = { role:'system', content:_aiBuildSystemPrompt(conv) };
+  const fileCtx = { role:'system', content:'بيانات ملفات المستخدم وقضاياه (JSON):\n' + JSON.stringify({files:buildAIFilesContext(), today:today()}).slice(0,60000) };
+  const history = conv.messages.filter(m=>m.id!=='__loading__').slice(-17,-1).map(m=>({
+    role:m.role, content: (m.quoted?('اقتباس سابق: "'+String(m.quoted).slice(0,300)+'"\n\n'):'') + (m.content||'') + (m.attachments&&m.attachments.length?('\n[مرفقات: '+m.attachments.map(a=>a.name).join(', ')+']'):'') ,
+  }));
+
+  let userContent;
+  const imageParts = attachments.filter(a=>a.kind==='image');
+  const textParts = attachments.filter(a=>a.kind==='text');
+  let fullText = (quoted ? ('اقتباس: "'+String(quoted).slice(0,300)+'"\n\n') : '') + text;
+  textParts.forEach(a=>{ fullText += `\n\n---\nمحتوى الملف المرفق "${a.name}":\n${a.text}`; });
+  if(imageParts.length){
+    userContent = [{type:'text', text: fullText || 'صف هذه الصورة/الصور.'}].concat(imageParts.map(a=>({type:'image_url', image_url:{url:a.dataUrl}})));
+  } else {
+    userContent = fullText;
+  }
+
+  const messages = [sys, fileCtx].concat(history).concat([{role:'user', content:userContent}]);
+  const body = { model:AI_MODEL, messages, temperature:0.5 };
+  const reply = await _aiRequest(key, body);
+
+  conv.messages = conv.messages.filter(m=>m.id!=='__loading__');
+  if(reply==null){ conv.messages.pop(); /* drop unanswered user turn on hard failure */ renderAIConversation(); return; }
+  const replyMsg = { id:uidShort(), role:'assistant', content:reply, attachments:[], quoted:null, ts:Date.now() };
+  conv.messages.push(replyMsg);
+  conv.updatedAt = Date.now();
+  _persistAIConversations();
+  renderAIConversation(); renderAISidebar();
+  if(AI_AUTO_SPEAK) aiSpeakText(reply);
 }
 
 /* ---- file summarize ---- */
@@ -3869,7 +4332,7 @@ async function runAISearch(){
 /* ---------- INIT ---------- */
 renderTopbarDate();
 renderTopbarQuote();
-loadIfEmpty().then(()=> loadAIKey()).then(()=> loadAIChatState()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
+loadIfEmpty().then(()=> loadAIKey()).then(()=> loadAIAppState()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
 </script>
 </body>
 </html>
