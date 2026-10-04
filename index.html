@@ -3612,22 +3612,35 @@ scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'s
 /* ---------- AI ASSISTANT ---------- */
 /* All AI features call the OpenAI API directly from the browser using a key
    the user pastes into الإعدادات, stored only in this browser's localStorage
-   (never written to index.html/git, never sent anywhere except api.openai.com).
-   There is no backend proxy — this keeps the app 100% static/free (no Firebase
-   Blaze billing plan needed), at the cost of the key living in this browser's
-   storage rather than behind a server. */
+   (never sent anywhere except api.openai.com). There is no backend proxy —
+   this keeps the app 100% static/free (no Firebase Blaze billing plan
+   needed).
+
+   Two ways to supply the key:
+   1) Per-browser, from الإعدادات — stored only in that browser's
+      localStorage, never touches this file or git. Safer, but you re-enter
+      it on every new device/browser.
+   2) Hardcoded below in AI_KEY_HARDCODED — syncs automatically to every
+      device with no setup, because it's just part of this file. The
+      trade-off: this repo and the published site are PUBLIC, so anyone who
+      opens the site's source can read this key and spend your OpenAI
+      credit. Only do this if you accept that risk (e.g. a low-balance key
+      you're fine losing/monitoring). Leave it as '' to disable this and
+      use option 1 only. */
 const AI_KEY_STORAGE = 'maham_openai_key';
+const AI_KEY_HARDCODED = ''; // ضع مفتاحك هنا (sk-...) إذا تبيه يتزامن تلقائيًا على كل أجهزتك — راجع التحذير أعلاه قبل ما تحطه وترفعه لـ GitHub
 const AI_MODEL = 'gpt-4o-mini';
 let AI_CHAT_HISTORY = [];
 
-function getAIKey(){ try{ return localStorage.getItem(AI_KEY_STORAGE) || ''; }catch(e){ return ''; } }
+function getAIKey(){ try{ return localStorage.getItem(AI_KEY_STORAGE) || AI_KEY_HARDCODED || ''; }catch(e){ return AI_KEY_HARDCODED || ''; } }
 function renderAIKeyStatus(){
   const line = document.getElementById('aiKeyStatusLine');
   const input = document.getElementById('aiKeyInput');
   if(!line) return;
   const key = getAIKey();
   if(key){
-    line.textContent = '✅ المفتاح مفعّل (ينتهي بـ ...' + key.slice(-4) + ')';
+    const source = localStorage.getItem(AI_KEY_STORAGE) ? '' : ' — مفتاح ثابت بالكود (يعمل تلقائيًا على كل الأجهزة)';
+    line.textContent = '✅ المفتاح مفعّل (ينتهي بـ ...' + key.slice(-4) + ')' + source;
     line.style.color = 'var(--green)';
     if(input) input.value = '';
     if(input) input.placeholder = 'sk-••••••••' + key.slice(-4);
