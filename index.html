@@ -138,6 +138,12 @@
   @media(prefers-reduced-motion:reduce){.page.active{animation:none;}}
 
   .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .settings-fold-head{cursor:pointer;margin-bottom:0;}
+  .settings-fold-count{font-size:11.5px;color:var(--text-3);font-weight:500;}
+  .settings-fold-chevron{display:inline-block;font-size:11px;color:var(--text-3);transition:transform .2s var(--ease-out-quart);}
+  .settings-fold-chevron.rot{transform:rotate(180deg);}
+  .settings-fold-body{display:none;margin-top:14px;}
+  .settings-fold-body.open{display:block;}
   .section-head h2{font-size:20px;font-weight:700;}
   .section-head h3{font-size:16px;font-weight:700;}
 
@@ -929,14 +935,30 @@
     </div>
 
     <div class="settings-block">
-      <div class="section-head"><h3>التصنيفات</h3><button class="btn btn-glass btn-sm" onclick="openCatModal()">+ تصنيف جديد</button></div>
-      <div id="catList"></div>
+      <div class="section-head settings-fold-head" onclick="toggleSettingsFold('cat')">
+        <h3>التصنيفات <span class="settings-fold-count" id="catFoldCount"></span></h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-glass btn-sm" onclick="event.stopPropagation();openCatModal()">+ تصنيف جديد</button>
+          <span class="settings-fold-chevron" id="catFoldChevron">▾</span>
+        </div>
+      </div>
+      <div id="catFoldBody" class="settings-fold-body">
+        <div id="catList"></div>
+      </div>
     </div>
 
     <div class="settings-block">
-      <div class="section-head"><h3>التصنيفات كمجموعات</h3><button class="btn btn-glass btn-sm" onclick="openGroupModal()">+ مجموعة جديدة</button></div>
-      <div class="settings-desc" style="margin-bottom:10px;">نظّم تصنيفاتك ضمن مجموعات (مثل أوشن، غين) — يمكن أن ينتمي التصنيف نفسه لأكثر من مجموعة، والتصنيفات غير المضافة لأي مجموعة تبقى كما هي بالأعلى.</div>
-      <div id="catGroupList"></div>
+      <div class="section-head settings-fold-head" onclick="toggleSettingsFold('group')">
+        <h3>التصنيفات كمجموعات <span class="settings-fold-count" id="groupFoldCount"></span></h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-glass btn-sm" onclick="event.stopPropagation();openGroupModal()">+ مجموعة جديدة</button>
+          <span class="settings-fold-chevron" id="groupFoldChevron">▾</span>
+        </div>
+      </div>
+      <div id="groupFoldBody" class="settings-fold-body">
+        <div class="settings-desc" style="margin:10px 0;">نظّم تصنيفاتك ضمن مجموعات (مثل أوشن، غين) — يمكن أن ينتمي التصنيف نفسه لأكثر من مجموعة، والتصنيفات غير المضافة لأي مجموعة تبقى كما هي بالأعلى.</div>
+        <div id="catGroupList"></div>
+      </div>
     </div>
 
     <div class="settings-block">
@@ -3248,12 +3270,34 @@ function renderSettings(){
     const count = FILES.filter(f=>f.category===c.name).length;
     return `<div class="cat-row"><span class="cat-dot" style="background:${col.val}"></span><span class="cname">${esc(c.name)} <span style="color:var(--text-3);font-weight:400;">(${count} ملف)</span></span><button class="btn btn-glass btn-sm" onclick="openCatModal('${c.id}')">تعديل</button></div>`;
   }).join('');
+  const catCountEl = document.getElementById('catFoldCount'); if(catCountEl) catCountEl.textContent = `(${CATEGORIES.length})`;
   renderCategoryGroups();
   renderQuotesList();
+  _initSettingsFold('cat');
+  _initSettingsFold('group');
+}
+/* ---- collapsible settings sections (categories / groups) — remembers open/closed per device ---- */
+function toggleSettingsFold(key){
+  const body = document.getElementById(key+'FoldBody');
+  const chevron = document.getElementById(key+'FoldChevron');
+  if(!body) return;
+  const isOpen = body.classList.toggle('open');
+  if(chevron) chevron.classList.toggle('rot', isOpen);
+  try{ localStorage.setItem('maham_fold_'+key, isOpen?'1':'0'); }catch(e){}
+}
+function _initSettingsFold(key){
+  let open = false; // collapsed by default to save space
+  try{ const v = localStorage.getItem('maham_fold_'+key); if(v!=null) open = v==='1'; }catch(e){}
+  const body = document.getElementById(key+'FoldBody');
+  const chevron = document.getElementById(key+'FoldChevron');
+  if(body) body.classList.toggle('open', open);
+  if(chevron) chevron.classList.toggle('rot', open);
 }
 function renderCategoryGroups(){
   const el = document.getElementById('catGroupList');
   if(!el) return;
+  const groupCountEl = document.getElementById('groupFoldCount');
+  if(groupCountEl) groupCountEl.textContent = `(${CATEGORY_GROUPS.length})`;
   if(!CATEGORY_GROUPS.length){ el.innerHTML = `<div class="empty-note">لا توجد مجموعات بعد. أنشئ أول مجموعة لتنظيم تصنيفاتك.</div>`; return; }
   el.innerHTML = CATEGORY_GROUPS.map(g=>{
     const catIds = g.catIds||[];
