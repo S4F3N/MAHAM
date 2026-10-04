@@ -559,6 +559,16 @@
   #_pwSheetForgotLink{display:block;text-align:center;font-size:12px;color:var(--accent);text-decoration:none;margin-bottom:14px;cursor:pointer;}
   #_pwSheetForgotLink:hover{text-decoration:underline;}
 
+  /* ---- password recovery sheet (external verification via Firebase account) ---- */
+  #_recoverSheetOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:9999;}
+  #_recoverSheetOverlay.open{display:flex;}
+  #_recoverSheet{background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:18px 18px 0 0;max-width:420px;width:100%;padding:22px;animation:_sheetIn .28s var(--ease-out-quart);}
+  #_recoverSheet input[type=email],#_recoverSheet input[type=password]{width:100%;margin-bottom:9px;}
+  #_recoverError{font-size:12.5px;color:var(--red);margin-bottom:9px;display:none;}
+  #_recoverError.show{display:block;}
+  #_recoverForgotAccountLink{display:block;text-align:center;font-size:12px;color:var(--accent);text-decoration:none;margin-bottom:14px;cursor:pointer;}
+  #_recoverForgotAccountLink:hover{text-decoration:underline;}
+
   /* ---- swipe-to-delete rows ---- */
   .swipe-row{position:relative;overflow:hidden;border-radius:var(--radius-lg);}
   .swipe-del-btn{position:absolute;top:0;bottom:0;right:0;width:84px;background:var(--red);color:#fff;border:none;font-size:11px;font-weight:700;line-height:1.5;cursor:pointer;z-index:0;}
@@ -1349,6 +1359,23 @@
     <div id="_pwSheetError"></div>
     <a href="javascript:void(0)" id="_pwSheetForgotLink" style="display:none;">نسيت كلمة المرور؟</a>
     <div class="sheet-btns"><button id="_pwSheetCancelBtn">إلغاء</button><button id="_pwSheetConfirmBtn">تأكيد</button></div>
+  </div>
+</div>
+
+<div id="_recoverSheetOverlay">
+  <div id="_recoverSheet">
+    <h4 style="margin:0 0 10px;font-size:15px;">استعادة الوصول لكلمة مرور الحماية</h4>
+    <div id="_recoverNotConfigured" style="display:none;">
+      <div class="settings-desc" style="margin-bottom:14px;">استعادة كلمة المرور تتطلب التحقق من هويتك بطريقة خارجية عبر حساب Firebase المرتبط بالبرنامج، ولا يوجد حساب مُعد على هذا الجهاز بعد. فعّل حساب Firebase أولًا من الإعدادات حتى تتوفر لك هذه الاستعادة مستقبلًا.</div>
+    </div>
+    <div id="_recoverFormBody" style="display:none;">
+      <div class="settings-desc" id="_recoverDesc" style="margin-bottom:10px;"></div>
+      <input type="email" id="_recoverEmailInput" placeholder="البريد الإلكتروني" autocomplete="off" style="display:none;">
+      <input type="password" id="_recoverPwInput" placeholder="كلمة مرور حساب Firebase" autocomplete="off">
+      <div id="_recoverError"></div>
+      <a href="javascript:void(0)" id="_recoverForgotAccountLink">نسيت كلمة مرور الحساب نفسه؟ إرسال رابط إعادة تعيين لبريدك</a>
+    </div>
+    <div class="sheet-btns"><button id="_recoverCancelBtn">إلغاء</button><button id="_recoverConfirmBtn">تحقق</button></div>
   </div>
 </div>
 
@@ -3743,13 +3770,7 @@ function _showPasswordConfirm(msg, {destructive=true, confirmLabel='تأكيد',
     const done=(v)=>{ document.removeEventListener('keydown', onKey); forgotLink.onclick=null; overlay.classList.remove('open'); resolve(v); };
     forgotLink.onclick = ()=>{
       done(false);
-      _showConfirm('سيتم إلغاء كلمة مرور الحماية الحالية فورًا بدون الحاجة لمعرفتها، حتى تقدر تعيّن كلمة مرور جديدة. تأكد أنك صاحب الجهاز/الحساب. متابعة؟', {destructive:true, confirmLabel:'إلغاء كلمة المرور'}).then(ok=>{
-        if(!ok) return;
-        PROTECT_PW_CACHE = '';
-        window.storage.set(PROTECT_PW_KEY, '');
-        renderProtectSettings();
-        _showToast('تم إلغاء كلمة المرور. ستُطلب منك تعيين كلمة مرور جديدة عند أول عملية حساسة.','success');
-      });
+      startPasswordRecovery();
     };
     const tryConfirm=()=>{
       const v1 = input1.value, v2 = input2.value;
@@ -3771,6 +3792,104 @@ function _showPasswordConfirm(msg, {destructive=true, confirmLabel='تأكيد',
     const onOv=(e)=>{ if(e.target===overlay){ overlay.removeEventListener('click',onOv); done(false); } };
     overlay.addEventListener('click', onOv);
   });
+}
+
+/* ---------- password recovery (external verification via Firebase account — NOT a local bypass) ---------- */
+function _clearProtectPwAfterRecovery(){
+  PROTECT_PW_CACHE = '';
+  window.storage.set(PROTECT_PW_KEY, '');
+  renderProtectSettings();
+  _showToast('تم التحقق من هويتك عبر حساب Firebase، وأُلغيت كلمة مرور الحماية. ستُطلب منك تعيين كلمة مرور جديدة عند أول عملية حساسة.','success');
+}
+function startPasswordRecovery(){
+  const overlay = document.getElementById('_recoverSheetOverlay');
+  const notConfigured = document.getElementById('_recoverNotConfigured');
+  const formBody = document.getElementById('_recoverFormBody');
+  const descEl = document.getElementById('_recoverDesc');
+  const emailInput = document.getElementById('_recoverEmailInput');
+  const pwInput = document.getElementById('_recoverPwInput');
+  const errEl = document.getElementById('_recoverError');
+  const forgotAccLink = document.getElementById('_recoverForgotAccountLink');
+  const confirmBtn = document.getElementById('_recoverConfirmBtn');
+  const cancelBtn = document.getElementById('_recoverCancelBtn');
+
+  emailInput.value=''; pwInput.value=''; errEl.classList.remove('show'); errEl.textContent='';
+  const cfgPresent = !!getFbConfig();
+  const signedIn = !!(fbUser && fbUser.email);
+
+  if(!cfgPresent){
+    notConfigured.style.display='block';
+    formBody.style.display='none';
+    confirmBtn.textContent='فتح إعداد الحساب';
+    cancelBtn.textContent='إغلاق';
+  } else if(signedIn){
+    notConfigured.style.display='none';
+    formBody.style.display='block';
+    emailInput.style.display='none';
+    descEl.textContent = `للتحقق من هويتك عبر جهة خارجية (Firebase)، أدخل كلمة مرور حساب Firebase المرتبط بالبرنامج (${fbUser.email}).`;
+    confirmBtn.textContent='تحقق وإلغاء الحماية';
+    cancelBtn.textContent='إلغاء';
+  } else {
+    notConfigured.style.display='none';
+    formBody.style.display='block';
+    emailInput.style.display='block';
+    descEl.textContent = 'سجّل الدخول بحساب Firebase المرتبط بالبرنامج للتحقق من هويتك عبر جهة خارجية.';
+    confirmBtn.textContent='تسجيل الدخول وإلغاء الحماية';
+    cancelBtn.textContent='إلغاء';
+  }
+
+  overlay.classList.add('open');
+  const done=()=>{ document.removeEventListener('keydown', onKey); overlay.classList.remove('open'); };
+  cancelBtn.onclick = ()=> done();
+  const onKey=(e)=>{ if(e.key==='Escape') done(); };
+  document.addEventListener('keydown', onKey);
+  const onOv=(e)=>{ if(e.target===overlay){ overlay.removeEventListener('click',onOv); done(); } };
+  overlay.addEventListener('click', onOv);
+
+  forgotAccLink.onclick = ()=>{
+    const email = signedIn ? fbUser.email : emailInput.value.trim();
+    if(!email){ errEl.textContent='اكتب بريدك الإلكتروني أولًا'; errEl.classList.add('show'); return; }
+    if(!initFirebase()){ errEl.textContent='تعذر الاتصال بـ Firebase'; errEl.classList.add('show'); return; }
+    fbAuth.sendPasswordResetEmail(email).then(()=>{
+      _showToast('تم إرسال رابط إعادة تعيين كلمة مرور الحساب إلى بريدك الإلكتروني','success');
+    }).catch((e)=>{
+      errEl.textContent = 'تعذر إرسال البريد: ' + (e && e.message ? e.message : 'خطأ غير معروف');
+      errEl.classList.add('show');
+    });
+  };
+
+  confirmBtn.onclick = ()=>{
+    if(!cfgPresent){
+      done();
+      const settingsTabBtn = document.querySelector('nav.tabs button[data-tab=settings]');
+      if(settingsTabBtn) settingsTabBtn.click();
+      if(typeof openSetupFromSettings==='function') openSetupFromSettings();
+      return;
+    }
+    const pw = pwInput.value;
+    if(signedIn){
+      if(!pw){ errEl.textContent='أدخل كلمة مرور الحساب'; errEl.classList.add('show'); return; }
+      const cred = firebase.auth.EmailAuthProvider.credential(fbUser.email, pw);
+      fbUser.reauthenticateWithCredential(cred).then(()=>{
+        done();
+        _clearProtectPwAfterRecovery();
+      }).catch(()=>{
+        errEl.textContent='كلمة مرور الحساب غير صحيحة'; errEl.classList.add('show');
+      });
+    } else {
+      const email = emailInput.value.trim();
+      if(!email || !pw){ errEl.textContent='أدخل البريد وكلمة المرور'; errEl.classList.add('show'); return; }
+      if(!initFirebase()){ errEl.textContent='لم يتم إعداد Firebase بعد'; errEl.classList.add('show'); return; }
+      fbAuth.signInWithEmailAndPassword(email, pw).then((cred)=>{
+        fbUser = cred.user;
+        try{ localStorage.setItem(FB_EMAIL_KEY, email); }catch(e){}
+        done();
+        _clearProtectPwAfterRecovery();
+      }).catch(()=>{
+        errEl.textContent='بيانات الدخول غير صحيحة'; errEl.classList.add('show');
+      });
+    }
+  };
 }
 
 /* ---------- toast / confirm ---------- */
