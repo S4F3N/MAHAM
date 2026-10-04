@@ -158,7 +158,7 @@
   .btn-danger:hover{background:var(--red);color:#fff;}
   .btn-sm{padding:5px 11px;font-size:12px;min-height:30px;}
 
-  input[type=text],input[type=date],input[type=time],input[type=number],input[type=email],input[type=tel],select,textarea{
+  input[type=text],input[type=date],input[type=time],input[type=number],input[type=email],input[type=tel],input[type=password],select,textarea{
     font-family:var(--font-body);font-size:13.5px;background:var(--input-bg);color:var(--text-1);
     border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;
   }
@@ -546,6 +546,16 @@
   .sheet-btns button{flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface-1);font-weight:600;font-size:13.5px;color:var(--text-1);cursor:pointer;}
   #_sheetConfirmBtn{background:var(--accent);color:#fff;border-color:transparent;}
   #_sheetConfirmBtn._destructive{background:var(--red);}
+
+  /* ---- password-protected confirm sheet (for data-destructive actions) ---- */
+  #_pwSheetOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:9999;}
+  #_pwSheetOverlay.open{display:flex;}
+  #_pwSheet{background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:18px 18px 0 0;max-width:420px;width:100%;padding:22px;animation:_sheetIn .28s var(--ease-out-quart);}
+  #_pwSheetMsg{font-size:14.5px;margin-bottom:12px;}
+  #_pwSheetSetupNote{font-size:12px;color:var(--text-3);line-height:1.7;margin-bottom:12px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;}
+  #_pwSheet input[type=password]{width:100%;margin-bottom:9px;}
+  #_pwSheetError{font-size:12.5px;color:var(--red);margin-bottom:9px;display:none;}
+  #_pwSheetError.show{display:block;}
 
   /* ---- swipe-to-delete rows ---- */
   .swipe-row{position:relative;overflow:hidden;border-radius:var(--radius-lg);}
@@ -1025,6 +1035,22 @@
         <button class="btn btn-danger btn-sm" onclick="resetAllData()">إعادة تعيين البيانات بالكامل</button>
       </div>
     </div>
+
+    <div class="settings-block">
+      <h3 style="margin-bottom:10px;">الحماية والنسخ الاحتياطي التلقائي</h3>
+      <div class="settings-desc">كلمة مرور تأكيد + رسالة تأكيد واضحة تُطلبان قبل أي عملية قد تفقد بياناتك (استيراد، إعادة تعيين، استعادة نسخة) — لتفادي الضغط عليها بالغلط. بالإضافة لنسخة احتياطية تلقائية تتجدد يوميًا.</div>
+      <div class="settings-row" style="margin-top:10px;">
+        <span id="protectPwStatus" style="font-size:12.5px;"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px;">
+        <button class="btn btn-glass btn-sm" id="protectPwSetBtn" onclick="manageProtectPw()">تعيين كلمة مرور الحماية</button>
+        <button class="btn btn-danger btn-sm" id="protectPwRemoveBtn" style="display:none;" onclick="removeProtectPw()">إلغاء الحماية</button>
+      </div>
+      <div class="settings-desc" id="dailyBackupStatus" style="margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-glass btn-sm" onclick="restoreDailyBackup()">↺ استعادة آخر نسخة احتياطية تلقائية</button>
+      </div>
+    </div>
   </section>
 
 </main>
@@ -1312,6 +1338,17 @@
 <div id="_toastContainer"></div>
 <div id="_sheetOverlay"><div id="_sheet"><div id="_sheetMsg"></div><div class="sheet-btns"><button id="_sheetCancelBtn">إلغاء</button><button id="_sheetConfirmBtn">تأكيد</button></div></div></div>
 
+<div id="_pwSheetOverlay">
+  <div id="_pwSheet">
+    <div id="_pwSheetMsg"></div>
+    <div id="_pwSheetSetupNote" style="display:none;">لم تُعيّن كلمة مرور حماية بعد. اكتب كلمة مرور الآن وسيتم استخدامها لتأكيد هذه العمليات الحساسة في المرات القادمة (يمكنك تغييرها لاحقًا من الإعدادات).</div>
+    <input type="password" id="_pwSheetInput" placeholder="كلمة مرور الحماية" autocomplete="off">
+    <input type="password" id="_pwSheetInput2" placeholder="تأكيد كلمة المرور" autocomplete="off" style="display:none;">
+    <div id="_pwSheetError"></div>
+    <div class="sheet-btns"><button id="_pwSheetCancelBtn">إلغاء</button><button id="_pwSheetConfirmBtn">تأكيد</button></div>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    Firebase (Auth + Firestore) storage shim — replaces window.storage
@@ -1474,7 +1511,7 @@ function doFirebaseLogin(mode){
     const overlay = document.getElementById('setupOverlay');
     ensureLoaded().then(function(){
       if(overlay) overlay.classList.remove('open');
-      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof loadAIAppState==='function') return loadAIAppState(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); });
+      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof loadAIAppState==='function') return loadAIAppState(); }).then(()=>{ if(typeof loadProtectPw==='function') return loadProtectPw(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); if(typeof runDailyBackupIfDue==='function') runDailyBackupIfDue(); });
       updateAccountLine();
       if(typeof _showToast==='function') _showToast('تم تسجيل الدخول بنجاح');
     });
@@ -1602,9 +1639,12 @@ function setDueWarnDays(v){
   renderHome(); renderNotif();
 }
 function resetAppSettings(){
-  APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS);
-  applyAppSettings(); persistAppSettings();
-  _showToast('تمت إعادة الضبط','success');
+  _showConfirm('سيتم إعادة ضبط المظهر والتنبيهات للوضع الافتراضي (لن يؤثر على ملفاتك وبياناتك). متابعة؟', {destructive:true, confirmLabel:'إعادة الضبط'}).then(ok=>{
+    if(!ok) return;
+    APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS);
+    applyAppSettings(); persistAppSettings();
+    _showToast('تمت إعادة الضبط','success');
+  });
 }
 function renderAppearanceControls(){
   const mode = APP_SETTINGS.themeMode || document.documentElement.getAttribute('data-theme') || 'dark';
@@ -3273,6 +3313,7 @@ function renderSettings(){
   const catCountEl = document.getElementById('catFoldCount'); if(catCountEl) catCountEl.textContent = `(${CATEGORIES.length})`;
   renderCategoryGroups();
   renderQuotesList();
+  renderProtectSettings();
   _initSettingsFold('cat');
   _initSettingsFold('group');
 }
@@ -3535,19 +3576,22 @@ function exportBackup(){
   logActivity('export','data', 'تصدير نسخة احتياطية من كل البيانات');
   _showToast('تم تصدير النسخة الاحتياطية','success');
 }
+function _applyBackupData(data){
+  FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[];
+  // Explicit full replace — bypass the merge-safe persist path and write
+  // these arrays as-is.
+  return Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]);
+}
 function importBackup(ev){
   const file = ev.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     try{
       const data = JSON.parse(reader.result);
-      _showConfirm('سيتم استبدال جميع البيانات الحالية بالنسخة المستوردة. متابعة؟', {destructive:true, confirmLabel:'استيراد'}).then(ok=>{
+      _showPasswordConfirm('سيتم استبدال جميع البيانات الحالية بالنسخة المستوردة. متابعة؟', {destructive:true, confirmLabel:'استيراد'}).then(ok=>{
         if(!ok) return;
-        FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[];
-        logActivity('import','data', `استيراد نسخة احتياطية (${FILES.length} ملف، ${ROUNDS.length} جولة، ${CONTACTS.length} جهة اتصال)`);
-        // Explicit full replace requested by the user — bypass the
-        // merge-safe persist path and write these arrays as-is.
-        Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
+        logActivity('import','data', `استيراد نسخة احتياطية (${(data.FILES||[]).length} ملف، ${(data.ROUNDS||[]).length} جولة، ${(data.CONTACTS||[]).length} جهة اتصال)`);
+        _applyBackupData(data).then(()=>{ goHome(); _showToast('تم الاستيراد بنجاح','success'); });
       });
     } catch(e){ _showToast('ملف غير صالح','error'); }
   };
@@ -3555,11 +3599,162 @@ function importBackup(ev){
   ev.target.value='';
 }
 function resetAllData(){
-  _showConfirm('سيتم حذف كل البيانات الحالية والعودة للبيانات التجريبية الافتراضية. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'إعادة التعيين'}).then(ok=>{
+  _showPasswordConfirm('سيتم حذف كل البيانات الحالية والعودة للبيانات التجريبية الافتراضية. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'إعادة التعيين'}).then(ok=>{
     if(!ok) return;
     FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[]; SUBFILES=[];
     logActivity('reset','data', 'إعادة تعيين جميع بيانات البرنامج بالكامل');
     Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
+  });
+}
+
+/* ---------- daily rotating auto-backup (safety net against accidental data loss) ---------- */
+const DAILY_BACKUP_COLLECTION = 'maham_backups';
+const DAILY_BACKUP_LOCAL_KEY = 'maham_local_daily_backup';
+const DAILY_BACKUP_DATE_KEY = 'maham_backup_last_date';
+function _todayLocalStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function _backupSnapshot(){
+  return {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,backedUpAt:new Date().toISOString()};
+}
+function runDailyBackupIfDue(){
+  let lastDate = ''; try{ lastDate = localStorage.getItem(DAILY_BACKUP_DATE_KEY) || ''; }catch(e){}
+  const today = _todayLocalStr();
+  if(lastDate === today){ renderProtectSettings(); return; }
+  const snapshot = _backupSnapshot();
+  const markDone = ()=>{ try{ localStorage.setItem(DAILY_BACKUP_DATE_KEY, today); }catch(e){} renderProtectSettings(); };
+  if(fbUser && fbDb){
+    // Saved in its OWN Firestore document (not merged into the shared
+    // maham/{uid} data document) so this daily snapshot never counts
+    // against that document's 1MB limit. .set() with no merge fully
+    // replaces yesterday's snapshot with today's — a single rotating
+    // slot, exactly as requested (يحذف نسخة أمس ويحفظ نسخة اليوم).
+    fbDb.collection(DAILY_BACKUP_COLLECTION).doc(fbUser.uid).set(snapshot).then(markDone).catch(()=>{
+      try{ localStorage.setItem(DAILY_BACKUP_LOCAL_KEY, JSON.stringify(snapshot)); }catch(e){}
+      markDone();
+    });
+  } else {
+    try{ localStorage.setItem(DAILY_BACKUP_LOCAL_KEY, JSON.stringify(snapshot)); }catch(e){}
+    markDone();
+  }
+}
+function restoreDailyBackup(){
+  _showPasswordConfirm('سيتم استبدال كل البيانات الحالية بآخر نسخة احتياطية تلقائية محفوظة. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'استعادة'}).then(ok=>{
+    if(!ok) return;
+    const finish = (data)=>{
+      if(!data){ _showToast('لا توجد نسخة احتياطية محفوظة بعد','error'); return; }
+      logActivity('import','data', 'استعادة من النسخة الاحتياطية التلقائية اليومية');
+      _applyBackupData(data).then(()=>{ goHome(); _showToast('تمت الاستعادة من آخر نسخة احتياطية','success'); });
+    };
+    if(fbUser && fbDb){
+      fbDb.collection(DAILY_BACKUP_COLLECTION).doc(fbUser.uid).get().then(snap=>{
+        finish(snap.exists ? snap.data() : null);
+      }).catch(()=>{
+        let raw=null; try{ raw = localStorage.getItem(DAILY_BACKUP_LOCAL_KEY); }catch(e){}
+        finish(raw ? JSON.parse(raw) : null);
+      });
+    } else {
+      let raw=null; try{ raw = localStorage.getItem(DAILY_BACKUP_LOCAL_KEY); }catch(e){}
+      finish(raw ? JSON.parse(raw) : null);
+    }
+  });
+}
+
+/* ---------- protection password (guards destructive data actions) ---------- */
+const PROTECT_PW_KEY = 'rd2:protectpw';
+let PROTECT_PW_CACHE = '';
+async function loadProtectPw(){
+  try{
+    const r = await window.storage.get(PROTECT_PW_KEY);
+    PROTECT_PW_CACHE = (r && typeof r.value === 'string') ? r.value : '';
+  }catch(e){ PROTECT_PW_CACHE = ''; }
+}
+function renderProtectSettings(){
+  const statusEl = document.getElementById('protectPwStatus');
+  if(statusEl){
+    const on = !!PROTECT_PW_CACHE;
+    statusEl.textContent = on ? '✓ الحماية مفعّلة — ستُطلب كلمة المرور قبل الاستيراد أو إعادة التعيين أو الاستعادة' : 'غير مفعّلة بعد — ستُطلب منك تعيين كلمة مرور عند أول عملية حساسة';
+    statusEl.style.color = on ? 'var(--green)' : 'var(--text-3)';
+    const setBtn = document.getElementById('protectPwSetBtn');
+    if(setBtn) setBtn.textContent = on ? 'تغيير كلمة المرور' : 'تعيين كلمة مرور الحماية';
+    const removeBtn = document.getElementById('protectPwRemoveBtn');
+    if(removeBtn) removeBtn.style.display = on ? 'inline-flex' : 'none';
+  }
+  const bEl = document.getElementById('dailyBackupStatus');
+  if(bEl){
+    let lastDate = ''; try{ lastDate = localStorage.getItem(DAILY_BACKUP_DATE_KEY) || ''; }catch(e){}
+    bEl.textContent = lastDate ? `آخر نسخة احتياطية تلقائية: ${lastDate}${(fbUser&&fbDb)?' — محفوظة بحساب Firebase':' — محفوظة محليًا في هذا المتصفح'}` : 'لم تُحفظ أي نسخة احتياطية تلقائية بعد — ستُحفظ أول نسخة تلقائيًا اليوم';
+  }
+}
+function manageProtectPw(){
+  if(!PROTECT_PW_CACHE){
+    _showPasswordConfirm('عيّن كلمة مرور لحماية العمليات الحساسة.', {confirmLabel:'تعيين', destructive:false}).then(ok=>{
+      if(ok){ renderProtectSettings(); _showToast('تم تفعيل الحماية','success'); }
+    });
+    return;
+  }
+  _showPasswordConfirm('أدخل كلمة المرور الحالية لتغييرها.', {confirmLabel:'التالي', destructive:false}).then(ok=>{
+    if(!ok) return;
+    const old = PROTECT_PW_CACHE;
+    PROTECT_PW_CACHE = ''; // force the next prompt into "set a new password" mode
+    _showPasswordConfirm('اكتب كلمة المرور الجديدة.', {confirmLabel:'حفظ', destructive:false}).then(ok2=>{
+      if(!ok2){ PROTECT_PW_CACHE = old; return; }
+      renderProtectSettings(); _showToast('تم تغيير كلمة المرور','success');
+    });
+  });
+}
+function removeProtectPw(){
+  if(!PROTECT_PW_CACHE) return;
+  _showPasswordConfirm('أدخل كلمة المرور الحالية لإلغاء الحماية. بعدها لن تُطلب كلمة مرور لتأكيد الاستيراد أو إعادة التعيين أو الاستعادة.', {confirmLabel:'إلغاء الحماية', destructive:true}).then(ok=>{
+    if(!ok) return;
+    PROTECT_PW_CACHE = '';
+    window.storage.set(PROTECT_PW_KEY, '');
+    renderProtectSettings();
+    _showToast('تم إلغاء الحماية');
+  });
+}
+function _showPasswordConfirm(msg, {destructive=true, confirmLabel='تأكيد', cancelLabel='إلغاء'}={}){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('_pwSheetOverlay');
+    const msgEl = document.getElementById('_pwSheetMsg');
+    const setupNote = document.getElementById('_pwSheetSetupNote');
+    const input1 = document.getElementById('_pwSheetInput');
+    const input2 = document.getElementById('_pwSheetInput2');
+    const errEl = document.getElementById('_pwSheetError');
+    const confirmBtn = document.getElementById('_pwSheetConfirmBtn');
+    const cancelBtn = document.getElementById('_pwSheetCancelBtn');
+    const isSetup = !PROTECT_PW_CACHE;
+    msgEl.textContent = msg;
+    setupNote.style.display = isSetup ? 'block' : 'none';
+    input1.value=''; input2.value='';
+    input1.placeholder = isSetup ? 'عيّن كلمة مرور الحماية' : 'كلمة مرور الحماية';
+    input2.style.display = isSetup ? 'block' : 'none';
+    errEl.classList.remove('show'); errEl.textContent='';
+    confirmBtn.textContent = confirmLabel; confirmBtn.className = destructive?'_destructive':'';
+    cancelBtn.textContent = cancelLabel;
+    overlay.classList.add('open');
+    setTimeout(()=>{ try{ input1.focus(); }catch(e){} }, 60);
+    const done=(v)=>{ document.removeEventListener('keydown', onKey); overlay.classList.remove('open'); resolve(v); };
+    const tryConfirm=()=>{
+      const v1 = input1.value, v2 = input2.value;
+      if(isSetup){
+        if(!v1 || v1.length<4){ errEl.textContent='اكتب كلمة مرور من 4 أحرف على الأقل'; errEl.classList.add('show'); return; }
+        if(v1!==v2){ errEl.textContent='كلمتا المرور غير متطابقتين'; errEl.classList.add('show'); return; }
+        PROTECT_PW_CACHE = v1;
+        window.storage.set(PROTECT_PW_KEY, v1);
+        done(true);
+      } else {
+        if(v1 !== PROTECT_PW_CACHE){ errEl.textContent='كلمة المرور غير صحيحة'; errEl.classList.add('show'); input1.value=''; try{ input1.focus(); }catch(e){} return; }
+        done(true);
+      }
+    };
+    confirmBtn.onclick = tryConfirm;
+    cancelBtn.onclick = ()=>done(false);
+    const onKey=(e)=>{ if(e.key==='Escape') done(false); if(e.key==='Enter'){ e.preventDefault(); tryConfirm(); } };
+    document.addEventListener('keydown', onKey);
+    const onOv=(e)=>{ if(e.target===overlay){ overlay.removeEventListener('click',onOv); done(false); } };
+    overlay.addEventListener('click', onOv);
   });
 }
 
@@ -4376,7 +4571,7 @@ async function runAISearch(){
 /* ---------- INIT ---------- */
 renderTopbarDate();
 renderTopbarQuote();
-loadIfEmpty().then(()=> loadAIKey()).then(()=> loadAIAppState()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
+loadIfEmpty().then(()=> loadAIKey()).then(()=> loadAIAppState()).then(()=> loadProtectPw()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); runDailyBackupIfDue(); });
 </script>
 </body>
 </html>
