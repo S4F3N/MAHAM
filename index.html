@@ -1363,7 +1363,7 @@ function doFirebaseLogin(mode){
     const overlay = document.getElementById('setupOverlay');
     ensureLoaded().then(function(){
       if(overlay) overlay.classList.remove('open');
-      if(typeof loadIfEmpty === 'function') loadIfEmpty();
+      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); });
       updateAccountLine();
       if(typeof _showToast==='function') _showToast('تم تسجيل الدخول بنجاح');
     });
@@ -3610,37 +3610,34 @@ window.addEventListener('scroll', ()=>{
 scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'smooth'}); haptic(6); });
 
 /* ---------- AI ASSISTANT ---------- */
-/* All AI features call the OpenAI API directly from the browser using a key
-   the user pastes into الإعدادات, stored only in this browser's localStorage
-   (never sent anywhere except api.openai.com). There is no backend proxy —
-   this keeps the app 100% static/free (no Firebase Blaze billing plan
-   needed).
-
-   Two ways to supply the key:
-   1) Per-browser, from الإعدادات — stored only in that browser's
-      localStorage, never touches this file or git. Safer, but you re-enter
-      it on every new device/browser.
-   2) Hardcoded below in AI_KEY_HARDCODED — syncs automatically to every
-      device with no setup, because it's just part of this file. The
-      trade-off: this repo and the published site are PUBLIC, so anyone who
-      opens the site's source can read this key and spend your OpenAI
-      credit. Only do this if you accept that risk (e.g. a low-balance key
-      you're fine losing/monitoring). Leave it as '' to disable this and
-      use option 1 only. */
-const AI_KEY_STORAGE = 'maham_openai_key';
-const AI_KEY_HARDCODED = ''; // ضع مفتاحك هنا (sk-...) إذا تبيه يتزامن تلقائيًا على كل أجهزتك — راجع التحذير أعلاه قبل ما تحطه وترفعه لـ GitHub
-const AI_MODEL = 'gpt-4o-mini';
+/* All AI features call the OpenAI API directly from the browser (no backend
+   proxy — keeps the app 100% static/free, no Firebase Blaze billing plan
+   needed). The key itself is stored through window.storage ('rd2:aikey'),
+   the SAME mechanism the rest of the app's data uses: a local cache always,
+   plus — while signed in with Firebase (see المزامنة في الإعدادات) — synced
+   to this user's own Firestore document, protected by the same security
+   rule as everything else (`request.auth.uid == uid`, nobody else can read
+   it). That's what makes it follow you to every device automatically
+   WITHOUT the key ever being written into this file or pushed to GitHub
+   (GitHub's own push protection blocks that outright, and the repo/site are
+   public, so a key hardcoded in the source would be readable by anyone). */
+const AI_KEY_KEY = 'rd2:aikey';
+const AI_MODEL = 'gpt-4o';
 let AI_CHAT_HISTORY = [];
+let AI_KEY_CACHE = '';
 
-function getAIKey(){ try{ return localStorage.getItem(AI_KEY_STORAGE) || AI_KEY_HARDCODED || ''; }catch(e){ return AI_KEY_HARDCODED || ''; } }
+function getAIKey(){ return AI_KEY_CACHE || ''; }
+async function loadAIKey(){
+  try{ const r = await window.storage.get(AI_KEY_KEY); AI_KEY_CACHE = (r && r.value) || ''; }catch(e){}
+}
 function renderAIKeyStatus(){
   const line = document.getElementById('aiKeyStatusLine');
   const input = document.getElementById('aiKeyInput');
   if(!line) return;
   const key = getAIKey();
   if(key){
-    const source = localStorage.getItem(AI_KEY_STORAGE) ? '' : ' — مفتاح ثابت بالكود (يعمل تلقائيًا على كل الأجهزة)';
-    line.textContent = '✅ المفتاح مفعّل (ينتهي بـ ...' + key.slice(-4) + ')' + source;
+    const synced = (fbUser && fbDb) ? ' — يتزامن تلقائيًا عبر حساب Firebase على كل أجهزتك' : ' — محفوظ محليًا فقط (سجّل دخولك بـ Firebase من الإعدادات ليتزامن على باقي أجهزتك)';
+    line.textContent = '✅ المفتاح مفعّل (ينتهي بـ ...' + key.slice(-4) + ')' + synced;
     line.style.color = 'var(--green)';
     if(input) input.value = '';
     if(input) input.placeholder = 'sk-••••••••' + key.slice(-4);
@@ -3650,15 +3647,17 @@ function renderAIKeyStatus(){
     if(input){ input.value=''; input.placeholder='sk-...'; }
   }
 }
-function saveAIKey(){
+async function saveAIKey(){
   const v = document.getElementById('aiKeyInput').value.trim();
   if(!v){ _showToast('اكتب المفتاح أولًا','error'); return; }
-  try{ localStorage.setItem(AI_KEY_STORAGE, v); }catch(e){ _showToast('تعذر حفظ المفتاح بهذا المتصفح','error'); return; }
+  AI_KEY_CACHE = v;
+  try{ await window.storage.set(AI_KEY_KEY, v); }catch(e){ _showToast('تعذر حفظ المفتاح','error'); return; }
   renderAIKeyStatus();
   _showToast('تم حفظ المفتاح بنجاح','success');
 }
-function clearAIKey(){
-  try{ localStorage.removeItem(AI_KEY_STORAGE); }catch(e){}
+async function clearAIKey(){
+  AI_KEY_CACHE = '';
+  try{ await window.storage.set(AI_KEY_KEY, ''); }catch(e){}
   renderAIKeyStatus();
   _showToast('تم حذف المفتاح');
 }
@@ -3825,7 +3824,7 @@ async function runAISearch(){
 /* ---------- INIT ---------- */
 renderTopbarDate();
 renderTopbarQuote();
-loadIfEmpty().then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
+loadIfEmpty().then(()=> loadAIKey()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
 </script>
 </body>
 </html>
