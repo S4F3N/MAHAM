@@ -1145,11 +1145,18 @@
 <div class="overlay" id="aiChatOverlay">
   <div class="modal ai-chat-modal">
     <div class="modal-handle"></div>
-    <h3>🤖 المساعد الذكي</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <h3 style="margin:0;">🤖 المساعد الذكي</h3>
+      <div class="seg-control" id="aiChatModeControl">
+        <button type="button" class="active" data-val="cases" onclick="setAIChatMode('cases')">قضاياي فقط</button>
+        <button type="button" data-val="general" onclick="setAIChatMode('general')">عام</button>
+      </div>
+    </div>
     <div class="ai-msgs" id="aiMsgs"></div>
     <div class="ai-input-row">
       <input type="text" id="aiChatInput" placeholder="اسأل عن ملفاتك وجولاتك ومهامك..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAIChat(); }">
       <button class="btn btn-filled btn-sm" onclick="sendAIChat()">إرسال</button>
+      <button class="btn btn-glass btn-sm" onclick="clearAIChatHistory()" title="مسح سجل المحادثة">🗑</button>
     </div>
   </div>
 </div>
@@ -1363,7 +1370,7 @@ function doFirebaseLogin(mode){
     const overlay = document.getElementById('setupOverlay');
     ensureLoaded().then(function(){
       if(overlay) overlay.classList.remove('open');
-      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); });
+      if(typeof loadIfEmpty === 'function') loadIfEmpty().then(()=>{ if(typeof loadAIKey==='function') return loadAIKey(); }).then(()=>{ if(typeof loadAIChatState==='function') return loadAIChatState(); }).then(()=>{ if(typeof renderSettings==='function') renderSettings(); });
       updateAccountLine();
       if(typeof _showToast==='function') _showToast('تم تسجيل الدخول بنجاح');
     });
@@ -3622,13 +3629,35 @@ scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'s
    (GitHub's own push protection blocks that outright, and the repo/site are
    public, so a key hardcoded in the source would be readable by anyone). */
 const AI_KEY_KEY = 'rd2:aikey';
+const AI_CHAT_HISTORY_KEY = 'rd2:aichathistory';
+const AI_CHAT_MODE_KEY = 'rd2:aichatmode';
 const AI_MODEL = 'gpt-4o';
-let AI_CHAT_HISTORY = [];
+let AI_CHAT_HISTORY = []; // full persisted conversation log — never auto-cleared, syncs via Firestore like everything else
+let AI_CHAT_MODE = 'cases'; // 'cases' = answers only from app data; 'general' = full general-purpose assistant
 let AI_KEY_CACHE = '';
 
 function getAIKey(){ return AI_KEY_CACHE || ''; }
 async function loadAIKey(){
   try{ const r = await window.storage.get(AI_KEY_KEY); AI_KEY_CACHE = (r && r.value) || ''; }catch(e){}
+}
+async function loadAIChatState(){
+  try{ const r = await window.storage.get(AI_CHAT_HISTORY_KEY); if(r && r.value){ AI_CHAT_HISTORY = JSON.parse(r.value) || []; } }catch(e){}
+  try{ const m = await window.storage.get(AI_CHAT_MODE_KEY); if(m && m.value){ AI_CHAT_MODE = m.value; } }catch(e){}
+}
+function _persistAIChatHistory(){ return window.storage.set(AI_CHAT_HISTORY_KEY, JSON.stringify(AI_CHAT_HISTORY)).catch(()=>{}); }
+function setAIChatMode(mode){
+  AI_CHAT_MODE = mode;
+  window.storage.set(AI_CHAT_MODE_KEY, mode).catch(()=>{});
+  const ctrl = document.getElementById('aiChatModeControl');
+  if(ctrl) ctrl.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.val===mode));
+}
+function clearAIChatHistory(){
+  AI_CHAT_HISTORY = [];
+  _persistAIChatHistory();
+  const el = document.getElementById('aiMsgs');
+  if(el) el.innerHTML = '';
+  _aiAppendMsg('assistant','تم مسح سجل المحادثة. أهلًا من جديد!');
+  _showToast('تم مسح سجل المحادثة');
 }
 function renderAIKeyStatus(){
   const line = document.getElementById('aiKeyStatusLine');
@@ -3672,6 +3701,9 @@ function _aiSystemPrompt(mode){
       return 'أنت مساعد بحث ذكي داخل قائمة ملفات قضايا. يُعطى لك سؤال المستخدم وقائمة مختصرة بالملفات (JSON). أعد JSON فقط بصيغة {"matches":[{"id":"...","reason":"..."}]} مرتبة من الأكثر صلة للأقل، ولا تُدرج ملفًا غير ذي صلة فعليًا. إن لم يوجد أي ملف مطابق أعد {"matches":[]}.';
     case 'chat':
     default:
+      if(AI_CHAT_MODE==='general'){
+        return 'أنت مساعد ذكي عام (مثل ChatGPT) تجيب بالعربية بوضوح وإيجاز على أي سؤال يطرحه المستخدم، سواء كان متعلقًا ببرنامجه "مهام صَفوان" لمتابعة القضايا أو سؤالًا عامًا تمامًا (قانوني عام، صياغة، ترجمة، معلومات عامة... إلخ). معك أيضًا بيانات ملفات المستخدم وقضاياه بصيغة JSON ضمن السياق — استخدمها فقط عندما يكون السؤال متعلقًا بها، وإلا جاوب من معرفتك العامة بثقة دون أي تردد أو اعتذار غير ضروري.';
+      }
       return 'أنت مساعد ذكي داخل برنامج "مهام صَفوان" لمتابعة ملفات قضايا قانونية. تجيب بالعربية بإيجاز ووضوح بناءً فقط على بيانات السياق المعطاة لك (الملفات، حالتها، الإجراءات المستحقة). إذا لم تكفِ المعلومات المعطاة للإجابة بثقة، قل ذلك صراحة بدل التخمين أو اختلاق تفاصيل.';
   }
 }
@@ -3687,13 +3719,17 @@ async function callAI(mode, message, context){
     messages.push({ role:'system', content:'بيانات السياق (JSON):\n' + JSON.stringify(context).slice(0,60000) });
   }
   if(mode==='chat'){
+    // AI_CHAT_HISTORY already has this turn's user message pushed by the
+    // caller, so just replay the last 10 as-is instead of appending the
+    // current message again below (that used to double it up).
     AI_CHAT_HISTORY.slice(-10).forEach(h=>{
       if(h && (h.role==='user'||h.role==='assistant') && h.content){
         messages.push({ role:h.role, content:String(h.content).slice(0,4000) });
       }
     });
+  } else {
+    messages.push({ role:'user', content:String(message).slice(0,8000) });
   }
-  messages.push({ role:'user', content:String(message).slice(0,8000) });
   const wantsJson = mode==='suggest' || mode==='search';
   const body = { model:AI_MODEL, messages, temperature: mode==='chat'?0.4:0.2 };
   if(wantsJson) body.response_format = { type:'json_object' };
@@ -3733,8 +3769,16 @@ function buildAIFilesContext(){ return FILES.map(_aiFileSummary); }
 /* ---- chat panel ---- */
 function openAIChat(){
   document.getElementById('aiChatOverlay').classList.add('open');
-  if(!AI_CHAT_HISTORY.length){
-    _aiAppendMsg('assistant','أهلًا! اسألني عن ملفاتك، الجولات المتأخرة، أو أي شيء مسجّل في البرنامج.');
+  const ctrl = document.getElementById('aiChatModeControl');
+  if(ctrl) ctrl.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.val===AI_CHAT_MODE));
+  const el = document.getElementById('aiMsgs');
+  if(el){
+    el.innerHTML = '';
+    if(AI_CHAT_HISTORY.length){
+      AI_CHAT_HISTORY.forEach(h=>{ if(h && h.role && h.content) _aiAppendMsg(h.role, h.content); });
+    } else {
+      _aiAppendMsg('assistant','أهلًا! اسألني عن ملفاتك، الجولات المتأخرة، أو أي شيء مسجّل في البرنامج — أو بدّل لوضع "عام" لأسأل أي شي ثاني.');
+    }
   }
   setTimeout(()=>document.getElementById('aiChatInput').focus(), 150);
 }
@@ -3757,9 +3801,10 @@ async function sendAIChat(){
   const loadingEl = _aiAppendMsg('assistant', 'جارٍ التفكير...', 'loading');
   const reply = await callAI('chat', msg, {files: buildAIFilesContext(), today: today()});
   loadingEl.remove();
-  if(reply==null) return;
+  if(reply==null){ AI_CHAT_HISTORY.pop(); return; } // drop the unanswered user turn so a retry doesn't double it up
   _aiAppendMsg('assistant', reply);
   AI_CHAT_HISTORY.push({role:'assistant', content:reply});
+  _persistAIChatHistory();
 }
 
 /* ---- file summarize ---- */
@@ -3824,7 +3869,7 @@ async function runAISearch(){
 /* ---------- INIT ---------- */
 renderTopbarDate();
 renderTopbarQuote();
-loadIfEmpty().then(()=> loadAIKey()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
+loadIfEmpty().then(()=> loadAIKey()).then(()=> loadAIChatState()).then(()=>{ renderHome(); renderContacts(); renderSettings(); renderTopbarQuote(); });
 </script>
 </body>
 </html>
