@@ -1,0 +1,11 @@
+{
+  "name": "maham-functions",
+  "description": "Cloud Function proxy that calls OpenAI on behalf of مهام صَفوان, keeping the API key server-side.",
+  "engines": { "node": "20" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.0"
+  },
+  "private": true
+}

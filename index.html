@@ -438,6 +438,20 @@
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:700;padding:18px;}
   .overlay.open{display:flex;}
   .modal{background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:24px;}
+  .ai-chat-modal{display:flex;flex-direction:column;height:78vh;}
+  .ai-msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:6px 2px;margin-bottom:8px;}
+  .ai-msg{max-width:85%;padding:9px 13px;border-radius:var(--radius-md);font-size:13.5px;line-height:1.65;white-space:pre-wrap;}
+  .ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-left-radius:4px;}
+  .ai-msg.assistant{align-self:flex-start;background:var(--surface-3);border-bottom-right-radius:4px;}
+  .ai-msg.loading{opacity:.65;font-style:italic;}
+  .ai-msg.error{align-self:flex-start;background:var(--red-glow);color:var(--red);}
+  .ai-input-row{display:flex;gap:8px;flex-shrink:0;}
+  .ai-input-row input{flex:1;}
+  .ai-result-text{white-space:pre-wrap;line-height:1.85;font-size:14px;color:var(--text-1);}
+  .ai-search-hit{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 13px;margin-bottom:8px;cursor:pointer;}
+  .ai-search-hit:hover{background:var(--surface-3);}
+  .ai-search-hit b{display:block;margin-bottom:3px;font-size:14px;}
+  .ai-search-hit span{font-size:12px;color:var(--text-2);}
   .modal.narrow{max-width:440px;}
   .modal h3{font-size:18px;font-weight:700;margin-bottom:16px;}
   .form-row{margin-bottom:13px;}
@@ -590,6 +604,7 @@
       <div class="icon-btn" id="notifBtn" title="التنبيهات">🔔<span class="notif-badge" id="notifBadge" style="display:none"></span></div>
       <div class="notif-drop" id="notifDrop"></div>
     </div>
+    <div class="icon-btn" id="aiBtn" title="المساعد الذكي" onclick="openAIChat()">🤖</div>
     <div class="icon-btn" id="themeToggle" title="تبديل المظهر">🌙</div>
   </div>
 </header>
@@ -654,7 +669,10 @@
   <!-- FILES -->
   <section class="page" id="page-files">
     <div class="section-head"><h2>الملفات</h2>
-      <button class="btn btn-filled btn-sm" onclick="openFileModal()">+ ملف جديد</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-glass btn-sm" onclick="openAISearch()">🔍 بحث ذكي</button>
+        <button class="btn btn-filled btn-sm" onclick="openFileModal()">+ ملف جديد</button>
+      </div>
     </div>
     <div class="filter-bar">
       <div class="search-box"><input type="text" id="fileSearch" placeholder="بحث بالاسم أو الطرف..." oninput="renderFiles()"></div>
@@ -979,7 +997,11 @@
     </div>
     <div class="form-row"><label>ما الذي تم اكتشافه / ملاحظته في هذه الجولة</label><textarea id="rFinding"></textarea></div>
     <div class="form-row"><label>الإجراء المتخذ (ما تم عمله فعليًا حتى الآن)</label><textarea id="rActionTaken"></textarea></div>
-    <div class="form-row"><label>الإجراء المطلوب (الخطوة القادمة)</label><textarea id="rActionNeeded"></textarea></div>
+    <div class="form-row">
+      <label>الإجراء المطلوب (الخطوة القادمة)</label>
+      <textarea id="rActionNeeded"></textarea>
+      <button type="button" class="btn btn-glass btn-sm" style="margin-top:6px;" onclick="aiSuggestRoundAction()">✨ اقترح الإجراء والأولوية</button>
+    </div>
     <div class="form-4col">
       <div class="form-row"><label>حالة تنفيذ الإجراء</label><select id="rExec"><option value="لم">لم يُنفذ بعد</option><option value="جارٍ">جارٍ التنفيذ</option><option value="تم">تم التنفيذ</option></select></div>
       <div class="form-row"><label>تاريخ التنفيذ (بداية العمل)</label><input type="date" id="rExecDate"></div>
@@ -1102,6 +1124,41 @@
       <button class="btn btn-glass" onclick="closeGroupModal()">إلغاء</button>
       <button class="btn btn-filled" onclick="saveGroup()">حفظ</button>
     </div>
+  </div>
+</div>
+
+<!-- AI CHAT MODAL -->
+<div class="overlay" id="aiChatOverlay">
+  <div class="modal ai-chat-modal">
+    <div class="modal-handle"></div>
+    <h3>🤖 المساعد الذكي</h3>
+    <div class="ai-msgs" id="aiMsgs"></div>
+    <div class="ai-input-row">
+      <input type="text" id="aiChatInput" placeholder="اسأل عن ملفاتك وجولاتك ومهامك..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAIChat(); }">
+      <button class="btn btn-filled btn-sm" onclick="sendAIChat()">إرسال</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI RESULT MODAL (summarize / suggest) -->
+<div class="overlay" id="aiResultOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 id="aiResultTitle">✨ نتيجة الذكاء الاصطناعي</h3>
+    <div class="ai-result-text" id="aiResultBody">جارٍ التحضير...</div>
+    <div class="modal-actions"><button class="btn btn-glass" onclick="document.getElementById('aiResultOverlay').classList.remove('open')">إغلاق</button></div>
+  </div>
+</div>
+
+<!-- AI SEARCH MODAL -->
+<div class="overlay" id="aiSearchOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>🔍 بحث ذكي بين الملفات</h3>
+    <div class="form-row"><input type="text" id="aiSearchInput" placeholder="مثال: قضايا GOSI المتأخرة، أو نزاعات الإيجار..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); runAISearch(); }"></div>
+    <button class="btn btn-filled btn-sm" onclick="runAISearch()">بحث</button>
+    <div id="aiSearchResults" style="margin-top:14px;"></div>
+    <div class="modal-actions"><button class="btn btn-glass" onclick="document.getElementById('aiSearchOverlay').classList.remove('open')">إغلاق</button></div>
   </div>
 </div>
 
@@ -2718,6 +2775,7 @@ function renderFilePage(){
         })()}
       </div>
       <div class="fh-actions">
+        <button class="btn btn-glass btn-sm" onclick="aiSummarizeFile('${f.id}')">✨ تلخيص بالذكاء الاصطناعي</button>
         <button class="btn btn-glass btn-sm" onclick="toggleFileCompleted('${f.id}')">${f.status==='مكتملة'?'↺ إعادة فتح':'✅ تصنيف كمكتملة'}</button>
         <button class="btn btn-glass btn-sm" onclick="openFileModal('${f.id}')">تعديل</button>
         <button class="btn btn-danger btn-sm" onclick="document.getElementById('fId').value='${f.id}'; deleteFile();">حذف</button>
@@ -3535,6 +3593,143 @@ window.addEventListener('scroll', ()=>{
   scrollTopBtn.classList.toggle('show', window.scrollY > 420);
 });
 scrollTopBtn.addEventListener('click', ()=>{ window.scrollTo({top:0, behavior:'smooth'}); haptic(6); });
+
+/* ---------- AI ASSISTANT ---------- */
+/* All AI features go through one Cloud Function (aiAssist) that holds the
+   OpenAI API key server-side — the key never touches the browser. The
+   function requires a signed-in Firebase user (checks the ID token), so
+   these features only work while logged in with Firebase (see المزامنة في
+   الإعدادات), same requirement as cross-device sync. */
+const AI_FN_URL = 'https://us-central1-maham-3d4d7.cloudfunctions.net/aiAssist';
+let AI_CHAT_HISTORY = [];
+
+async function callAI(mode, message, context){
+  if(!fbUser || !fbAuth || !fbAuth.currentUser){
+    _showToast('سجّل دخولك بحساب Firebase أولاً لتفعيل ميزات الذكاء الاصطناعي (من الإعدادات)','error');
+    return null;
+  }
+  let idToken;
+  try{ idToken = await fbAuth.currentUser.getIdToken(); }
+  catch(e){ _showToast('تعذر التحقق من تسجيل الدخول','error'); return null; }
+  try{
+    const res = await fetch(AI_FN_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+idToken },
+      body: JSON.stringify({ mode, message, context, history: mode==='chat'? AI_CHAT_HISTORY.slice(-10) : undefined }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ _showToast('تعذر الاتصال بالمساعد الذكي: '+(data.error||res.status),'error'); return null; }
+    return data.content || '';
+  }catch(e){
+    _showToast('تعذر الاتصال بالمساعد الذكي — تحقق من الاتصال بالإنترنت','error');
+    return null;
+  }
+}
+/* Compact summaries so payloads sent to the AI stay small and relevant —
+   full notes/attachments aren't needed for chat/search, just enough to
+   answer "what's going on with X" or "find files about Y". */
+function _aiFileSummary(f){
+  const na = nextActionFor(f.id);
+  const rs = ROUNDS.filter(r=>r.fileId===f.id);
+  return {
+    id:f.id, title:f.title, status:f.status, priority:f.priority, category:f.category,
+    party:f.party, tags:f.tags||[], roundsCount:rs.length,
+    overdue: rs.filter(r=>r.exec!=='تم' && r.due && daysUntil(r.due)<0).length,
+    nextAction: na ? {actionNeeded:na.actionNeeded, due:na.due, exec:na.exec} : null,
+  };
+}
+function buildAIFilesContext(){ return FILES.map(_aiFileSummary); }
+
+/* ---- chat panel ---- */
+function openAIChat(){
+  document.getElementById('aiChatOverlay').classList.add('open');
+  if(!AI_CHAT_HISTORY.length){
+    _aiAppendMsg('assistant','أهلًا! اسألني عن ملفاتك، الجولات المتأخرة، أو أي شيء مسجّل في البرنامج.');
+  }
+  setTimeout(()=>document.getElementById('aiChatInput').focus(), 150);
+}
+function _aiAppendMsg(role, text, cls){
+  const el = document.getElementById('aiMsgs');
+  const div = document.createElement('div');
+  div.className = 'ai-msg '+role+(cls?' '+cls:'');
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  return div;
+}
+async function sendAIChat(){
+  const input = document.getElementById('aiChatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  _aiAppendMsg('user', msg);
+  AI_CHAT_HISTORY.push({role:'user', content:msg});
+  const loadingEl = _aiAppendMsg('assistant', 'جارٍ التفكير...', 'loading');
+  const reply = await callAI('chat', msg, {files: buildAIFilesContext(), today: today()});
+  loadingEl.remove();
+  if(reply==null) return;
+  _aiAppendMsg('assistant', reply);
+  AI_CHAT_HISTORY.push({role:'assistant', content:reply});
+}
+
+/* ---- file summarize ---- */
+async function aiSummarizeFile(fileId){
+  const f = fileOf(fileId); if(!f) return;
+  const rs = ROUNDS.filter(r=>r.fileId===fileId).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,15);
+  document.getElementById('aiResultTitle').textContent = '✨ تلخيص: '+f.title;
+  document.getElementById('aiResultBody').textContent = 'جارٍ التلخيص...';
+  document.getElementById('aiResultOverlay').classList.add('open');
+  const context = {
+    file: {title:f.title, status:f.status, priority:f.priority, category:f.category, party:f.party, opened:f.opened, target:f.target, notes:f.notes},
+    rounds: rs.map(r=>({date:r.date, type:r.type, exec:r.exec, finding:r.finding, actionTaken:r.actionTaken, actionNeeded:r.actionNeeded, due:r.due, execDate:r.execDate})),
+  };
+  const result = await callAI('summarize', 'لخص حالة هذا الملف وآخر مستجداته والإجراء القادم المطلوب', context);
+  document.getElementById('aiResultBody').textContent = result || 'تعذر الحصول على تلخيص.';
+}
+
+/* ---- round suggest ---- */
+async function aiSuggestRoundAction(){
+  const finding = document.getElementById('rFinding').value.trim();
+  const actionTaken = document.getElementById('rActionTaken').value.trim();
+  if(!finding && !actionTaken){ _showToast('اكتب أولًا ما تم اكتشافه أو الإجراء المتخذ','error'); return; }
+  const btn = event && event.target;
+  const prevLabel = btn ? btn.textContent : '';
+  if(btn){ btn.textContent = '...جارٍ الاقتراح'; btn.disabled = true; }
+  const reply = await callAI('suggest', 'اقترح الإجراء المطلوب والأولوية المناسبة بناءً على هذه الجولة', {finding, actionTaken});
+  if(btn){ btn.textContent = prevLabel; btn.disabled = false; }
+  if(!reply) return;
+  let parsed;
+  try{ parsed = JSON.parse(reply); }catch(e){ _showToast('تعذر فهم رد المساعد','error'); return; }
+  if(parsed.actionNeeded) document.getElementById('rActionNeeded').value = parsed.actionNeeded;
+  if(parsed.priority && ['عاجل','متوسط','عادي'].includes(parsed.priority)) document.getElementById('rPriority').value = parsed.priority;
+  _showToast(parsed.reason ? ('اقتراح: '+parsed.reason) : 'تم تعبئة الاقتراح','success');
+}
+
+/* ---- smart search ---- */
+function openAISearch(){
+  document.getElementById('aiSearchResults').innerHTML = '';
+  document.getElementById('aiSearchInput').value = '';
+  document.getElementById('aiSearchOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('aiSearchInput').focus(), 150);
+}
+async function runAISearch(){
+  const q = document.getElementById('aiSearchInput').value.trim();
+  if(!q) return;
+  const resEl = document.getElementById('aiSearchResults');
+  resEl.innerHTML = '<div class="today-card-empty">جارٍ البحث...</div>';
+  const reply = await callAI('search', q, {files: buildAIFilesContext()});
+  if(!reply){ resEl.innerHTML = ''; return; }
+  let parsed;
+  try{ parsed = JSON.parse(reply); }catch(e){ resEl.innerHTML = '<div class="today-card-empty">تعذر فهم نتائج البحث.</div>'; return; }
+  const matches = (parsed.matches||[]).map(m=>({...m, file: fileOf(m.id)})).filter(m=>m.file);
+  if(!matches.length){ resEl.innerHTML = '<div class="today-card-empty">لا توجد نتائج مطابقة.</div>'; return; }
+  resEl.innerHTML = matches.map(m=>`
+    <div class="ai-search-hit" onclick="document.getElementById('aiSearchOverlay').classList.remove('open'); goToFile('${m.file.id}');">
+      <b>${esc(m.file.title)}</b>
+      <span>${esc(m.reason||'')}</span>
+    </div>
+  `).join('');
+}
 
 /* ---------- INIT ---------- */
 renderTopbarDate();
