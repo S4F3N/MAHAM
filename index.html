@@ -569,6 +569,32 @@
   #_recoverForgotAccountLink{display:block;text-align:center;font-size:12px;color:var(--accent);text-decoration:none;margin-bottom:14px;cursor:pointer;}
   #_recoverForgotAccountLink:hover{text-decoration:underline;}
 
+
+  /* ---- Hijri / Gregorian date picker ---- */
+  .hd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--font-body);font-size:13.5px;background:var(--input-bg);color:var(--text-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;text-align:right;min-height:38px;}
+  .hd-btn:hover{border-color:var(--border-focus);}
+  .hd-btn.empty .hd-text{color:var(--text-3);}
+  .hd-ico{opacity:.7;font-size:14px;}
+  #hdOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10050;padding:14px;}
+  #hdOverlay.open{display:flex;}
+  #hdSheet{background:var(--surface-2);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:340px;padding:16px;}
+  .hd-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .hd-x{background:none;border:none;color:var(--text-3);font-size:16px;cursor:pointer;padding:4px 8px;}
+  .hd-nav{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .hd-nav button{background:var(--surface-1);border:1px solid var(--border);color:var(--text-1);border-radius:var(--radius-sm);width:32px;height:32px;cursor:pointer;font-size:15px;flex:none;}
+  .hd-nav select{flex:1;min-width:0;padding:6px 8px;}
+  .hd-nav input[type=number]{width:74px;flex:none;padding:6px 8px;text-align:center;}
+  .hd-dow,.hd-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .hd-dow div{text-align:center;font-size:10.5px;color:var(--text-3);padding:3px 0;}
+  .hd-day{aspect-ratio:1;border-radius:8px;border:1px solid transparent;background:none;color:var(--text-1);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-body);font-size:13px;line-height:1.1;padding:0;}
+  .hd-day small{font-size:8.5px;color:var(--text-3);margin-top:1px;}
+  .hd-day:hover{background:var(--surface-3);}
+  .hd-day.today{border-color:var(--accent);}
+  .hd-day.sel{background:var(--accent);color:#fff;}
+  .hd-day.sel small{color:rgba(255,255,255,.8);}
+  .hd-foot{display:flex;gap:8px;margin-top:12px;}
+  .hd-foot button{flex:1;}
+
   /* ---- swipe-to-delete rows ---- */
   .swipe-row{position:relative;overflow:hidden;border-radius:var(--radius-lg);}
   .swipe-del-btn{position:absolute;top:0;bottom:0;right:0;width:84px;background:var(--red);color:#fff;border:none;font-size:11px;font-weight:700;line-height:1.5;cursor:pointer;z-index:0;}
@@ -914,6 +940,13 @@
         <div class="seg-control" id="fontScaleControl">
           <button type="button" data-val="normal" onclick="setFontScale('normal')">عادي</button>
           <button type="button" data-val="large" onclick="setFontScale('large')">كبير</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>عرض التواريخ (يظهر التقويم الآخر عند وضع المؤشر)</label>
+        <div class="seg-control" id="dateModeControl">
+          <button type="button" data-val="gregory" onclick="setDateMode('gregory')">ميلادي</button>
+          <button type="button" data-val="hijri" onclick="setDateMode('hijri')">هجري</button>
         </div>
       </div>
       <div class="settings-row">
@@ -1347,6 +1380,30 @@
   </div>
 </div>
 
+<div id="hdOverlay">
+  <div id="hdSheet">
+    <div class="hd-top">
+      <div class="seg-control" id="hdModeSeg">
+        <button type="button" data-m="gregory" onclick="hdSetMode('gregory')">ميلادي</button>
+        <button type="button" data-m="hijri" onclick="hdSetMode('hijri')">هجري</button>
+      </div>
+      <button type="button" class="hd-x" onclick="hdClose()" title="إغلاق">✕</button>
+    </div>
+    <div class="hd-nav">
+      <button type="button" onclick="hdStep(-1)" title="الشهر السابق">‹</button>
+      <select id="hdMonthSel" onchange="hdJump()"></select>
+      <input type="number" id="hdYearInp" onchange="hdJump()">
+      <button type="button" onclick="hdStep(1)" title="الشهر التالي">›</button>
+    </div>
+    <div class="hd-dow" id="hdDow"></div>
+    <div class="hd-grid" id="hdGrid"></div>
+    <div class="hd-foot">
+      <button type="button" class="btn btn-glass btn-sm" onclick="hdPickToday()">اليوم</button>
+      <button type="button" class="btn btn-glass btn-sm" onclick="hdClear()">مسح</button>
+    </div>
+  </div>
+</div>
+
 <div id="_toastContainer"></div>
 <div id="_sheetOverlay"><div id="_sheet"><div id="_sheetMsg"></div><div class="sheet-btns"><button id="_sheetCancelBtn">إلغاء</button><button id="_sheetConfirmBtn">تأكيد</button></div></div></div>
 
@@ -1637,6 +1694,7 @@ function applyAccentColor(){
   document.documentElement.style.setProperty('--border-focus', hexToRgba(hex, theme==='dark'?0.7:0.6));
 }
 function applyAppSettings(){
+  if(typeof refreshAllDateFields==='function') refreshAllDateFields();
   document.documentElement.setAttribute('data-fontscale', APP_SETTINGS.fontScale==='large'?'large':'normal');
   document.documentElement.setAttribute('data-eyecomfort', APP_SETTINGS.eyeComfort?'1':'0');
   applyAccentColor();
@@ -1677,6 +1735,7 @@ function resetAppSettings(){
   });
 }
 function renderAppearanceControls(){
+  if(typeof renderDateModeControl==='function') renderDateModeControl();
   const mode = APP_SETTINGS.themeMode || document.documentElement.getAttribute('data-theme') || 'dark';
   document.querySelectorAll('#themeModeControl button').forEach(b=>b.classList.toggle('active', b.dataset.val===mode));
   document.querySelectorAll('#fontScaleControl button').forEach(b=>b.classList.toggle('active', b.dataset.val===(APP_SETTINGS.fontScale||'normal')));
@@ -2046,17 +2105,64 @@ if(window.matchMedia){
 }
 
 function esc(s){ const d=document.createElement('div'); d.innerText = s||''; return d.innerHTML; }
-function fmtDate(d){ if(!d) return ''; const dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; return dt.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'short',day:'numeric'}); }
-function fmtDateTime(iso){ if(!iso) return ''; const dt=new Date(iso); if(isNaN(dt)) return iso; return dt.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'short',day:'numeric'}) + ' — ' + dt.toLocaleTimeString('ar-SA',{hour:'numeric',minute:'2-digit'}); }
+/* ================= DATES: Gregorian / Hijri (Umm al-Qura) ================= */
+const HJ_MONTHS = ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
+const GR_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const _HJ_FMT = (()=>{ try{ return new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'numeric',year:'numeric'}); }catch(e){ return null; } })();
+function _isoToDate(iso){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||''); if(!m) return null; return new Date(+m[1],+m[2]-1,+m[3],12); }
+function _dateToIso(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+function hijriOf(dt){
+  if(!_HJ_FMT) return null;
+  const o={}; _HJ_FMT.formatToParts(dt).forEach(p=>{ o[p.type]=p.value; });
+  const y=parseInt(o.year,10), m=parseInt(o.month,10), d=parseInt(o.day,10);
+  return (isNaN(y)||isNaN(m)||isNaN(d)) ? null : {y,m,d};
+}
+const _h2gCache = {};
+function hijriToGreg(y,m,d){
+  const key=y+'-'+m+'-'+d;
+  if(_h2gCache[key]) return new Date(_h2gCache[key]);
+  const days=(y-1)*354.36707+(m-1)*29.530588+(d-1);
+  const a=new Date(Date.UTC(622,6,19)+days*86400000);
+  const cur=new Date(a.getUTCFullYear(),a.getUTCMonth(),a.getUTCDate(),12);
+  const target=(y*100+m)*100+d;
+  for(let i=0;i<80;i++){
+    const h=hijriOf(cur); if(!h) return null;
+    const k=(h.y*100+h.m)*100+h.d;
+    if(k===target){ _h2gCache[key]=cur.getTime(); return new Date(cur); }
+    const dm=(y*12+m)-(h.y*12+h.m);
+    let step=Math.round(dm*29.530588+(d-h.d));
+    if(step===0) step = target>k ? 1 : -1;
+    cur.setDate(cur.getDate()+step);
+  }
+  return null;
+}
+function hijriMonthLen(y,m){
+  const a=hijriToGreg(y,m,1), b=(m===12)?hijriToGreg(y+1,1,1):hijriToGreg(y,m+1,1);
+  return (a&&b) ? Math.round((b-a)/86400000) : 30;
+}
+function dateMode(){ return (typeof APP_SETTINGS!=='undefined' && APP_SETTINGS.dateMode==='hijri') ? 'hijri' : 'gregory'; }
+function _fmtG(dt,o){ return dt.toLocaleDateString('ar-SA-u-ca-gregory',o); }
+function _fmtH(dt,o){ return dt.toLocaleDateString('ar-SA-u-ca-islamic-umalqura',o); }
+function _fmtMain(dt){ return dateMode()==='hijri' ? _fmtH(dt,{year:'numeric',month:'long',day:'numeric'}) : _fmtG(dt,{year:'numeric',month:'short',day:'numeric'}); }
+function fmtDate(d){ if(!d) return ''; const dt=_isoToDate(d); if(!dt||isNaN(dt)) return d; return _fmtMain(dt); }
+/* the OTHER calendar, long form with weekday — used for hover tooltips */
+function fmtDateAlt(d){
+  const dt=_isoToDate(d); if(!dt||isNaN(dt)) return '';
+  const o={weekday:'long',day:'numeric',month:'long',year:'numeric'};
+  return dateMode()==='hijri' ? 'ميلادي: '+_fmtG(dt,o) : 'هجري: '+_fmtH(dt,o);
+}
+function dTitle(d){ const t=fmtDateAlt(d); return t ? ` title="${t}"` : ''; }
+function fmtDateTime(iso){ if(!iso) return ''; const dt=new Date(iso); if(isNaN(dt)) return iso; return _fmtMain(dt) + ' — ' + dt.toLocaleTimeString('ar-SA',{hour:'numeric',minute:'2-digit'}); }
+function dTitleTs(iso){ if(!iso) return ''; const dt=new Date(iso); return isNaN(dt) ? '' : dTitle(_dateToIso(dt)); }
 function daysUntil(d){ if(!d) return null; const t=new Date(); t.setHours(0,0,0,0); const dt=new Date(d+'T00:00:00'); return Math.round((dt-t)/86400000); }
 function dueBadgeHtml(d){
   const n = daysUntil(d);
   if(n===null) return '';
   const warnDays = APP_SETTINGS.dueWarnDays || 3;
-  if(n<0) return `<span class="badge due-late">متأخر ${Math.abs(n)}ي</span>`;
-  if(n===0) return `<span class="badge due-late">اليوم</span>`;
-  if(n<=warnDays) return `<span class="badge due-soon">خلال ${n}ي</span>`;
-  return `<span class="badge">${fmtDate(d)}</span>`;
+  if(n<0) return `<span class="badge due-late"${dTitle(d)}>متأخر ${Math.abs(n)}ي</span>`;
+  if(n===0) return `<span class="badge due-late"${dTitle(d)}>اليوم</span>`;
+  if(n<=warnDays) return `<span class="badge due-soon"${dTitle(d)}>خلال ${n}ي</span>`;
+  return `<span class="badge"${dTitle(d)}>${fmtDate(d)}</span>`;
 }
 function fileOf(id){ return FILES.find(f=>f.id===id); }
 function contactOf(id){ return CONTACTS.find(c=>c.id===id); }
@@ -2219,7 +2325,7 @@ function renderTodayCard(){
   });
   const el = document.getElementById('todayCard');
   if(!el) return;
-  let html = `<div class="today-card-title">🗓️ مهام اليوم — ${fmtDate(t)}</div>`;
+  let html = `<div class="today-card-title"${dTitle(t)}>🗓️ مهام اليوم — ${fmtDate(t)}</div>`;
   if(!items.length){
     html += `<div class="today-card-empty">لا مهام أو إجراءات مستحقة اليوم 👍</div>`;
   } else {
@@ -2294,7 +2400,7 @@ function renderMiniCal(){
   const dowEl = document.getElementById('miniCalDow');
   if(!dowEl) return;
   dowEl.innerHTML = CAL_DOW.map(d=>`<div>${d[0]}</div>`).join('');
-  document.getElementById('miniCalLabel').innerText = miniCalMonth.toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'});
+  const _mcl=document.getElementById('miniCalLabel'); _mcl.innerText = miniCalMonth.toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'}); _mcl.title = _monthHijriRange(miniCalMonth);
   const year=miniCalMonth.getFullYear(), month=miniCalMonth.getMonth();
   const firstDow=new Date(year,month,1).getDay();
   const daysInMonth=new Date(year,month+1,0).getDate();
@@ -2314,7 +2420,7 @@ function renderMiniCal(){
     const cls=['mini-cal-day'];
     if(c.dateStr===t) cls.push('today');
     if(c.dateStr===miniCalDay && miniCalDropOpen) cls.push('selected');
-    return `<div class="${cls.join(' ')}" onclick="miniCalDayClick('${c.dateStr}')">${c.d}${hasItems?'<span class="mcd-dot"></span>':''}</div>`;
+    return `<div class="${cls.join(' ')}"${dTitle(c.dateStr)} onclick="miniCalDayClick('${c.dateStr}')">${c.d}${hasItems?'<span class="mcd-dot"></span>':''}</div>`;
   }).join('');
   const drop = document.getElementById('miniCalDrop');
   if(miniCalDropOpen){ renderMiniCalDrop(); } else { drop.classList.remove('open'); drop.innerHTML=''; }
@@ -2324,7 +2430,7 @@ function renderMiniCalDrop(){
   const tTasks = TASKS.filter(t=>t.date===miniCalDay).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const tRounds = ROUNDS.filter(r=>r.due===miniCalDay);
   const tFiles = FILES.filter(f=>f.target===miniCalDay);
-  let html = `<div class="mini-cal-drop-title">أعمال يوم ${fmtDate(miniCalDay)}${miniCalDay===today()?' (اليوم)':''}</div>`;
+  let html = `<div class="mini-cal-drop-title"${dTitle(miniCalDay)}>أعمال يوم ${fmtDate(miniCalDay)}${miniCalDay===today()?' (اليوم)':''}</div>`;
   tTasks.forEach(x=>{ html+=`<div class="mini-cal-drop-item" onclick="openTaskModal('${x.id}')">${TASK_TYPES[x.type]||'✅'} ${esc(x.title)}${x.time?' · '+x.time:''}</div>`; });
   tRounds.forEach(r=>{ const f=fileOf(r.fileId); html+=`<div class="mini-cal-drop-item" onclick="goToFile('${r.fileId}')">${ROUND_TYPES[r.type]||'📌'} ${esc((r.actionNeeded||'إجراء مستحق').slice(0,40))}${f?' — '+esc(f.title):''}</div>`; });
   tFiles.forEach(f=>{ html+=`<div class="mini-cal-drop-item" onclick="goToFile('${f.id}')">📁 موعد إنجاز: ${esc(f.title)}</div>`; });
@@ -2339,7 +2445,7 @@ function _openActionCardHtml(r){
       <button class="ac-del" onclick="event.stopPropagation(); quickDelete('round','${r.id}')" title="حذف">✕</button>
       <div class="ic">${ROUND_TYPES[r.type]||'📌'}</div>
       <div class="ttl"><span class="p-dot ${r.priority}"></span> ${esc((r.actionNeeded||'بدون وصف').slice(0,70))}</div>
-      <div class="ac-badges">${r.execDate?'<span class="badge">🚩 بدء '+fmtDate(r.execDate)+'</span>':''}${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+      <div class="ac-badges">${r.execDate?'<span class="badge"'+dTitle(r.execDate)+'>🚩 بدء '+fmtDate(r.execDate)+'</span>':''}${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
       <div class="sub">${f?esc(f.title):''}</div>
     </div>`;
 }
@@ -2427,7 +2533,7 @@ function _openHeadlineItemHtml(r){
       <span class="ttl">${esc((r.actionNeeded||'بدون وصف').trim() || 'بدون وصف')}</span>
     </div>
     <div class="og-item-detail">
-      <div class="ac-badges">${r.execDate?'<span class="badge">🚩 بدء '+fmtDate(r.execDate)+'</span>':''}${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
+      <div class="ac-badges">${r.execDate?'<span class="badge"'+dTitle(r.execDate)+'>🚩 بدء '+fmtDate(r.execDate)+'</span>':''}${r.due?dueBadgeHtml(r.due):'<span class="badge">بدون موعد</span>'} <span class="exec-pill ${r.exec}">${r.exec==='لم'?'لم يُنفذ':'جارٍ'}</span></div>
       <div class="sub" style="margin:6px 0 8px;">${f?esc(f.title):''}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn btn-glass btn-sm" onclick="event.stopPropagation(); goToFile('${r.fileId}')">فتح الملف</button>
@@ -2504,7 +2610,7 @@ function renderFiles(){
         <div class="f-top"><span class="p-dot ${f.priority}"></span><span class="f-title">${esc(f.title)}</span>${f.pinned?'<span class="star">⭐</span>':''}<span class="f-complete-btn" onclick="event.stopPropagation(); toggleFileCompleted('${f.id}')" title="${f.status==='مكتملة'?'إعادة فتح الملف':'تصنيف كمكتملة'}">${f.status==='مكتملة'?'↺':'✅'}</span></div>
         <div class="f-badges">${groupBadge(f.groupId)}${catBadge(f.category)}<span class="badge status-${f.status}">${f.status}</span></div>
         <div class="f-bar"><div class="f-fill" style="transform:scaleX(${pct})"></div></div>
-        <div class="f-meta"><span>${rs.length} جولة</span><span>${last?'آخر تحديث '+fmtDate(last.date):'بدون جولات'}</span></div>
+        <div class="f-meta"><span>${rs.length} جولة</span><span${last?dTitle(last.date):''}>${last?'آخر تحديث '+fmtDate(last.date):'بدون جولات'}</span></div>
         ${(f.tags&&f.tags.length)?`<div class="f-tags">${f.tags.slice(0,3).map(t=>`<span class="tag-chip">${esc(t)}</span>`).join('')}</div>`:''}
         ${(function(){
           const na = nextActionFor(f.id);
@@ -2550,7 +2656,7 @@ function renderTodayAgenda(){
   const total = tTasks.length + tRounds.length;
   const badge = document.getElementById('todayBadge');
   if(total){ badge.style.display='flex'; badge.textContent = total>9?'9+':total; } else { badge.style.display='none'; }
-  let html = `<div class="agenda-drop-title">مهام اليوم — ${fmtDate(t)}</div>`;
+  let html = `<div class="agenda-drop-title"${dTitle(t)}>مهام اليوم — ${fmtDate(t)}</div>`;
   if(!total){ html += `<div class="sd-empty">لا مهام أو مواعيد اليوم 👍</div>`; }
   tTasks.forEach(x=>{
     const f = fileOf(x.fileId);
@@ -2598,7 +2704,7 @@ function dayItemsCount(dateStr){
 }
 function renderCalendarPage(){
   document.getElementById('calDow').innerHTML = CAL_DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  document.getElementById('calMonthLabel').innerText = calMonth.toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'});
+  const _cml=document.getElementById('calMonthLabel'); _cml.innerText = calMonth.toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'}); _cml.title = _monthHijriRange(calMonth);
   const year = calMonth.getFullYear(), month = calMonth.getMonth();
   const firstDow = new Date(year,month,1).getDay();
   const daysInMonth = new Date(year,month+1,0).getDate();
@@ -2621,16 +2727,21 @@ function renderCalendarPage(){
     const cls = ['cal-day'];
     if(c.dateStr===t) cls.push('today');
     if(c.dateStr===selectedDay) cls.push('selected');
-    return `<div class="${cls.join(' ')}" onclick="selectDay('${c.dateStr}')">
+    return `<div class="${cls.join(' ')}"${dTitle(c.dateStr)} onclick="selectDay('${c.dateStr}')">
       <span class="cal-daynum">${c.d}</span>
       <div class="cal-dots">${dots.join('')}</div>
     </div>`;
   }).join('');
   renderDayPanel();
 }
+function _monthHijriRange(d){
+  const a=new Date(d.getFullYear(),d.getMonth(),1,12), b=new Date(d.getFullYear(),d.getMonth()+1,0,12);
+  const o={month:'long',year:'numeric'}, x=_fmtH(a,o), y=_fmtH(b,o);
+  return 'هجري: '+(x===y?x:x+' — '+y);
+}
 function selectDay(dateStr){ selectedDay = dateStr; haptic(6); renderCalendarPage(); }
 function renderDayPanel(){
-  document.getElementById('dayPanelTitle').innerText = 'أعمال يوم ' + fmtDate(selectedDay) + (selectedDay===today()?' (اليوم)':'');
+  const _dpt = document.getElementById('dayPanelTitle'); _dpt.innerText = 'أعمال يوم ' + fmtDate(selectedDay) + (selectedDay===today()?' (اليوم)':''); _dpt.title = fmtDateAlt(selectedDay);
   const tTasks = TASKS.filter(t=>t.date===selectedDay).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const tRounds = ROUNDS.filter(r=>r.due===selectedDay);
   const tFiles = FILES.filter(f=>f.target===selectedDay);
@@ -2778,7 +2889,7 @@ function renderTasksPage(){
         <input type="checkbox" class="tchk" ${x.done?'checked':''} onclick="event.stopPropagation()" onchange="toggleTaskDone('${x.id}')">
         <div style="flex:1;cursor:pointer;" onclick="openTaskModal('${x.id}')">
           <div class="ttitle ${x.done?'done':''}">${icon} <span class="p-dot ${x.priority} ${x.done?'done':''}"></span> ${esc(x.title)}</div>
-          <div class="tmeta" style="margin-top:4px;">${x.time?`<span class="time-badge">${x.time}</span>`:''} <span class="badge">${fmtDate(x.date)}</span> ${f?('· '+esc(f.title)):''}</div>
+          <div class="tmeta" style="margin-top:4px;">${x.time?`<span class="time-badge">${x.time}</span>`:''} <span class="badge"${dTitle(x.date)}>${fmtDate(x.date)}</span> ${f?('· '+esc(f.title)):''}</div>
         </div>
       </div>
     </div>`;
@@ -2979,8 +3090,8 @@ function renderFilePage(){
     <div class="fh-grid">
       ${f.party?`<div><b>الطرف/الجهة:</b> ${esc(f.party)}</div>`:''}
       ${f.responsible?`<div><b>المسؤول:</b> ${esc(f.responsible)}</div>`:''}
-      ${f.opened?`<div><b>تاريخ الفتح:</b> ${fmtDate(f.opened)}</div>`:''}
-      ${f.target?`<div><b>موعد مستهدف:</b> ${fmtDate(f.target)}</div>`:''}
+      ${f.opened?`<div${dTitle(f.opened)}><b>تاريخ الفتح:</b> ${fmtDate(f.opened)}</div>`:''}
+      ${f.target?`<div${dTitle(f.target)}><b>موعد مستهدف:</b> ${fmtDate(f.target)}</div>`:''}
     </div>
     ${(f.contactIds&&f.contactIds.length)?`<div class="fh-tags">${f.contactIds.map(cid=>{const c=contactOf(cid); return c?`<span class="tag-chip">👤 ${esc(c.name)}</span>`:'';}).join('')}</div>`:''}
     ${(f.tags&&f.tags.length)?`<div class="fh-tags">${f.tags.map(t=>`<span class="tag-chip">#${esc(t)}</span>`).join('')}</div>`:''}
@@ -3032,7 +3143,7 @@ function renderRounds(){
     <button class="swipe-del-btn" onclick="event.stopPropagation(); quickDelete('round','${r.id}')">🗑<br>حذف</button>
     <div class="swipeable-inner round-card exec-${r.exec} p-${r.priority}" id="round-${r.id}">
       <div class="rc-top">
-        <div class="rc-top-left"><span class="rc-date">${ROUND_TYPES[r.type]||'📌'} ${fmtDate(r.date)}</span><span class="rc-type">${esc(r.type)}</span>${subfileBadge(r.subFileId)}</div>
+        <div class="rc-top-left"><span class="rc-date"${dTitle(r.date)}>${ROUND_TYPES[r.type]||'📌'} ${fmtDate(r.date)}</span><span class="rc-type">${esc(r.type)}</span>${subfileBadge(r.subFileId)}</div>
         <span class="exec-pill ${r.exec}">${r.exec==='تم'?'تم التنفيذ':(r.exec==='جارٍ'?'جارٍ التنفيذ':'لم يُنفذ بعد')}</span>
       </div>
       <div class="rc-fields">
@@ -3043,7 +3154,7 @@ function renderRounds(){
         ${r.suggest?`<div class="rc-field"><div class="lbl">اقتراحات إضافية</div><div class="val">${esc(r.suggest)}</div></div>`:''}
       </div>
       <div class="rc-meta-row">
-        ${r.execDate?`<span class="badge">🚩 بدء ${fmtDate(r.execDate)}</span>`:''}
+        ${r.execDate?`<span class="badge"${dTitle(r.execDate)}>🚩 بدء ${fmtDate(r.execDate)}</span>`:''}
         ${r.due?dueBadgeHtml(r.due):''}
         ${r.responsible?`<span class="badge">👤 ${esc(r.responsible)}</span>`:''}
         ${r.amount?`<span class="badge">💰 ${Number(r.amount).toLocaleString('ar-SA')} ﷼</span>`:''}
@@ -3582,7 +3693,7 @@ function renderActivityPage(){
       <div class="log-icon ${x.action}">${LOG_ACTION_ICONS[x.action]||'•'}</div>
       <div style="flex:1">
         <div class="log-summary">${esc(x.summary)}</div>
-        <div class="log-meta">${LOG_ACTION_LABELS[x.action]||x.action} · ${LOG_ENTITY_LABELS[x.entity]||x.entity} · ${fmtDateTime(x.ts)}</div>
+        <div class="log-meta">${LOG_ACTION_LABELS[x.action]||x.action} · ${LOG_ENTITY_LABELS[x.entity]||x.entity} · <span${dTitleTs(x.ts)}>${fmtDateTime(x.ts)}</span></div>
         ${x.detail?`<div class="log-detail">${esc(x.detail)}</div>`:''}
       </div>
     </div>`;
@@ -3891,6 +4002,119 @@ function startPasswordRecovery(){
     }
   };
 }
+
+
+/* ---------- date picker (Hijri / Gregorian) — values are always stored as Gregorian YYYY-MM-DD ---------- */
+let HD = {el:null, y:0, m:0};   // el = underlying <input>, (y,m) = month being viewed in the current mode
+function upgradeDateInput(el){
+  if(!el || el._hdUp) return;
+  el._hdUp = true;
+  const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  Object.defineProperty(el,'value',{ get(){ return desc.get.call(this); }, set(v){ desc.set.call(this,v); hdRefreshField(this); }, configurable:true });
+  el.style.display='none';
+  const b=document.createElement('button');
+  b.type='button'; b.className='hd-btn empty';
+  b.innerHTML='<span class="hd-text">اختر التاريخ</span><span class="hd-ico">📅</span>';
+  b.onclick=()=>hdOpen(el);
+  el.insertAdjacentElement('afterend', b);
+  el._hdBtn=b;
+  hdRefreshField(el);
+}
+function hdRefreshField(el){
+  const b=el._hdBtn; if(!b) return;
+  const v=el.value;
+  b.classList.toggle('empty', !v);
+  b.querySelector('.hd-text').textContent = v ? fmtDate(v) : 'اختر التاريخ';
+  b.title = v ? fmtDateAlt(v) : '';
+}
+function refreshAllDateFields(){ document.querySelectorAll('input[type=date]').forEach(el=>{ if(el._hdUp) hdRefreshField(el); }); }
+function hdViewOf(iso){
+  const dt=_isoToDate(iso)||new Date();
+  if(dateMode()==='hijri'){ const h=hijriOf(dt); if(h) return {y:h.y,m:h.m}; }
+  return {y:dt.getFullYear(), m:dt.getMonth()+1};
+}
+function hdOpen(el){
+  HD.el=el;
+  const v=hdViewOf(el.value||_dateToIso(new Date()));
+  HD.y=v.y; HD.m=v.m;
+  document.getElementById('hdOverlay').classList.add('open');
+  hdRender();
+}
+function hdClose(){ document.getElementById('hdOverlay').classList.remove('open'); HD.el=null; }
+function hdSetMode(m){
+  if(dateMode()===m) return;
+  APP_SETTINGS.dateMode=m; persistAppSettings();
+  const v=hdViewOf((HD.el&&HD.el.value)||_dateToIso(new Date()));
+  HD.y=v.y; HD.m=v.m;
+  hdRender(); refreshAllDateFields(); renderDateModeControl();
+  if(typeof rerenderDates==='function') rerenderDates();
+}
+function hdStep(n){
+  HD.m+=n;
+  if(HD.m>12){ HD.m=1; HD.y++; } else if(HD.m<1){ HD.m=12; HD.y--; }
+  hdRender();
+}
+function hdJump(){
+  const m=parseInt(document.getElementById('hdMonthSel').value,10);
+  let y=parseInt(document.getElementById('hdYearInp').value,10);
+  if(!isNaN(y)) HD.y=y;
+  if(!isNaN(m)) HD.m=m;
+  hdRender();
+}
+function hdRender(){
+  const mode=dateMode(), hij=mode==='hijri';
+  document.querySelectorAll('#hdModeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.m===mode));
+  const names=hij?HJ_MONTHS:GR_MONTHS;
+  document.getElementById('hdMonthSel').innerHTML=names.map((n,i)=>`<option value="${i+1}"${i+1===HD.m?' selected':''}>${n}</option>`).join('');
+  document.getElementById('hdYearInp').value=HD.y;
+  document.getElementById('hdDow').innerHTML=CAL_DOW.map(d=>`<div>${d}</div>`).join('');
+  let first, len;
+  if(hij){ first=hijriToGreg(HD.y,HD.m,1); len=hijriMonthLen(HD.y,HD.m); }
+  else { first=new Date(HD.y,HD.m-1,1,12); len=new Date(HD.y,HD.m,0).getDate(); }
+  if(!first){ document.getElementById('hdGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-3);padding:18px;">تعذر عرض هذا الشهر</div>'; return; }
+  const sel=HD.el?HD.el.value:'', t=_dateToIso(new Date());
+  let cells='';
+  for(let i=0;i<first.getDay();i++) cells+='<div></div>';
+  for(let i=0;i<len;i++){
+    const dt=new Date(first.getFullYear(),first.getMonth(),first.getDate()+i,12);
+    const iso=_dateToIso(dt);
+    let main, alt;
+    if(hij){ main=i+1; alt=dt.getDate(); } else { main=i+1; const h=hijriOf(dt); alt=h?h.d:''; }
+    const cls=['hd-day']; if(iso===sel) cls.push('sel'); if(iso===t) cls.push('today');
+    const tip=(hij?'ميلادي: '+_fmtG(dt,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'هجري: '+_fmtH(dt,{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+    cells+=`<button type="button" class="${cls.join(' ')}" title="${tip}" onclick="hdPick('${iso}')">${main}<small>${alt}</small></button>`;
+  }
+  document.getElementById('hdGrid').innerHTML=cells;
+}
+function hdPick(iso){
+  const el=HD.el; if(!el) return;
+  el.value=iso;
+  el.dispatchEvent(new Event('change',{bubbles:true}));
+  hdClose();
+}
+function hdPickToday(){ hdPick(_dateToIso(new Date())); }
+function hdClear(){ hdPick(''); }
+document.getElementById('hdOverlay').addEventListener('click',e=>{ if(e.target.id==='hdOverlay') hdClose(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && document.getElementById('hdOverlay').classList.contains('open')) hdClose(); });
+
+/* display preference (shared by the picker toggle and Settings) */
+function setDateMode(m){
+  APP_SETTINGS.dateMode = (m==='hijri')?'hijri':'gregory';
+  persistAppSettings();
+  renderDateModeControl(); refreshAllDateFields(); rerenderDates();
+}
+function renderDateModeControl(){
+  document.querySelectorAll('#dateModeControl button').forEach(b=>b.classList.toggle('active', b.dataset.val===dateMode()));
+}
+function rerenderDates(){
+  try{ renderHome(); renderNotif(); }catch(e){}
+  try{ renderCalendarPage(); }catch(e){}
+  try{ renderTasksPage(); }catch(e){}
+  try{ renderFiles(); }catch(e){}
+  try{ if(typeof currentFileId!=='undefined' && currentFileId) renderFilePage(); }catch(e){}
+  try{ renderActivityPage(); }catch(e){}
+}
+document.querySelectorAll('input[type=date]').forEach(upgradeDateInput);
 
 /* ---------- toast / confirm ---------- */
 function _showToast(msg, type='info', duration=3000){
