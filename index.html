@@ -613,6 +613,24 @@
   #urgentDoneList.collapsed{display:none;}
   .badge.urg-late{background:var(--orange);color:#fff;}
 
+
+  /* ---- sub-tasks + drag & drop ---- */
+  .urg-item{margin-bottom:8px;}
+  .urg-item > .urg-row{margin-bottom:0;}
+  .urg-item.dragging{opacity:.55;transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,.35);position:relative;z-index:5;}
+  .urg-grip{width:22px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--text-3);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:16px;flex:none;margin-left:-4px;}
+  .urg-grip:active{cursor:grabbing;color:var(--accent);}
+  .urg-subs{margin:6px 14px 0 0;padding-right:14px;border-right:2px solid var(--border);}
+  .urg-subs .urg-item{margin-bottom:6px;}
+  .urg-subs .urg-row{padding:8px 11px;background:var(--surface-2);}
+  .urg-subs .urg-title{font-size:13px;}
+  .urg-subs .urg-chk{width:22px;height:22px;font-size:12px;}
+  .urg-act{background:none;border:1px solid var(--border);color:var(--text-2);border-radius:14px;font-size:11px;padding:2px 9px;cursor:pointer;font-family:var(--font-body);}
+  .urg-act:hover{border-color:var(--accent);color:var(--accent);}
+  .urg-subadd{display:flex;gap:6px;margin:6px 14px 0 0;padding-right:14px;}
+  .urg-subadd input{flex:1;padding:7px 10px;font-size:13px;}
+  .urg-prog{background:var(--accent-glow);color:var(--accent);}
+
   /* ---- swipe-to-delete rows ---- */
   .swipe-row{position:relative;overflow:hidden;border-radius:var(--radius-lg);}
   .swipe-del-btn{position:absolute;top:0;bottom:0;right:0;width:84px;background:var(--red);color:#fff;border:none;font-size:11px;font-weight:700;line-height:1.5;cursor:pointer;z-index:0;}
@@ -1293,6 +1311,7 @@
     <div class="form-row"><label>التفاصيل / ملاحظات</label><textarea id="uNotes"></textarea></div>
     <div class="settings-block" style="margin:6px 0 12px;padding:12px 14px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:8px;">🔗 الربط (اختياري)</div>
+      <div class="form-row"><label>مهمة أم (لجعل هذه مهمة فرعية)</label><select id="uParent" onchange="urgParentChanged()"></select></div>
       <div class="form-row"><label>المجموعة</label><select id="uGroup" onchange="urgLinkChanged('group')"></select></div>
       <div class="form-row"><label>التصنيف</label><select id="uCat" onchange="urgLinkChanged('cat')"></select></div>
       <div class="form-row" style="margin-bottom:4px;"><label>الملف</label><select id="uFile" onchange="urgLinkChanged('file')"></select></div>
@@ -4193,13 +4212,28 @@ document.querySelectorAll('input[type=date]').forEach(upgradeDateInput);
 
 /* ================= URGENT / QUICK TASKS =================
    Stored inside TASKS with quick:true (so sync / backup / restore just work) and hidden from the
-   regular tasks + calendar views. When linked to a file, a mirrored round is kept in that file under
-   an auto-created sub-file called «المهام السريعة». */
+   regular tasks + calendar views. A sub-task is a quick task with parentId (one level only).
+   When linked to a file, a mirrored round is kept in that file under an auto-created sub-file
+   called «المهام السريعة». Manual ordering lives in the numeric `order` field among siblings. */
 const URG_TYPES = {'تدقيق عقد':'📝','كتابة خطاب':'✍️','إرسال إيميل':'📧','اتصال':'📞','متابعة':'🔎','مراجعة':'🧐','أخرى':'⚡'};
 const URG_ROUND_TYPE = {'كتابة خطاب':'مراسلة','إرسال إيميل':'مراسلة','اتصال':'اتصال','تدقيق عقد':'تحديث داخلي','متابعة':'تحديث داخلي','مراجعة':'تحديث داخلي','أخرى':'أخرى'};
 const URG_SUBFILE_TITLE = 'المهام السريعة';
+let URG_SUBADD_OPEN = '';
 function CTASKS(){ return TASKS.filter(t=>!t.quick); }
 function quickTasks(){ return TASKS.filter(t=>t.quick); }
+function urgKids(id){ return TASKS.filter(t=>t.quick && t.parentId===id); }
+function urgNextOrder(){ return quickTasks().reduce((m,t)=>Math.max(m, typeof t.order==='number'?t.order:0), 0)+1; }
+/* manual order first; legacy tasks without an order keep priority/created order and come before new ones */
+function urgSort(list){
+  const pr={'عاجل':0,'متوسط':1,'عادي':2};
+  const legacy=(a,b)=>(pr[a.priority]-pr[b.priority]) || (a.createdAt||'').localeCompare(b.createdAt||'');
+  return list.slice().sort((a,b)=>{
+    const ha=typeof a.order==='number', hb=typeof b.order==='number';
+    if(ha&&hb) return a.order-b.order;
+    if(ha!==hb) return ha?1:-1;
+    return legacy(a,b);
+  });
+}
 function updateUrgentBadge(){
   const b=document.getElementById('urgentTabBadge'); if(!b) return;
   const n=quickTasks().filter(x=>!x.done).length;
@@ -4217,38 +4251,55 @@ function toggleUrgentDoneSection(){
   const collapsed=l.classList.toggle('collapsed'); if(c) c.classList.toggle('rot', !collapsed);
   try{ localStorage.setItem('maham_urgent_done_collapsed', collapsed?'1':'0'); }catch(e){}
 }
-function _urgRowHtml(x){
+function _urgRowHtml(x, isSub){
   const f=fileOf(x.fileId), grp=CATEGORY_GROUPS.find(g=>g.id===x.groupId);
   const late = !x.done && x.date && x.date<today();
+  const kids = isSub ? [] : urgKids(x.id);
   const b=[];
-  b.push(`<span class="badge">${URG_TYPES[x.type]||'⚡'} ${esc(x.type||'أخرى')}</span>`);
+  if(!isSub || (x.type && x.type!=='أخرى')) b.push(`<span class="badge">${URG_TYPES[x.type]||'⚡'} ${esc(x.type||'أخرى')}</span>`);
+  if(kids.length) b.push(`<span class="badge urg-prog">▸ ${kids.filter(k=>k.done).length}/${kids.length} فرعية</span>`);
   if(x.date) b.push(`<span class="badge${late?' urg-late':''}"${dTitle(x.date)}>${late?'متأخرة · ':'📅 '}${fmtDate(x.date)}</span>`);
   if(x.responsible) b.push(`<span class="badge">👤 ${esc(x.responsible)}</span>`);
-  if(grp) b.push(`<span class="badge">📚 ${esc(grp.name)}</span>`);
-  if(x.category) b.push(`<span class="badge">🏷️ ${esc(x.category)}</span>`);
-  if(f) b.push(`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${f.id}')" title="فتح الملف">📁 ${esc(f.title)}${x.roundId?' ✓ مسجّلة':''}</span>`);
+  if(!isSub){
+    if(grp) b.push(`<span class="badge">📚 ${esc(grp.name)}</span>`);
+    if(x.category) b.push(`<span class="badge">🏷️ ${esc(x.category)}</span>`);
+  }
+  if(f && (!isSub || true)) b.push(`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${f.id}')" title="فتح الملف">📁 ${esc(f.title)}${x.roundId?' ✓ مسجّلة':''}</span>`);
   if(x.done && x.doneAt) b.push(`<span class="badge" style="background:var(--green-glow);color:var(--green)"${dTitleTs(x.doneAt)}>أُنجزت ${fmtDateTime(x.doneAt)}</span>`);
-  return `<div class="urg-row ${x.done?'done':''}">
+  const grip = x.done ? '' : `<span class="urg-grip" title="اسحب لإعادة الترتيب">⠿</span>`;
+  const addBtn = (!isSub && !x.done) ? `<button class="urg-act" onclick="event.stopPropagation();urgToggleSubAdd('${x.id}')">+ فرعية</button>` : '';
+  const row = `<div class="urg-row ${x.done?'done':''}">
+    ${grip}
     <button class="urg-chk ${x.done?'on':''}" onclick="toggleUrgent('${x.id}')" title="${x.done?'إرجاع إلى قيد التنفيذ':'تمت — انقلها إلى المنفذة'}">✓</button>
     <div class="urg-body" onclick="openUrgentModal('${x.id}')">
       <div class="urg-title"><span class="p-dot ${x.priority} ${x.done?'done':''}"></span><span class="urg-t">${esc(x.title)}</span></div>
-      <div class="urg-meta">${b.join('')}</div>
+      <div class="urg-meta">${b.join('')}${addBtn}</div>
       ${x.notes?`<div class="urg-notes">${esc(x.notes)}</div>`:''}
     </div>
   </div>`;
+  if(isSub) return `<div class="urg-item sub" data-id="${x.id}">${row}</div>`;
+  const subs = kids.length ? `<div class="urg-subs" data-parent="${x.id}">${urgSort(kids).map(k=>_urgRowHtml(k,true)).join('')}</div>` : '';
+  const subadd = (URG_SUBADD_OPEN===x.id && !x.done) ? `<div class="urg-subadd"><input type="text" id="urgSubInput" placeholder="مهمة فرعية... Enter للإضافة" onkeydown="if(event.key==='Enter') addUrgentSub('${x.id}'); if(event.key==='Escape') urgToggleSubAdd('')"><button class="btn btn-filled btn-sm" onclick="addUrgentSub('${x.id}')">إضافة</button></div>` : '';
+  return `<div class="urg-item" data-id="${x.id}">${row}${subs}${subadd}</div>`;
+}
+function urgTopLevel(done){
+  const ids=new Set(TASKS.map(t=>t.id));
+  return quickTasks().filter(x=>(!x.parentId || !ids.has(x.parentId)) && !!x.done===done);
 }
 function renderUrgentPage(){
   updateUrgentBadge();
-  const all=quickTasks(), pr={'عاجل':0,'متوسط':1,'عادي':2};
-  const pending=all.filter(x=>!x.done).sort((a,b)=>(pr[a.priority]-pr[b.priority]) || (a.createdAt||'').localeCompare(b.createdAt||''));
-  const done=all.filter(x=>x.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||'')).slice(0,60);
-  document.getElementById('urgentCount').textContent = pending.length ? `(${pending.length})` : '';
-  document.getElementById('urgentList').innerHTML = pending.length ? pending.map(_urgRowHtml).join('') : `<div class="tasks-empty-note">لا توجد مهام عاجلة الآن 🎉 — اكتب مهمة في الأعلى واضغط Enter.</div>`;
-  document.getElementById('urgentDoneCount').textContent = done.length ? `(${all.filter(x=>x.done).length})` : '';
-  document.getElementById('urgentDoneList').innerHTML = done.length ? done.map(_urgRowHtml).join('') : `<div class="tasks-empty-note">ما أُنجزت مهام بعد.</div>`;
+  const pending=urgSort(urgTopLevel(false));
+  const doneAll=urgTopLevel(true).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
+  const doneTop=doneAll.slice(0,60);
+  const pendingCount=quickTasks().filter(x=>!x.done).length;
+  document.getElementById('urgentCount').textContent = pendingCount ? `(${pendingCount})` : '';
+  document.getElementById('urgentList').innerHTML = pending.length ? pending.map(x=>_urgRowHtml(x,false)).join('') : `<div class="tasks-empty-note">لا توجد مهام عاجلة الآن 🎉 — اكتب مهمة في الأعلى واضغط Enter.</div>`;
+  document.getElementById('urgentDoneCount').textContent = doneAll.length ? `(${doneAll.length})` : '';
+  document.getElementById('urgentDoneList').innerHTML = doneTop.length ? doneTop.map(x=>_urgRowHtml(x,false)).join('') : `<div class="tasks-empty-note">ما أُنجزت مهام بعد.</div>`;
   let col=false; try{ col=localStorage.getItem('maham_urgent_done_collapsed')==='1'; }catch(e){}
   document.getElementById('urgentDoneList').classList.toggle('collapsed', col);
   const ch=document.getElementById('urgentDoneChevron'); if(ch) ch.classList.toggle('rot', !col);
+  if(URG_SUBADD_OPEN){ const i=document.getElementById('urgSubInput'); if(i) i.focus(); }
 }
 /* mirror the task into its file as a round under the «المهام السريعة» sub-file */
 function urgSyncToFile(x){
@@ -4263,8 +4314,10 @@ function urgSyncToFile(x){
     SUBFILES.push(sf); out.subs.push(sf.id);
     logActivity('add','subfile', `إنشاء مسار تلقائي: ${URG_SUBFILE_TITLE} — ${file.title}`);
   }
+  const par = x.parentId ? TASKS.find(t=>t.id===x.parentId) : null;
+  const finding = (par ? `مهمة فرعية من «${par.title}»` + (x.notes?' — ':'') : '') + (x.notes||'');
   const doneDay = x.done && x.doneAt ? _dateToIso(new Date(x.doneAt)) : '';
-  const mapped = { subFileId:sf.id, type:URG_ROUND_TYPE[x.type]||'أخرى', priority:x.priority||'عاجل', exec:x.done?'تم':'لم', execDate:doneDay, due:x.date||'', responsible:x.responsible||'', finding:x.notes||'', actionNeeded:x.title };
+  const mapped = { subFileId:sf.id, type:URG_ROUND_TYPE[x.type]||'أخرى', priority:x.priority||'عاجل', exec:x.done?'تم':'لم', execDate:doneDay, due:x.date||'', responsible:x.responsible||'', finding, actionNeeded:x.title };
   if(r){
     Object.assign(r, mapped);
     if(x.done){ if(!r.actionTaken) r.actionTaken='تم التنفيذ'; } else if(r.actionTaken==='تم التنفيذ'){ r.actionTaken=''; }
@@ -4275,8 +4328,9 @@ function urgSyncToFile(x){
   out.rounds.push(r.id);
   return out;
 }
-function urgPersist(x, sync){
-  const jobs=[persistTasks(x?x.id:null)];
+function _urgMerge(a,b){ return {rounds:[...a.rounds,...b.rounds], delRounds:[...a.delRounds,...b.delRounds], subs:[...a.subs,...b.subs]}; }
+function urgPersist(ids, sync){
+  const jobs=[persistTasks(ids)];
   if(sync){
     if(sync.rounds.length||sync.delRounds.length) jobs.push(persistRounds(sync.rounds, sync.delRounds));
     if(sync.subs.length) jobs.push(persistSubfiles(sync.subs));
@@ -4286,19 +4340,82 @@ function urgPersist(x, sync){
 function quickAddUrgent(){
   const inp=document.getElementById('urgQuickInput'); const title=inp.value.trim();
   if(!title){ inp.focus(); return; }
-  const x={id:uid(), quick:true, done:false, title, type:'أخرى', priority:'عاجل', date:today(), notes:'', responsible:'', fileId:'', groupId:'', category:'', roundId:'', createdAt:new Date().toISOString(), doneAt:''};
+  const x={id:uid(), quick:true, done:false, title, type:'أخرى', priority:'عاجل', date:today(), notes:'', responsible:'', fileId:'', groupId:'', category:'', roundId:'', parentId:'', order:urgNextOrder(), createdAt:new Date().toISOString(), doneAt:''};
   TASKS.push(x); inp.value=''; haptic(6);
   logActivity('add','task', `إضافة مهمة عاجلة: ${title}`);
-  urgPersist(x,null);
+  urgPersist(x.id,null);
   inp.focus();
+}
+/* ---- sub-tasks ---- */
+function urgToggleSubAdd(id){ URG_SUBADD_OPEN = (URG_SUBADD_OPEN===id) ? '' : id; renderUrgentPage(); }
+function addUrgentSub(parentId){
+  const inp=document.getElementById('urgSubInput'); if(!inp) return;
+  const title=inp.value.trim(); const p=TASKS.find(t=>t.id===parentId);
+  if(!title||!p){ inp.focus(); return; }
+  const x={id:uid(), quick:true, done:false, title, type:'أخرى', priority:p.priority||'عاجل', date:'', notes:'', responsible:'', fileId:p.fileId||'', groupId:p.groupId||'', category:p.category||'', roundId:'', parentId:p.id, order:urgNextOrder(), createdAt:new Date().toISOString(), doneAt:''};
+  TASKS.push(x); haptic(6);
+  logActivity('add','task', `إضافة مهمة فرعية: ${title} ← ${p.title}`);
+  const sync=urgSyncToFile(x);
+  urgPersist(x.id,sync);
 }
 function toggleUrgent(id){
   const x=TASKS.find(t=>t.id===id); if(!x) return;
-  x.done=!x.done; x.doneAt=x.done?new Date().toISOString():''; haptic(8);
-  logActivity('edit','task', `${x.done?'إنجاز':'إرجاع'} مهمة عاجلة: ${x.title}`);
-  const sync=urgSyncToFile(x);
-  urgPersist(x,sync).then(()=>{ if(x.done) _showToast('انتقلت إلى المنفذة ✓','success'); });
+  const apply=(alsoKids)=>{
+    const changed=[x]; 
+    x.done=!x.done; x.doneAt=x.done?new Date().toISOString():'';
+    if(x.done && alsoKids) urgKids(x.id).forEach(k=>{ if(!k.done){ k.done=true; k.doneAt=x.doneAt; changed.push(k); } });
+    haptic(8);
+    logActivity('edit','task', `${x.done?'إنجاز':'إرجاع'} مهمة عاجلة: ${x.title}`);
+    let sync={rounds:[],delRounds:[],subs:[]};
+    changed.forEach(t=>{ sync=_urgMerge(sync, urgSyncToFile(t)); });
+    urgPersist(changed.map(t=>t.id),sync).then(()=>{ if(x.done) _showToast('انتقلت إلى المنفذة ✓','success'); });
+  };
+  const pendingKids = !x.done ? urgKids(x.id).filter(k=>!k.done) : [];
+  if(pendingKids.length){
+    _showConfirm(`لهذه المهمة ${pendingKids.length} مهمة فرعية غير منجزة. إنجاز الجميع معًا؟`, {confirmLabel:'إنجاز الجميع', cancelLabel:'لا'}).then(ok=>{ if(ok) apply(true); else renderUrgentPage(); });
+  } else apply(false);
 }
+/* ---- drag & drop ordering (pointer events: works with mouse and touch) ---- */
+let URG_DRAG=null;
+function _urgDragMove(e){
+  const d=URG_DRAG; if(!d||e.pointerId!==d.pid) return;
+  if(e.clientY<90) window.scrollBy(0,-14); else if(e.clientY>window.innerHeight-90) window.scrollBy(0,14);
+  const sibs=[...d.container.children].filter(c=>c.classList.contains('urg-item') && c!==d.item);
+  const next=sibs.find(c=>{ const r=c.getBoundingClientRect(); return e.clientY < r.top + r.height/2; });
+  if(next){ if(d.item.nextElementSibling!==next) d.container.insertBefore(d.item,next); }
+  else if(sibs.length){ const last=sibs[sibs.length-1]; if(last.nextElementSibling!==d.item) last.after(d.item); }
+}
+function _urgDragEnd(e){
+  const d=URG_DRAG; if(!d||e.pointerId!==d.pid) return;
+  d.grip.removeEventListener('pointermove',_urgDragMove);
+  d.grip.removeEventListener('pointerup',_urgDragEnd);
+  d.grip.removeEventListener('pointercancel',_urgDragEnd);
+  d.item.classList.remove('dragging');
+  URG_DRAG=null;
+  const ids=[...d.container.children].filter(c=>c.classList.contains('urg-item')).map(c=>c.dataset.id);
+  if(ids.join()===d.before.join()) return;
+  const changed=[];
+  ids.forEach((id,i)=>{ const t=TASKS.find(q=>q.id===id); if(t && t.order!==i+1){ t.order=i+1; changed.push(id); } });
+  haptic(8);
+  persistTasks(changed).then(()=>renderUrgentPage());
+}
+function urgDragInit(){
+  const list=document.getElementById('urgentList'); if(!list || list._dragInit) return;
+  list._dragInit=true;
+  list.addEventListener('pointerdown',e=>{
+    const grip=e.target.closest('.urg-grip'); if(!grip) return;
+    const item=grip.closest('.urg-item'); if(!item) return;
+    e.preventDefault();
+    const container=item.parentElement;
+    URG_DRAG={item,container,grip,pid:e.pointerId,before:[...container.children].filter(c=>c.classList.contains('urg-item')).map(c=>c.dataset.id)};
+    item.classList.add('dragging');
+    try{ grip.setPointerCapture(e.pointerId); }catch(err){}
+    grip.addEventListener('pointermove',_urgDragMove);
+    grip.addEventListener('pointerup',_urgDragEnd);
+    grip.addEventListener('pointercancel',_urgDragEnd);
+  });
+}
+urgDragInit();
 /* ---- modal ---- */
 function _urgGroupOfCat(catName){ const c=CATEGORIES.find(k=>k.name===catName); return c? CATEGORY_GROUPS.filter(g=>(g.catIds||[]).includes(c.id)) : []; }
 function urgRebuildLinks(g,c,f){
@@ -4322,17 +4439,33 @@ function urgLinkChanged(src){
   }
   urgRebuildLinks(g,c,f);
 }
-function openUrgentModal(id){
+function urgBuildParentSelect(selfId, current){
+  const sel=document.getElementById('uParent');
+  const hasKids = selfId && urgKids(selfId).length>0;
+  const opts=quickTasks().filter(t=>t.id!==selfId && !t.parentId && !t.done);
+  sel.innerHTML='<option value="">— بدون (مهمة رئيسية) —</option>'+opts.map(t=>`<option value="${t.id}"${t.id===current?' selected':''}>${esc(t.title)}</option>`).join('');
+  sel.disabled=!!hasKids;
+  sel.title = hasKids ? 'هذه المهمة لها مهام فرعية، فلا يمكن جعلها فرعية لغيرها' : '';
+}
+function urgParentChanged(){
+  const pid=document.getElementById('uParent').value; if(!pid) return;
+  const p=TASKS.find(t=>t.id===pid); if(!p) return;
+  const g=document.getElementById('uGroup').value, c=document.getElementById('uCat').value, f=document.getElementById('uFile').value;
+  if(!g && !c && !f) urgRebuildLinks(p.groupId||'', p.category||'', p.fileId||'');
+}
+function openUrgentModal(id, parentId){
   const x = id ? TASKS.find(t=>t.id===id) : null;
+  const par = (!x && parentId) ? TASKS.find(t=>t.id===parentId) : null;
   document.getElementById('uId').value = id||'';
-  document.getElementById('urgentModalTitle').textContent = x ? 'تعديل المهمة العاجلة' : 'مهمة عاجلة جديدة';
+  document.getElementById('urgentModalTitle').textContent = x ? 'تعديل المهمة العاجلة' : (par?'مهمة فرعية جديدة':'مهمة عاجلة جديدة');
   document.getElementById('uTitle').value = x?x.title:'';
   document.getElementById('uType').value = x?(x.type||'أخرى'):'أخرى';
-  document.getElementById('uPriority').value = x?(x.priority||'عاجل'):'عاجل';
+  document.getElementById('uPriority').value = x?(x.priority||'عاجل'):(par?par.priority:'عاجل');
   document.getElementById('uDate').value = x?(x.date||''):today();
   document.getElementById('uResponsible').value = x?(x.responsible||''):'';
   document.getElementById('uNotes').value = x?(x.notes||''):'';
-  urgRebuildLinks(x?(x.groupId||''):'', x?(x.category||''):'', x?(x.fileId||''):'');
+  urgBuildParentSelect(id||'', x?(x.parentId||''):(par?par.id:''));
+  urgRebuildLinks(x?(x.groupId||''):(par?par.groupId||'':''), x?(x.category||''):(par?par.category||'':''), x?(x.fileId||''):(par?par.fileId||'':''));
   document.getElementById('uDeleteBtn').style.display = x?'inline-flex':'none';
   document.getElementById('urgentOverlay').classList.add('open');
   setTimeout(()=>{ try{ document.getElementById('uTitle').focus(); }catch(e){} },60);
@@ -4342,6 +4475,7 @@ function saveUrgent(){
   const id=document.getElementById('uId').value;
   const title=document.getElementById('uTitle').value.trim();
   if(!title){ _showToast('الرجاء إدخال عنوان المهمة','error'); return; }
+  const parentSel=document.getElementById('uParent');
   const data={
     title, type:document.getElementById('uType').value, priority:document.getElementById('uPriority').value,
     date:document.getElementById('uDate').value, responsible:document.getElementById('uResponsible').value.trim(),
@@ -4349,21 +4483,32 @@ function saveUrgent(){
     groupId:document.getElementById('uGroup').value, category:document.getElementById('uCat').value, fileId:document.getElementById('uFile').value,
   };
   let x;
-  if(id){ x=TASKS.find(t=>t.id===id); Object.assign(x,data); logActivity('edit','task', `تعديل مهمة عاجلة: ${title}`); }
-  else { x={id:uid(), quick:true, done:false, roundId:'', createdAt:new Date().toISOString(), doneAt:'', ...data}; TASKS.push(x); logActivity('add','task', `إضافة مهمة عاجلة: ${title}`); }
+  if(id){
+    x=TASKS.find(t=>t.id===id);
+    if(!parentSel.disabled){ const np=parentSel.value; if(np!==(x.parentId||'')){ x.parentId=np; x.order=urgNextOrder(); } }
+    Object.assign(x,data); logActivity('edit','task', `تعديل مهمة عاجلة: ${title}`);
+  } else {
+    x={id:uid(), quick:true, done:false, roundId:'', parentId:parentSel.value||'', order:urgNextOrder(), createdAt:new Date().toISOString(), doneAt:'', ...data}; TASKS.push(x);
+    logActivity('add','task', `${x.parentId?'إضافة مهمة فرعية':'إضافة مهمة عاجلة'}: ${title}`);
+  }
   const sync=urgSyncToFile(x);
-  urgPersist(x,sync).then(()=>{ closeUrgentModal(); _showToast(x.fileId?'تم الحفظ وتسجيلها في الملف':'تم الحفظ','success'); });
+  urgPersist(x.id,sync).then(()=>{ closeUrgentModal(); _showToast(x.fileId?'تم الحفظ وتسجيلها في الملف':'تم الحفظ','success'); });
 }
 function deleteUrgent(){
   const id=document.getElementById('uId').value; const x=TASKS.find(t=>t.id===id); if(!x) return;
-  const msg = x.roundId ? 'حذف هذه المهمة؟ سيُحذف أيضًا سجلها في الملف (الجولة المرتبطة).' : 'حذف هذه المهمة؟';
+  const kids=urgKids(id);
+  const all=[x,...kids];
+  const delRounds=all.map(t=>t.roundId).filter(Boolean);
+  let msg='حذف هذه المهمة؟';
+  if(kids.length) msg=`حذف هذه المهمة مع ${kids.length} مهمة فرعية؟`;
+  if(delRounds.length) msg+=` سيُحذف أيضًا ${delRounds.length>1?'سجلها في الملف ('+delRounds.length+' جولات)':'سجلها في الملف (الجولة المرتبطة)'}.`;
   _showConfirm(msg,{destructive:true,confirmLabel:'حذف'}).then(ok=>{
     if(!ok) return;
-    const delRounds = x.roundId ? [x.roundId] : [];
-    if(delRounds.length) ROUNDS=ROUNDS.filter(r=>r.id!==x.roundId);
-    TASKS=TASKS.filter(t=>t.id!==id);
-    logActivity('delete','task', `حذف مهمة عاجلة: ${x.title}`);
-    Promise.all([persistTasks(null,id), delRounds.length?persistRounds(null,delRounds):null]).then(()=>{ closeUrgentModal(); updateUrgentBadge(); renderUrgentPage(); if(currentFileId) renderFilePage(); renderNotif(); _showToast('تم الحذف'); });
+    const ids=all.map(t=>t.id);
+    if(delRounds.length) ROUNDS=ROUNDS.filter(r=>!delRounds.includes(r.id));
+    TASKS=TASKS.filter(t=>!ids.includes(t.id));
+    logActivity('delete','task', `حذف مهمة عاجلة: ${x.title}${kids.length?' (مع '+kids.length+' فرعية)':''}`);
+    Promise.all([persistTasks(null,ids), delRounds.length?persistRounds(null,delRounds):null]).then(()=>{ closeUrgentModal(); updateUrgentBadge(); renderUrgentPage(); if(currentFileId) renderFilePage(); renderNotif(); _showToast('تم الحذف'); });
   });
 }
 
