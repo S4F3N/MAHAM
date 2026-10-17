@@ -162,6 +162,9 @@
   .ax-fbtn{margin-top:6px;}
   .ax-scopebox{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;} .ax-scope{font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;}
   #axCmdIn{width:100%;}
+  .ax-inrow{display:flex;gap:8px;align-items:flex-start;} .ax-inrow textarea{flex:1;min-width:0;}
+  .ax-mic{flex:none;min-width:40px;font-size:16px;} .ax-mic.rec{background:var(--accent);color:#fff;animation:axpulse 1.1s ease-in-out infinite;}
+  @keyframes axpulse{0%,100%{box-shadow:0 0 0 0 var(--accent-glow);}50%{box-shadow:0 0 0 8px transparent;}}
   .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
   .settings-fold-head{cursor:pointer;margin-bottom:0;}
   .settings-fold-count{font-size:11.5px;color:var(--text-3);font-weight:500;}
@@ -1103,6 +1106,7 @@
     <div class="settings-desc" style="margin-bottom:12px;">المهام السريعة واليومية التي تخلصها الآن (تدقيق عقد، كتابة خطاب، إرسال إيميل...). ضع علامة ✓ فتنتقل إلى «المنفذة». وإذا ربطتها بملف تُسجَّل فيه تلقائيًا ضمن مسار «المهام السريعة».</div>
     <div class="urg-add">
       <input type="text" id="urgQuickInput" placeholder="اكتب مهمة عاجلة واضغط Enter..." onkeydown="if(event.key==='Enter') quickAddUrgent();">
+      <button type="button" class="btn btn-glass btn-sm ax-mic" onclick="axMic(this,'urgQuickInput')" title="إملاء صوتي">🎤</button>
       <button class="btn btn-glass btn-sm" id="urgAiBtn" onclick="axUrgentParse()" title="حلّل النص بالذكاء الاصطناعي وعبّئ التفاصيل">✨</button>
       <button class="btn btn-filled btn-sm" onclick="quickAddUrgent()">إضافة</button>
     </div>
@@ -1526,7 +1530,7 @@
     <div class="modal-handle"></div>
     <h3>إنجاز المهمة</h3>
     <div class="settings-desc" id="urgNoteTitle" style="margin:0 0 8px;font-weight:600;"></div>
-    <div class="form-row"><label>ملاحظة الإنجاز (اختياري)</label><textarea id="urgNoteText" rows="4" placeholder="ماذا تم؟ نتيجة، ملاحظة، رقم مرجعي..."></textarea><button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="axSuggestDoneNote(this)">✨ اقترح الملاحظة</button></div>
+    <div class="form-row"><label>ملاحظة الإنجاز (اختياري)</label><textarea id="urgNoteText" rows="4" placeholder="ماذا تم؟ نتيجة، ملاحظة، رقم مرجعي..."></textarea><button type="button" class="btn btn-glass btn-sm ax-mic" onclick="axMic(this,'urgNoteText')">🎤</button><button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="axSuggestDoneNote(this)">✨ اقترح الملاحظة</button></div>
     <div class="modal-actions">
       <button class="btn btn-glass" onclick="urgNoteCancel()">إلغاء</button>
       <button class="btn btn-filled" onclick="urgNoteOk()">✓ إنجاز</button>
@@ -5193,7 +5197,7 @@ function plnForm(cfg){
   document.getElementById('plnFormModal').classList.toggle('wide', !!cfg.wide);
   document.getElementById('plnFormOverlay').classList.add('open');
   body.querySelectorAll('input[type=date]').forEach(upgradeDateInput);
-  (cfg.fields||[]).forEach(f=>{ if(!f.ai) return; const el=document.getElementById('plnF_'+f.k); const row=el&&el.closest('.form-row'); if(row) row.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="${f.ai}(this)">${f.aiLabel||'✨ بالذكاء الاصطناعي'}</button>`); });
+  (cfg.fields||[]).forEach(f=>{ if(f.mic){ const el=document.getElementById('plnF_'+f.k); const row=el&&el.closest('.form-row'); if(row) row.insertAdjacentHTML('beforeend',axMicBtn('plnF_'+f.k)); } if(!f.ai) return; const el=document.getElementById('plnF_'+f.k); const row=el&&el.closest('.form-row'); if(row) row.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="${f.ai}(this)">${f.aiLabel||'✨ بالذكاء الاصطناعي'}</button>`); });
   if(!cfg.noSave) setTimeout(()=>{ const f=body.querySelector('input[type=text],textarea'); if(f) f.focus(); },60);
 }
 function plnFieldHtml(f,val){
@@ -5792,7 +5796,7 @@ const axIso=x=>/^\d{4}-\d{2}-\d{2}$/.test(axStr(x))?axStr(x):'';
 /* ---------- result panel ---------- */
 let AX_PANEL={actions:[]};
 function axOpen(title){ document.getElementById('axTitle').textContent=title; axLoading('جارٍ العمل…'); document.getElementById('axOverlay').classList.add('open'); }
-function axClose(){ document.getElementById('axOverlay').classList.remove('open'); }
+function axClose(){ axMicStop(); document.getElementById('axOverlay').classList.remove('open'); }
 function axLoading(t){ document.getElementById('axBody').innerHTML=`<div class="ax-loading"><span class="ax-spin"></span>${esc(t||'جارٍ العمل…')}</div>`; document.getElementById('axActions').innerHTML=''; AX_PANEL.actions=[]; }
 function axShow(html,actions){
   document.getElementById('axBody').innerHTML=html;
@@ -5887,7 +5891,7 @@ function plnMaterialize(spec,opts){
 const AX_PLAN_SCHEMA='المخطط: {"title":"","icon":"إيموجي واحد من: 🎯🏢⚖️📜🧭🚀🛡️📈🏗️🤝📑🔧","goal":"","description":"","days":رقم إجمالي الأيام,"phases":[{"title":"","desc":"","startDay":رقم,"endDay":رقم,"tasks":[{"title":"","dueDay":رقم أيام من اليوم,"priority":"عاجل|متوسط|عادي","checklist":["خطوة"],"notes":""}]}],"risks":[{"title":"","prob":1-5,"impact":1-5,"mitigation":""}],"kpis":[{"name":"","unit":"","start":رقم,"target":رقم}]}';
 function axPlanFromPrompt(fileId,idea){
   plnForm({title:'✨ خطة بالذكاء الاصطناعي',saveLabel:'✨ ولّد الخطة',values:{idea:idea||'',days:90,depth:'متوسط'},
-    fields:[{k:'idea',label:'صف الخطة التي تريدها',type:'textarea',full:true,rows:5,req:true,ph:'مثال: خطة لتنظيم إدارة العقود في الشركة خلال 3 أشهر، تشمل نماذج العقود والمراجعة والصلاحيات'},
+    fields:[{k:'idea',label:'صف الخطة التي تريدها',type:'textarea',mic:true,full:true,rows:5,req:true,ph:'مثال: خطة لتنظيم إدارة العقود في الشركة خلال 3 أشهر، تشمل نماذج العقود والمراجعة والصلاحيات'},
       {k:'days',label:'المدة المتوقعة',type:'select',opts:[[30,'شهر'],[60,'شهران'],[90,'3 أشهر'],[180,'6 أشهر'],[365,'سنة']]},
       {k:'depth',label:'مستوى التفصيل',type:'select',opts:['مختصر','متوسط','مفصل']}],
     onSave:v=>axPlanGen(v,fileId)});
@@ -5968,7 +5972,7 @@ let AX_CHAT=[];
 function axPlanAsk(pid){
   const p=plnById(pid); if(!p) return; AX_CHAT=[]; axOpen('💬 اسأل عن «'+p.title+'»');
   axShow(`<div id="axChatLog" class="ax-chatlog"><div class="tasks-empty-note" style="padding:8px">اسأل مثلًا: ما أخطر ما يهدد الخطة؟ من المتأخر؟ ماذا أنجزنا هذا الشهر؟</div></div>
-    <div class="pln-quick"><input type="text" id="axChatIn" placeholder="اكتب سؤالك… Enter" onkeydown="if(event.key==='Enter')axPlanAskSend('${pid}')"><button class="btn btn-filled btn-sm" onclick="axPlanAskSend('${pid}')">إرسال</button></div><div class="ax-priv">${AX_PRIV}</div>`,[]);
+    <div class="pln-quick">${axMicBtn('axChatIn')}<input type="text" id="axChatIn" placeholder="اكتب سؤالك أو اضغط 🎤… Enter" onkeydown="if(event.key==='Enter')axPlanAskSend('${pid}')"><button class="btn btn-filled btn-sm" onclick="axPlanAskSend('${pid}')">إرسال</button></div><div class="ax-priv">${AX_PRIV}</div>`,[]);
   setTimeout(()=>{ const i=document.getElementById('axChatIn'); if(i) i.focus(); },60);
 }
 async function axPlanAskSend(pid){
@@ -6126,7 +6130,7 @@ function axFileDraft(id){
   const f=fileOf(id); if(!f) return;
   plnForm({title:'✍️ مسودة خطاب / مذكرة',saveLabel:'✨ اكتب المسودة',values:{kind:'خطاب متابعة',note:''},
     fields:[{k:'kind',label:'نوع المستند',type:'select',full:true,opts:['خطاب متابعة','خطاب مطالبة','إنذار رسمي','رد على خطاب','مذكرة موجزة للإدارة','بريد إلكتروني رسمي','محضر اجتماع','ملخص للعميل']},
-      {k:'note',label:'ما المطلوب تحديدًا؟ (اختياري)',type:'textarea',full:true,rows:3,ph:'مثال: نطلب فيه الرد خلال 7 أيام ونذكّر بالمرفقات'}],
+      {k:'note',label:'ما المطلوب تحديدًا؟ (اختياري)',type:'textarea',mic:true,full:true,rows:3,ph:'مثال: نطلب فيه الرد خلال 7 أيام ونذكّر بالمرفقات'}],
     onSave:async v=>{ axOpen('✍️ '+v.kind); axLoading('أكتب المسودة…');
       const d=await axAsk('file_draft','اكتب '+v.kind+' باللغة العربية المهنية الرسمية اعتمادًا على بيانات الملف وجولاته. ضع المعلومات الناقصة بين أقواس مربعة [..] (أسماء، أرقام، مواعيد) ولا تختلقها، ولا تستشهد بمواد نظامية إلا إن كانت مذكورة في السياق. '+(v.note?'تعليمات المستخدم: '+v.note:''),'اكتب المسودة.',axFileCtx(f));
       if(d==null){ axFail(); return; } axTextResult(d); }});
@@ -6146,7 +6150,7 @@ async function axPolishRound(btn){
 /* ====================== TASKS / CALENDAR / HOME / CONTACTS ====================== */
 function axTaskParse(){
   plnForm({title:'✨ إضافة ذكية لموعد / مهمة',saveLabel:'✨ حلّل وعبّئ',values:{text:''},
-    fields:[{k:'text',label:'اكتب الموعد أو المهمة بلغتك',type:'textarea',full:true,rows:3,req:true,ph:'مثال: اجتماع مع المحامي يوم الخميس القادم الساعة 10 صباحًا بخصوص قضية الإيجار'}],
+    fields:[{k:'text',label:'اكتب الموعد أو المهمة بلغتك',type:'textarea',mic:true,full:true,rows:3,req:true,ph:'مثال: اجتماع مع المحامي يوم الخميس القادم الساعة 10 صباحًا بخصوص قضية الإيجار'}],
     onSave:async v=>{
       axOpen('✨ إضافة ذكية'); axLoading('أحلل النص…');
       const r=await axAsk('task_parse','حوّل وصف المستخدم إلى موعد أو مهمة منظمة. استنتج التاريخ والوقت (24 ساعة HH:MM) من الكلمات نسبةً لتاريخ اليوم، واختر type من: موعد، اجتماع، مهمة، تذكير. وإن ذُكر ملف فاختر fileId الأنسب وإلا اتركه فارغًا. المخطط: {"title":"","type":"","date":"YYYY-MM-DD","time":"","priority":"عاجل|متوسط|عادي","notes":"","fileId":""}',v.text,{files:axFilesBrief()},{json:true});
@@ -6181,7 +6185,7 @@ function axContactMsg(id){
   plnForm({title:'✉️ مراسلة '+c.name,saveLabel:'✨ اكتب الرسالة',values:{channel:'واتساب',fileId:files[0]?files[0].id:'',purpose:''},
     fields:[{k:'channel',label:'القناة',type:'select',opts:['واتساب','بريد إلكتروني','خطاب رسمي']},
       {k:'fileId',label:'الملف ذو الصلة',type:'select',opts:[['','— بدون —'],...files.map(f=>[f.id,f.title])]},
-      {k:'purpose',label:'غرض الرسالة',type:'textarea',full:true,rows:3,req:true,ph:'مثال: أطلب موعدًا لتسليم المستندات المتبقية'}],
+      {k:'purpose',label:'غرض الرسالة',type:'textarea',mic:true,full:true,rows:3,req:true,ph:'مثال: أطلب موعدًا لتسليم المستندات المتبقية'}],
     onSave:async v=>{ axOpen('✉️ رسالة إلى '+c.name); axLoading('أكتب الرسالة…');
       const f=v.fileId?fileOf(v.fileId):null;
       const d=await axAsk('contact_msg','اكتب رسالة '+v.channel+' مهذبة ومهنية إلى '+c.name+(c.role?' ('+c.role+')':'')+' بحسب غرض المستخدم'+(v.channel==='واتساب'?' بإيجاز':'')+'. ضع المعلومات الناقصة بين أقواس مربعة [..] ولا تختلقها.',v.purpose,{contact:{name:c.name,role:c.role,notes:(c.notes||'').slice(0,300)},file:f?axFileCtx(f):null});
@@ -6193,11 +6197,12 @@ function axContactMsg(id){
 function axCommandOpen(){
   axOpen('✨ اطلب من المساعد');
   axShow(`<div class="settings-desc" style="margin:0 0 8px">اكتب أمرًا بلغتك وسأحوّله إلى إجراء تراجعه قبل التنفيذ: أضف مهمة عاجلة، سجّل موعدًا، أضف مهمة أو ملاحظة إلى خطة، أنشئ خطة، افتح ملفًا، أو اسأل عن أولوياتك.</div>
-    <textarea id="axCmdIn" rows="3" placeholder="مثال: ذكّرني غدًا بإرسال العقد المعدل لشركة النقل — عاجل"></textarea>
+    <div class="ax-inrow"><textarea id="axCmdIn" rows="3" placeholder="اكتب أو اضغط 🎤 وتكلّم… مثال: ذكّرني غدًا بإرسال العقد المعدل لشركة النقل — عاجل"></textarea>${axMicBtn('axCmdIn')}</div>
     <div class="ax-priv">${AX_PRIV}</div>`,[{label:'✨ نفّذ',cls:'btn-filled',fn:axCommandRun}]);
   setTimeout(()=>{ const i=document.getElementById('axCmdIn'); if(i){ i.focus(); i.addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) axCommandRun(); }); } },60);
 }
 async function axCommandRun(){
+  axMicStop();
   const text=(document.getElementById('axCmdIn')||{}).value; if(!text||!text.trim()) return;
   axLoading('أفهم طلبك…');
   const sc=axScope();
@@ -6264,6 +6269,26 @@ async function axTestConn(btn){
   btn.disabled=false; btn.textContent=old;
   if(r!=null) _showToast('✅ الاتصال سليم — المساعد يعمل','success');
 }
+
+
+/* ---------- voice dictation (Web Speech API) ---------- */
+let AX_REC=null, AX_REC_BTN=null;
+function axMicStop(){ if(AX_REC){ try{ AX_REC.stop(); }catch(e){} } }
+function axMic(btn,targetId){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ _showToast('المتصفح لا يدعم الإملاء الصوتي — جرّب Chrome أو Safari، أو استخدم ميكروفون لوحة المفاتيح','error'); return; }
+  if(AX_REC){ const same=AX_REC_BTN===btn; axMicStop(); if(same) return; }
+  const el=document.getElementById(targetId); if(!el) return;
+  const rec=new SR(); rec.lang='ar-SA'; rec.interimResults=true; rec.continuous=true;
+  const base=el.value; let finalTxt='';
+  const sep=base&&!/\s$/.test(base)?' ':'';
+  rec.onresult=e=>{ let interim=''; for(let i=e.resultIndex;i<e.results.length;i++){ const r=e.results[i]; if(r.isFinal) finalTxt+=r[0].transcript+' '; else interim+=r[0].transcript; } el.value=base+sep+(finalTxt+interim).trim(); el.dispatchEvent(new Event('input',{bubbles:true})); };
+  rec.onerror=e=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed') _showToast('اسمح باستخدام الميكروفون من إعدادات المتصفح','error'); else if(e.error!=='no-speech'&&e.error!=='aborted') _showToast('تعذر الإملاء الصوتي: '+e.error,'error'); };
+  rec.onend=()=>{ if(AX_REC_BTN){ AX_REC_BTN.classList.remove('rec'); AX_REC_BTN.textContent='🎤'; } AX_REC=null; AX_REC_BTN=null; };
+  AX_REC=rec; AX_REC_BTN=btn; btn.classList.add('rec'); btn.textContent='⏹';
+  try{ rec.start(); haptic(8); }catch(e){ AX_REC=null; AX_REC_BTN=null; btn.classList.remove('rec'); btn.textContent='🎤'; }
+}
+const axMicBtn=id=>`<button type="button" class="btn btn-glass btn-sm ax-mic" onclick="axMic(this,'${id}')" title="إملاء صوتي — اضغط وتكلّم، واضغط مرة أخرى للإيقاف">🎤</button>`;
 
 /* ---------- toast / confirm ---------- */
 function _showToast(msg, type='info', duration=3000){
