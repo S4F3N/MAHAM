@@ -619,6 +619,7 @@
   .urg-item > .urg-row{margin-bottom:0;}
   .urg-item.dragging{opacity:.55;transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,.35);position:relative;z-index:5;}
   .urg-grip{width:22px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--text-3);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:16px;flex:none;margin-left:-4px;}
+  .urg-drop-ind{border:2px dashed var(--accent);border-radius:var(--radius-md);margin-bottom:8px;background:var(--accent-glow);}
   .urg-grip:active{cursor:grabbing;color:var(--accent);}
   .urg-subs{margin:6px 14px 0 0;padding-right:14px;border-right:2px solid var(--border);}
   .urg-subs .urg-item{margin-bottom:6px;}
@@ -728,6 +729,176 @@
   .setup-steps b{color:var(--text-1);}
   .setup-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
 
+
+  /* ================= PLANS ================= */
+  .pln-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .pln-top .grow{flex:1 1 180px;min-width:0;}
+  .pln-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
+  .pln-stat{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;}
+  .pln-stat .n{font-size:24px;font-weight:800;line-height:1.1;font-family:var(--font-body);}
+  .pln-stat .l{font-size:11.5px;color:var(--text-2);margin-top:3px;}
+  .pln-stat.warn .n{color:var(--orange);} .pln-stat.bad .n{color:var(--red);} .pln-stat.good .n{color:var(--green);}
+  .pln-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+  .pln-card{position:relative;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 16px 14px;cursor:pointer;overflow:hidden;transition:transform .15s,border-color .15s,box-shadow .15s;}
+  .pln-card:hover{transform:translateY(-2px);border-color:var(--pc,var(--accent));box-shadow:0 8px 26px rgba(0,0,0,.22);}
+  .pln-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--pc,var(--accent));}
+  .pln-card-h{display:flex;gap:12px;align-items:center;}
+  .pln-ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:color-mix(in srgb,var(--pc,var(--accent)) 20%,transparent);flex:none;}
+  .pln-card-t{font-weight:700;font-size:15px;line-height:1.35;flex:1;min-width:0;}
+  .pln-card-g{font-size:12px;color:var(--text-2);margin:10px 0 8px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .pln-card-f{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+  .pln-ring{flex:none;position:relative;display:inline-flex;align-items:center;justify-content:center;}
+  .pln-ring span{position:absolute;font-weight:800;font-size:12px;font-family:var(--font-body);}
+  .pln-pill{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;background:var(--surface-3);color:var(--text-2);}
+  .pln-pill.green{background:color-mix(in srgb,var(--green) 20%,transparent);color:var(--green);}
+  .pln-pill.orange{background:color-mix(in srgb,var(--orange) 22%,transparent);color:var(--orange);}
+  .pln-pill.purple{background:color-mix(in srgb,var(--red) 22%,transparent);color:var(--red);}
+  .pln-pill.blue{background:var(--accent-glow);color:var(--accent);}
+  .pln-bar{height:6px;border-radius:6px;background:var(--surface-3);overflow:hidden;}
+  .pln-bar i{display:block;height:100%;border-radius:6px;background:var(--pc,var(--accent));transition:width .4s;}
+  .pln-focus{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:18px;}
+  .pln-focus h4,.pln-box h4{margin:0 0 10px;font-size:13.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .pln-frow{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:13px;cursor:pointer;}
+  .pln-frow:first-of-type{border-top:none;}
+  .pln-frow .t{flex:1;min-width:0;}
+  .pln-frow .s{font-size:11px;color:var(--text-3);}
+  .pln-empty{text-align:center;padding:30px 10px;}
+  .pln-empty h3{margin:0 0 6px;}
+  .pln-tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:14px;text-align:right;}
+  .pln-tpl{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:13px;cursor:pointer;transition:border-color .15s,transform .15s;}
+  .pln-tpl:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .pln-tpl b{display:block;font-size:13.5px;margin:6px 0 3px;}
+  .pln-tpl small{color:var(--text-2);font-size:11.5px;line-height:1.55;display:block;}
+  /* detail */
+  .pln-hd{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .pln-hd .ttl{flex:1 1 220px;min-width:0;}
+  .pln-hd h2{margin:0;font-size:20px;line-height:1.35;}
+  .pln-hd .sub{font-size:12px;color:var(--text-2);margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .pln-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .pln-tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--border);margin:6px 0 16px;}
+  .pln-tabs button{background:none;border:none;border-bottom:2px solid transparent;padding:9px 13px;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;white-space:nowrap;font-family:var(--font-body);}
+  .pln-tabs button.on{color:var(--pc,var(--accent));border-bottom-color:var(--pc,var(--accent));}
+  .pln-tabs button .c{font-size:10.5px;background:var(--surface-3);border-radius:10px;padding:1px 7px;margin-right:4px;}
+  .pln-ov{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:900px){.pln-ov{grid-template-columns:1.25fr 1fr;}}
+  .pln-box{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;min-width:0;}
+  .pln-hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .pln-hero .kp{display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));gap:10px;flex:1;min-width:230px;}
+  .pln-hero .kp div{background:var(--surface-2);border-radius:var(--radius-md);padding:9px 12px;}
+  .pln-hero .kp b{font-size:19px;display:block;font-family:var(--font-body);}
+  .pln-hero .kp span{font-size:11px;color:var(--text-2);}
+  .pln-note{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:10px;}
+  .pln-ph-row{margin:9px 0;cursor:pointer;}
+  .pln-ph-row .r{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;gap:8px;}
+  .pln-chart svg{width:100%;height:auto;display:block;}
+  .pln-chart text{fill:var(--text-3);font-size:10px;font-family:var(--font-body);}
+  .pln-legend{display:flex;gap:14px;font-size:11px;color:var(--text-2);flex-wrap:wrap;margin-top:6px;}
+  .pln-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-left:5px;}
+  .pln-quick{display:flex;gap:8px;margin-top:10px;}
+  .pln-quick input{flex:1;}
+  .pln-log{border-right:2px solid var(--border);padding-right:12px;margin-right:6px;}
+  .pln-log .it{position:relative;padding:6px 0;font-size:12.5px;line-height:1.65;}
+  .pln-log .it::before{content:"";position:absolute;right:-18px;top:13px;width:8px;height:8px;border-radius:50%;background:var(--pc,var(--accent));}
+  .pln-log .it.auto::before{background:var(--text-3);}
+  .pln-log .d{font-size:10.5px;color:var(--text-3);display:block;}
+  .pln-log .x{float:left;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;}
+  /* tasks tab */
+  .pln-tbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+  .pln-tbar input{flex:1 1 150px;min-width:0;}
+  .pln-tbar select{flex:0 1 auto;}
+  .pln-seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .pln-seg button{background:var(--surface-1);border:none;padding:6px 12px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:var(--font-body);}
+  .pln-seg button.on{background:var(--pc,var(--accent));color:#fff;}
+  .pln-phase{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;}
+  .pln-phase.dragging{opacity:.6;box-shadow:0 8px 24px rgba(0,0,0,.35);position:relative;z-index:5;}
+  .pln-phead{display:flex;gap:10px;align-items:center;padding:11px 12px;cursor:pointer;}
+  .pln-phead .pt{flex:1;min-width:0;}
+  .pln-phead .pt b{font-size:14px;}
+  .pln-phead .pt small{display:block;font-size:11px;color:var(--text-3);margin-top:2px;}
+  .pln-phead .pb{width:90px;flex:none;}
+  .pln-phead .pp{font-size:12px;font-weight:700;width:36px;text-align:center;flex:none;font-family:var(--font-body);}
+  .pln-chev{color:var(--text-3);transition:transform .2s;display:inline-block;}
+  .pln-phase.open .pln-chev{transform:rotate(90deg);}
+  .pln-pbody{display:none;padding:0 10px 10px;}
+  .pln-phase.open .pln-pbody{display:block;}
+  .pln-grip{width:20px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--text-3);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;flex:none;font-size:15px;}
+  .pln-grip:active{cursor:grabbing;color:var(--accent);}
+  .pln-tasks{min-height:6px;}
+  .pln-task{display:flex;gap:8px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:8px 10px;margin-bottom:6px;}
+  .pln-task.dragging{opacity:.6;box-shadow:0 8px 24px rgba(0,0,0,.35);position:relative;z-index:6;}
+  .pln-task.done .pln-ttitle{text-decoration:line-through;color:var(--text-3);}
+  .pln-st{width:26px;height:26px;border-radius:50%;border:2px solid var(--text-3);background:none;color:var(--text-2);cursor:pointer;font-size:13px;font-weight:700;flex:none;display:flex;align-items:center;justify-content:center;padding:0;font-family:var(--font-body);}
+  .pln-task.s-prog .pln-st{border-color:var(--accent);color:var(--accent);}
+  .pln-task.s-hold .pln-st{border-color:var(--orange);color:var(--orange);}
+  .pln-task.done .pln-st{background:var(--green);border-color:var(--green);color:#fff;}
+  .pln-tbody{flex:1;min-width:0;cursor:pointer;}
+  .pln-ttitle{font-size:13.5px;font-weight:600;line-height:1.5;}
+  .pln-tmeta{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;align-items:center;}
+  .pln-tmeta .badge.late{background:var(--orange);color:#fff;}
+  .pln-cl{margin:6px 0 2px;padding-right:2px;}
+  .pln-cl label{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:2px 0;cursor:pointer;}
+  .pln-cl label.d span{text-decoration:line-through;color:var(--text-3);}
+  .pln-qadd{padding:2px 0 0;}
+  .pln-qadd input{width:100%;padding:7px 10px;font-size:12.5px;}
+  .pln-p-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;}
+  /* board */
+  .pln-board{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px;}
+  .pln-col{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px;min-height:160px;}
+  .pln-col h5{margin:0 0 8px;font-size:12.5px;display:flex;justify-content:space-between;color:var(--text-2);}
+  .pln-col.over{border-color:var(--accent);background:var(--accent-glow);}
+  .pln-card2{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:8px;margin-bottom:7px;}
+  .pln-card2.dragging{opacity:.65;box-shadow:0 8px 24px rgba(0,0,0,.35);position:relative;z-index:6;}
+  /* timeline */
+  .pln-gantt{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;overflow-x:auto;}
+  .pln-g-in{min-width:640px;}
+  .pln-g-axis{position:relative;height:22px;margin-right:170px;border-bottom:1px solid var(--border);}
+  .pln-g-axis span{position:absolute;top:0;font-size:10.5px;color:var(--text-3);transform:translateX(50%);white-space:nowrap;}
+  .pln-g-row{display:flex;align-items:center;height:28px;}
+  .pln-g-row.ph{height:32px;margin-top:6px;}
+  .pln-g-l{width:170px;flex:none;font-size:12px;padding-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pln-g-row.ph .pln-g-l{font-weight:700;}
+  .pln-g-t{position:relative;flex:1;height:100%;}
+  .pln-g-t::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(to left,transparent 0,transparent calc(16.66% - 1px),var(--border) calc(16.66% - 1px),var(--border) 16.66%);opacity:.55;}
+  .pln-g-bar{position:absolute;top:7px;height:14px;border-radius:7px;background:var(--pc,var(--accent));opacity:.85;min-width:8px;cursor:pointer;overflow:hidden;}
+  .pln-g-bar i{display:block;height:100%;background:rgba(255,255,255,.35);}
+  .pln-g-row.ph .pln-g-bar{top:8px;height:16px;opacity:1;}
+  .pln-g-bar.done{background:var(--green);}
+  .pln-g-bar.late{background:var(--orange);}
+  .pln-g-today{position:absolute;top:0;bottom:0;width:2px;background:var(--purple);z-index:2;}
+  .pln-g-today::after{content:"اليوم";position:absolute;top:4px;right:5px;font-size:10px;color:var(--purple);font-weight:700;background:var(--bg);padding:0 3px;border-radius:4px;}
+  /* risks */
+  .pln-risk-wrap{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:900px){.pln-risk-wrap{grid-template-columns:340px 1fr;}}
+  .pln-mx{display:grid;grid-template-columns:22px repeat(5,1fr);gap:3px;direction:ltr;}
+  .pln-mx .c{aspect-ratio:1;border-radius:6px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;padding:2px;}
+  .pln-mx .ax{font-size:10px;color:var(--text-3);display:flex;align-items:center;justify-content:center;}
+  .pln-mx .dot{background:rgba(0,0,0,.45);border-radius:50%;width:17px;height:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .pln-r1{background:#2f9e4f;} .pln-r2{background:#b8a114;} .pln-r3{background:#d98a0b;} .pln-r4{background:#7b4fd6;}
+  .pln-item{display:flex;gap:10px;align-items:flex-start;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+  .pln-item .sc{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex:none;font-size:13px;}
+  .pln-item .b{flex:1;min-width:0;}
+  .pln-item .b b{font-size:13.5px;}
+  .pln-item .b p{margin:4px 0 0;font-size:12px;color:var(--text-2);line-height:1.6;white-space:pre-wrap;}
+  .pln-kpi{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+  .pln-kpi .r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;}
+  .pln-kpi .r b{font-size:13.5px;}
+  .pln-kpi .r span{font-size:12px;color:var(--text-2);font-family:var(--font-body);}
+  .pln-cols2{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:900px){.pln-cols2{grid-template-columns:1fr 1fr;}}
+  .pln-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+  .pln-fgrid .full{grid-column:1/-1;}
+  .pln-swatches{display:flex;gap:8px;flex-wrap:wrap;}
+  .pln-swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;font-size:16px;background:var(--surface-3);}
+  .pln-swatches button.on{border-color:var(--text-1);box-shadow:0 0 0 2px var(--bg);}
+  .pln-clrow{display:flex;gap:6px;margin-bottom:6px;align-items:center;}
+  .pln-clrow input[type=text]{flex:1;}
+  .pln-clrow input[type=checkbox]{width:18px;height:18px;flex:none;}
+  .pln-clrow button{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;}
+  #plnTabBadge{background:var(--orange);}
+  @media(max-width:640px){.pln-fgrid{grid-template-columns:1fr;} .pln-phead .pb{display:none;} .pln-board{grid-template-columns:repeat(4,78vw);}}
+  .pln-drop-ind{border:2px dashed var(--accent);border-radius:var(--radius-md);margin-bottom:6px;background:var(--accent-glow);}
+  @media print{ .pln-noprint{display:none!important;} }
+  .modal.wide{max-width:720px;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -767,6 +938,7 @@
 <nav class="tabs">
   <button data-tab="home" class="active">الرئيسية</button>
   <button data-tab="urgent">⚡ المهام العاجلة<span class="notif-badge tab-badge" id="urgentTabBadge" style="display:none"></span></button>
+  <button data-tab="plans">🧭 الخطط<span class="notif-badge tab-badge" id="plnTabBadge" style="display:none"></span></button>
   <button data-tab="files">الملفات</button>
   <button data-tab="tasks">المهام<span class="notif-badge tab-badge" id="tasksTabBadge" style="display:none"></span></button>
   <button data-tab="calendar">التقويم</button>
@@ -926,6 +1098,9 @@
     </div>
     <div id="urgentDoneList"></div>
   </section>
+
+  <!-- PLANS -->
+  <section class="page" id="page-plans"><div id="plansRoot"></div></section>
 
   <!-- TASKS -->
   <section class="page" id="page-tasks">
@@ -1357,6 +1532,20 @@
       <button class="btn btn-danger" id="uDeleteBtn" onclick="deleteUrgent()" style="display:none">حذف</button>
       <button class="btn btn-glass" onclick="closeUrgentModal()">إلغاء</button>
       <button class="btn btn-filled" onclick="saveUrgent()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLANS FORM MODAL -->
+<div class="overlay" id="plnFormOverlay">
+  <div class="modal" id="plnFormModal">
+    <div class="modal-handle"></div>
+    <h3 id="plnFormTitle"></h3>
+    <div id="plnFormBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="plnFormDel" onclick="plnFormDelete()" style="display:none">حذف</button>
+      <button class="btn btn-glass" onclick="plnFormClose()">إغلاق</button>
+      <button class="btn btn-filled" id="plnFormSave" onclick="plnFormSave()">حفظ</button>
     </div>
   </div>
 </div>
@@ -1901,6 +2090,7 @@ function renderTopbarDate(){
 
 /* ---------- TOPBAR QUOTE ---------- */
 let QUOTES = [];
+let PLANS = [];
 const SEED_QUOTES = ['وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ', 'لكل مجتهد نصيب'];
 let _quoteIdx = 0;
 function renderTopbarQuote(){
@@ -2005,8 +2195,8 @@ function loadIfEmpty(){
     window.storage.get('rd2:tasks').catch(()=>null), window.storage.get('rd2:theme').catch(()=>null),
     window.storage.get(APP_SETTINGS_KEY).catch(()=>null), window.storage.get('rd2:categorygroups').catch(()=>null),
     window.storage.get('rd2:activitylog').catch(()=>null), window.storage.get('rd2:subfiles').catch(()=>null),
-    window.storage.get('rd2:quotes').catch(()=>null),
-  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf,qt])=>{
+    window.storage.get('rd2:quotes').catch(()=>null), window.storage.get('rd2:plans').catch(()=>null),
+  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf,qt,pl])=>{
     if(f&&f.value){try{FILES=JSON.parse(f.value);}catch(e){FILES=[];}}
     if(r&&r.value){try{ROUNDS=JSON.parse(r.value);}catch(e){ROUNDS=[];}}
     if(c&&c.value){try{CONTACTS=JSON.parse(c.value);}catch(e){CONTACTS=[];}}
@@ -2015,6 +2205,7 @@ function loadIfEmpty(){
     if(alog&&alog.value){try{ACTIVITY_LOG=JSON.parse(alog.value);}catch(e){ACTIVITY_LOG=[];}}
     if(sf&&sf.value){try{SUBFILES=JSON.parse(sf.value);}catch(e){SUBFILES=[];}}
     if(qt&&qt.value){try{QUOTES=JSON.parse(qt.value);}catch(e){QUOTES=[];}}
+    if(pl&&pl.value){try{PLANS=JSON.parse(pl.value);}catch(e){PLANS=[];}}
     if(tk&&tk.value){try{TASKS=JSON.parse(tk.value);}catch(e){TASKS=[];}}
     if(aset&&aset.value){ try{ APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS, JSON.parse(aset.value)); }catch(e){} }
     if(th&&th.value){setTheme(th.value,false);} else { applyAppSettings(); }
@@ -2095,8 +2286,8 @@ async function _smartPersist(key, getLocal, setLocal, changedIds, deletedIds){
    intended behavior. */
 function _hardPersist(key, arr){ return window.storage.set(key, JSON.stringify(arr)); }
 
-const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set()};
-const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set()};
+const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set(), plans:new Set()};
+const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set(), plans:new Set()};
 
 function persistFiles(changed, deleted){
   _addIds(_chgIds.files, changed); _addIds(_delIds.files, deleted);
@@ -2121,6 +2312,10 @@ function persistCategoryGroups(changed, deleted){
 function persistSubfiles(changed, deleted){
   _addIds(_chgIds.subfiles, changed); _addIds(_delIds.subfiles, deleted);
   return _smartPersist('rd2:subfiles', ()=>SUBFILES, (arr)=>{SUBFILES=arr;}, _chgIds.subfiles, _delIds.subfiles).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistPlans(changed, deleted){
+  _addIds(_chgIds.plans, changed); _addIds(_delIds.plans, deleted);
+  return _smartPersist('rd2:plans', ()=>PLANS, (arr)=>{PLANS=arr;}, _chgIds.plans, _delIds.plans).catch(()=>_showToast('تعذر الحفظ','error'));
 }
 function persistActivityLog(){ return window.storage.set('rd2:activitylog', JSON.stringify(ACTIVITY_LOG)).catch(()=>{}); }
 function logActivity(action, entity, summary, detail){
@@ -2156,6 +2351,7 @@ const _remoteKeyMap = {
   'rd2:tasks': (v)=>{TASKS=v;},
   'rd2:subfiles': (v)=>{SUBFILES=v;},
   'rd2:quotes': (v)=>{QUOTES=v;},
+  'rd2:plans': (v)=>{PLANS=v;},
   'rd2:activitylog': (v)=>{ACTIVITY_LOG=v;},
 };
 let _fbUnsub = null;
@@ -2193,7 +2389,7 @@ function _reRenderAfterRemoteChange(){
     else { currentFileId=null; goToFilesPage(); }
     return;
   }
-  const tabs = ['home','files','tasks','calendar','contacts','activity','settings'];
+  const tabs = ['home','files','tasks','calendar','contacts','activity','settings','plans','urgent'];
   const active = tabs.find(function(t){ const el=document.getElementById('page-'+t); return el && el.classList.contains('active'); });
   if(active==='home') renderHome();
   else if(active==='files') renderFilesPage();
@@ -2201,6 +2397,8 @@ function _reRenderAfterRemoteChange(){
   else if(active==='calendar') renderCalendarPage();
   else if(active==='contacts') renderContacts();
   else if(active==='activity') renderActivityPage();
+  else if(active==='plans') renderPlansPage();
+  else if(active==='urgent') renderUrgentPage();
 }
 
 function systemPrefersDark(){ return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
@@ -2339,10 +2537,11 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentFileId=null;
-    ['home','urgent','files','tasks','calendar','contacts','activity','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
+    ['home','urgent','plans','files','tasks','calendar','contacts','activity','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
     document.getElementById('page-file').classList.remove('active');
     if(btn.dataset.tab==='home') renderHome();
     if(btn.dataset.tab==='urgent') renderUrgentPage();
+    if(btn.dataset.tab==='plans') renderPlansPage();
     if(btn.dataset.tab==='files') renderFilesPage();
     if(btn.dataset.tab==='tasks') renderTasksPage();
     if(btn.dataset.tab==='calendar') renderCalendarPage();
@@ -2360,6 +2559,7 @@ function goHome(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-home').classList.add('active');
   currentFileId=null;
@@ -2374,6 +2574,7 @@ function goToFilesPage(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-files').classList.add('active');
   currentFileId=null;
@@ -2389,6 +2590,7 @@ function goToActivity(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active');
   document.getElementById('page-activity').classList.add('active');
   currentFileId=null;
   renderActivityPage();
@@ -2402,6 +2604,7 @@ function goToTasks(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-tasks').classList.add('active');
   currentFileId=null;
@@ -2416,6 +2619,7 @@ function goToFile(id){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-file').classList.add('active');
   currentFileId=id; roundFilterExec=''; roundFilterType=''; roundFilterTrack='';
@@ -2430,6 +2634,7 @@ function goToCalendarDay(dateStr){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-calendar').classList.add('active');
   currentFileId=null;
@@ -2986,7 +3191,7 @@ function deleteTaskById(id, fromModal){
 function updateTasksTabBadge(){
   const badge = document.getElementById('tasksTabBadge'); if(!badge) return;
   const t = today();
-  updateUrgentBadge();
+  updateUrgentBadge(); if(typeof plnUpdateBadge==="function") plnUpdateBadge();
   const count = CTASKS().filter(x=>!x.done && x.date<=t).length;
   if(count){ badge.style.display='inline-flex'; badge.textContent = count>9?'9+':count; } else { badge.style.display='none'; }
 }
@@ -3838,7 +4043,7 @@ function clearActivityLog(){
 
 /* ---------- BACKUP / RESET ---------- */
 function exportBackup(){
-  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,exportedAt:new Date().toISOString()};
+  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,PLANS,exportedAt:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download='نسخة-احتياطية-المتابعة.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -3847,10 +4052,10 @@ function exportBackup(){
   _showToast('تم تصدير النسخة الاحتياطية','success');
 }
 function _applyBackupData(data){
-  FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[];
+  FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[]; PLANS = data.PLANS||[];
   // Explicit full replace — bypass the merge-safe persist path and write
   // these arrays as-is.
-  return Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]);
+  return Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES),_hardPersist('rd2:plans',PLANS)]);
 }
 function importBackup(ev){
   const file = ev.target.files[0]; if(!file) return;
@@ -3871,9 +4076,9 @@ function importBackup(ev){
 function resetAllData(){
   _showPasswordConfirm('سيتم حذف كل البيانات الحالية والعودة للبيانات التجريبية الافتراضية. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'إعادة التعيين'}).then(ok=>{
     if(!ok) return;
-    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[]; SUBFILES=[];
+    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[]; SUBFILES=[]; PLANS=[];
     logActivity('reset','data', 'إعادة تعيين جميع بيانات البرنامج بالكامل');
-    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
+    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES),_hardPersist('rd2:plans',PLANS)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
   });
 }
 
@@ -3886,7 +4091,7 @@ function _todayLocalStr(){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function _backupSnapshot(){
-  return {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,backedUpAt:new Date().toISOString()};
+  return {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,PLANS,backedUpAt:new Date().toISOString()};
 }
 function runDailyBackupIfDue(){
   let lastDate = ''; try{ lastDate = localStorage.getItem(DAILY_BACKUP_DATE_KEY) || ''; }catch(e){}
@@ -4242,6 +4447,8 @@ function rerenderDates(){
   try{ renderFiles(); }catch(e){}
   try{ if(typeof currentFileId!=='undefined' && currentFileId) renderFilePage(); }catch(e){}
   try{ renderActivityPage(); }catch(e){}
+  try{ if(document.getElementById('page-plans').classList.contains('active')) renderPlansPage(); }catch(e){}
+  try{ if(document.getElementById('page-urgent').classList.contains('active')) renderUrgentPage(); }catch(e){}
 }
 document.querySelectorAll('input[type=date]').forEach(upgradeDateInput);
 
@@ -4277,7 +4484,7 @@ function updateUrgentBadge(){
 }
 function goToUrgent(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='urgent'));
-  ['home','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>document.getElementById('page-'+t).classList.remove('active'));
+  ['home','files','file','calendar','contacts','settings','activity','tasks','plans'].forEach(t=>document.getElementById('page-'+t).classList.remove('active'));
   document.getElementById('page-urgent').classList.add('active');
   currentFileId=null;
   renderUrgentPage();
@@ -4495,18 +4702,21 @@ let URG_DRAG=null;
 function _urgDragMove(e){
   const d=URG_DRAG; if(!d||e.pointerId!==d.pid) return;
   if(e.clientY<90) window.scrollBy(0,-14); else if(e.clientY>window.innerHeight-90) window.scrollBy(0,14);
+  /* translate only (never re-parent) so pointer capture survives; a dashed slot marks the drop position */
+  d.item.style.transform=`translateY(${e.clientY-d.sy+(window.scrollY-d.ss)}px)`;
   const sibs=[...d.container.children].filter(c=>c.classList.contains('urg-item') && c!==d.item);
   const next=sibs.find(c=>{ const r=c.getBoundingClientRect(); return e.clientY < r.top + r.height/2; });
-  if(next){ if(d.item.nextElementSibling!==next) d.container.insertBefore(d.item,next); }
-  else if(sibs.length){ const last=sibs[sibs.length-1]; if(last.nextElementSibling!==d.item) last.after(d.item); }
+  if(next) d.container.insertBefore(d.ind,next); else d.container.appendChild(d.ind);
 }
 function _urgDragEnd(e){
   const d=URG_DRAG; if(!d||e.pointerId!==d.pid) return;
   d.grip.removeEventListener('pointermove',_urgDragMove);
   d.grip.removeEventListener('pointerup',_urgDragEnd);
   d.grip.removeEventListener('pointercancel',_urgDragEnd);
-  d.item.classList.remove('dragging');
+  d.item.classList.remove('dragging'); d.item.style.transform='';
   URG_DRAG=null;
+  if(d.ind.parentNode) d.ind.parentNode.insertBefore(d.item,d.ind);
+  d.ind.remove();
   const ids=[...d.container.children].filter(c=>c.classList.contains('urg-item')).map(c=>c.dataset.id);
   if(ids.join()===d.before.join()) return;
   const changed=[];
@@ -4522,7 +4732,8 @@ function urgDragInit(){
     const item=grip.closest('.urg-item'); if(!item) return;
     e.preventDefault();
     const container=item.parentElement;
-    URG_DRAG={item,container,grip,pid:e.pointerId,before:[...container.children].filter(c=>c.classList.contains('urg-item')).map(c=>c.dataset.id)};
+    const ind=document.createElement('div'); ind.className='urg-drop-ind'; ind.style.height=Math.min(item.offsetHeight,60)+'px';
+    URG_DRAG={item,container,grip,ind,sy:e.clientY,ss:window.scrollY,pid:e.pointerId,before:[...container.children].filter(c=>c.classList.contains('urg-item')).map(c=>c.dataset.id)};
     item.classList.add('dragging');
     try{ grip.setPointerCapture(e.pointerId); }catch(err){}
     grip.addEventListener('pointermove',_urgDragMove);
@@ -4629,6 +4840,869 @@ function deleteUrgent(){
     Promise.all([persistTasks(null,ids), delRounds.length?persistRounds(null,delRounds):null]).then(()=>{ closeUrgentModal(); updateUrgentBadge(); renderUrgentPage(); if(currentFileId) renderFilePage(); renderNotif(); _showToast('تم الحذف'); });
   });
 }
+
+
+/* ---- built-in plan templates ----
+   task tuple: [title, dueOffsetDays, priority, checklist[], notes]  (offsets are days from the plan start) */
+const PLN_TEMPLATES = [
+ { key:'reorg', name:'إعادة تنظيم الشركة (قانونيًا ونظاميًا وإداريًا)', icon:'🏢', color:0, days:180,
+   blurb:'خطة شاملة لنقل الشركة من الإدارة الفردية إلى معايير الشركات الكبرى: عقود وانضباط وظيفي، قنوات اتصال، حوكمة وتفويض، امتثال نظامي.',
+   goal:'الوصول بالوضع القانوني والنظامي والإداري للشركة إلى مستوى مؤسسي احترافي: عقود موثّقة، صلاحيات مفوَّضة، قنوات تواصل رسمية، وتراخيص نظامية سارية.',
+   description:'تبدأ الخطة بالتشخيص ثم العقود والانضباط الوظيفي، ثم قنوات الاتصال والحوكمة، ثم الامتثال والعقود التجارية، وتنتهي بالتحول المؤسسي والمتابعة. المرحلة الأولى لا تبدأ بالتغيير بل بفهم الواقع بدقة.',
+   phases:[
+   {title:'١. التشخيص وجرد الوضع القائم', days:[0,30], desc:'فهم الواقع الفعلي قبل أي تغيير', tasks:[
+     ['إعداد قائمة بأسماء العاملين ومسمياتهم وتواريخ التحاق كل منهم',5,'عاجل',['الاسم والمسمى والإدارة','تاريخ المباشرة','الراتب الأساسي والبدلات','حالة العقد (مكتوب / شفهي / لا يوجد)','رقم الإقامة أو الهوية وحالة التسجيل في التأمينات']],
+     ['جرد الأسطول والمعدات (عدد المركبات وملكيتها وتراخيصها وتأميناتها)',10,'عاجل',['كشف المركبات وأرقام اللوحات','تاريخ انتهاء الاستمارة والفحص الدوري','وثائق التأمين وتواريخها','المركبات المرهونة أو المؤجرة']],
+     ['حصر التراخيص والسجلات والشهادات النظامية وتواريخ انتهائها',14,'عاجل',['السجل التجاري ونشاطاته','رخص البلدية والدفاع المدني','تراخيص النقل والتخزين والتخليص','الزكاة والضريبة والتأمينات','شهادات السعودة والخدمات الإلكترونية']],
+     ['حصر القضايا والمطالبات والتعهدات القائمة (للشركة وعليها)',18,'عاجل',['جدول القضايا ومراحلها','المطالبات المتوقعة','الكفالات والسندات لأمر','الالتزامات غير الموثقة']],
+     ['مقابلات غير مواجهة مع العاملين لفهم الاتفاقات الشفهية (راتب/عمولة/حوافز)',24,'عاجل',['إعداد دليل أسئلة موحّد','تحديد من يحتفظ بعلاقات العملاء','توثيق ما يُعدّ حقًا مكتسبًا','محضر لكل مقابلة']],
+     ['تقرير التشخيص الشامل وعرضه على المدير العام',30,'عاجل',['فجوات قانونية','فجوات نظامية','فجوات إدارية','الأولويات والمخاطر']] ]},
+   {title:'٢. العقود والانضباط الوظيفي', days:[25,80], desc:'تحويل الاتفاقات الشفهية إلى علاقة عمل موثقة', tasks:[
+     ['تصميم نموذج عقد عمل موحّد يتوافق مع نظام العمل',35,'عاجل',['الراتب والبدلات والعمولة بنص واضح','فترة التجربة والإنهاء','السرية وعدم المنافسة والملكية الفكرية','ساعات العمل والإجازات']],
+     ['سياسة العمولات والحوافز المكتوبة (من يملك العميل؟ متى تُستحق؟)',42,'عاجل',['تعريف العميل الخاص بالموظف مقابل عميل الشركة','نسب العمولة وشروط الاستحقاق','أثر الاستقالة أو الإنهاء على العمولة','آلية المراجعة والنزاع']],
+     ['إعداد لائحة تنظيم العمل واعتمادها',50,'متوسط',['مواعيد العمل والحضور','المخالفات والجزاءات','إجراءات التظلم','الاعتماد من الجهة المختصة']],
+     ['خطة التواصل مع العاملين لشرح التغيير وتقليل المقاومة',55,'متوسط',['اجتماع تعريفي جماعي','جلسات فردية للموظفين المحوريين','أسئلة وأجوبة مكتوبة']],
+     ['توقيع العقود الجديدة وتسجيلها في المنصات الرسمية',75,'عاجل',['جدول بمن وقّع ومن تبقى','معالجة المتحفظين','حفظ نسخة أصلية في ملف الموظف']],
+     ['نظام الحضور والانصراف وملفات الموظفين الإلكترونية',80,'متوسط',[]] ]},
+   {title:'٣. قنوات الاتصال والعملاء', days:[40,100], desc:'نقل العلاقة مع العميل من الأفراد إلى الشركة', tasks:[
+     ['اعتماد أرقام وبريد رسمي للشركة (مبيعات / دعم / مالية)',50,'عاجل',['أرقام ثابتة وخطوط مخصصة','نطاق بريد إلكتروني رسمي','توقيع بريدي موحد']],
+     ['إنشاء إدارة خدمة العملاء وتحديد المسؤول والإجراءات',65,'متوسط',['وصف وظيفي ومؤشرات أداء','نموذج استلام الطلبات والشكاوى','مدة الاستجابة المستهدفة']],
+     ['سجل موحّد للعملاء (CRM) ونقل بيانات العملاء إليه',80,'متوسط',['جمع بيانات العملاء من الموظفين','تعيين مسؤول حساب لكل عميل','سياسة خصوصية وحماية البيانات']],
+     ['نماذج المراسلات والعروض والفواتير بهوية موحدة',90,'عادي',[]],
+     ['رسالة تعريفية للعملاء بقنوات التواصل الجديدة',100,'متوسط',[]] ]},
+   {title:'٤. الحوكمة وتفويض الصلاحيات', days:[60,120], desc:'تخفيف مركزية المالك وبناء هيكل قرار واضح', tasks:[
+     ['الهيكل التنظيمي المقترح والوصف الوظيفي لكل إدارة',70,'عاجل',['الإدارات الرئيسية وخطوط التقرير','الوظائف الشاغرة','مصفوفة المهام والمسؤوليات']],
+     ['مصفوفة تفويض الصلاحيات (مالية وتعاقدية وتشغيلية)',85,'عاجل',['حدود الصرف والتوقيع','من يوقّع العقود وبأي قيمة','الاستثناءات وآلية الرفع للمدير العام']],
+     ['مراجعة عقد التأسيس والنظام الأساسي وتحديثه عند الحاجة',95,'متوسط',['الإدارة والمديرون وصلاحياتهم','توزيع الحصص والقرارات','الحاجة لتعديل نشاطات أو رأس مال']],
+     ['اجتماعات دورية مجدولة (إدارية / تشغيلية / مالية) ومحاضر موثقة',110,'متوسط',[]],
+     ['سياسة تعارض المصالح والمشتريات والموافقات',120,'متوسط',[]] ]},
+   {title:'٥. الامتثال النظامي والتراخيص', days:[30,130], desc:'سد الفجوات النظامية وتجديد ما قارب على الانتهاء', tasks:[
+     ['سجل امتثال (Compliance Register) بالتراخيص وتواريخ تجديدها وتنبيهات مسبقة',45,'عاجل',['المسؤول عن كل ترخيص','تنبيه قبل 90 / 60 / 30 يومًا','الغرامات المحتملة']],
+     ['معالجة التراخيص المنتهية أو القريبة من الانتهاء',70,'عاجل',[]],
+     ['مراجعة الوضع لدى التأمينات والزكاة والضريبة وتسوية أي فروقات',90,'عاجل',['كشوف الاشتراكات','الإقرارات والمدفوعات','المديونيات والغرامات وإمكانية الإعفاء أو التقسيط']],
+     ['مراجعة نسب السعودة وحماية الأجور وتصحيح المخالفات',100,'متوسط',[]],
+     ['مراجعة وثائق التأمين (المركبات / البضائع / المسؤولية / الطبي)',115,'متوسط',[]],
+     ['اشتراطات السلامة والدفاع المدني للمستودعات والمواقع',130,'متوسط',[]] ]},
+   {title:'٦. العقود التجارية وإدارة المخاطر القانونية', days:[60,150], desc:'توحيد العقود وتقليل النزاعات', tasks:[
+     ['مراجعة العقود الجارية مع العملاء والموردين والناقلين وتصنيفها بالمخاطر',90,'عاجل',['عقود تنتهي قريبًا','بنود المسؤولية والتعويض','بنود الدفع والغرامات','حل النزاعات والاختصاص']],
+     ['نماذج عقود قياسية (نقل / تخزين / تخليص / تأجير) معتمدة',110,'متوسط',[]],
+     ['إجراء داخلي لمراجعة أي عقد قبل التوقيع (Legal Review)',120,'متوسط',[]],
+     ['سجل القضايا والمطالبات وآلية متابعتها وتقارير دورية للإدارة',130,'متوسط',[]],
+     ['سياسة التحصيل والمديونيات والإنذارات',150,'عادي',[]] ]},
+   {title:'٧. التحول المؤسسي والمتابعة', days:[120,180], desc:'تثبيت النظام الجديد وقياس النتائج', tasks:[
+     ['دليل السياسات والإجراءات المجمَّع',150,'متوسط',[]],
+     ['تدريب المديرين والعاملين على النظم الجديدة',160,'متوسط',[]],
+     ['مراجعة نصف مرحلية للخطة وقياس المؤشرات',170,'عاجل',[]],
+     ['تقرير ختامي للمدير العام وخطة السنة التالية',180,'عاجل',[]] ]} ],
+   risks:[
+    ['استمرار الاتفاقات الشفهية يولّد نزاعات عمالية وعمولات متنازعًا عليها',4,4,'توثيق سريع للاتفاقات القائمة وفق مقابلات وإقرارات مكتوبة قبل فرض النموذج الجديد.'],
+    ['مقاومة الموظفين الذين يحتفظون بعلاقات العملاء وخشيتهم فقدان مصالحهم',4,4,'ضمانات مكتوبة للحقوق المكتسبة، وإشراكهم في صياغة سياسة العمولات.'],
+    ['مركزية القرار لدى المالك وتعطل التفويض في الممارسة',3,5,'تدرّج في التفويض مع حدود مالية صغيرة أولًا، ومتابعة أسبوعية مع المدير العام.'],
+    ['تسرّب بعض العملاء عند نقل العلاقة إلى قنوات الشركة',3,4,'رسالة تعريفية ومسؤول حساب ثابت وفترة انتقالية يتعاون فيها الموظف مع الشركة.'],
+    ['انتهاء تراخيص أو التزامات نظامية دون اكتشاف مبكر',3,5,'سجل الامتثال بتنبيهات مسبقة ومسؤول واضح لكل ترخيص.'],
+    ['ضغط التكلفة والوقت على حساب جودة التنفيذ',2,3,'ترتيب الأولويات: الأخطر نظاميًا أولًا، وتأجيل التحسينات الشكلية.'] ],
+   kpis:[ ['نسبة العاملين بعقود موثقة','%',0,100], ['تراخيص منتهية أو قريبة الانتهاء','رخصة',0,0], ['عملاء مسجلون في السجل الموحد','عميل',0,100], ['زمن الاستجابة لطلبات العملاء','ساعة',48,8], ['نسبة مصفوفة التفويض المطبقة','%',0,100] ],
+   resources:[ ['منصة قوى / نظام العمل (مراجع رسمية)',''], ['بوابة الجهة المختصة بالنقل والجمارك والتراخيص',''] ] },
+
+ { key:'newco', name:'تأسيس شركة أو فرع جديد', icon:'🚀', color:1, days:90,
+   blurb:'من فكرة التأسيس حتى التشغيل: الشكل النظامي، السجل والتراخيص، الحسابات، الفريق والتشغيل.',
+   goal:'تأسيس الكيان وتشغيله بترخيص كامل وهيكل مالي وتشغيلي واضح.',
+   description:'ترتيب تقليدي لخطوات التأسيس مع فترات تنفيذ تقريبية قابلة للتعديل.',
+   phases:[
+   {title:'التخطيط والشكل النظامي', days:[0,20], desc:'', tasks:[
+     ['اختيار الشكل النظامي والنشاط وهيكل الملكية',5,'عاجل',['المقارنة بين الأشكال المتاحة','المساهمون وحصصهم','رأس المال']],
+     ['حجز الاسم التجاري وصياغة عقد التأسيس',12,'عاجل',[]],
+     ['اعتماد عقد التأسيس والتوقيع',20,'عاجل',[]] ]},
+   {title:'السجل والتراخيص', days:[15,50], desc:'', tasks:[
+     ['إصدار السجل التجاري والاشتراك في الغرفة التجارية',25,'عاجل',[]],
+     ['رخصة البلدية والدفاع المدني وعقد المقر',35,'عاجل',[]],
+     ['الزكاة والضريبة والتأمينات والخدمات الإلكترونية',45,'متوسط',[]],
+     ['التراخيص القطاعية الخاصة بالنشاط',50,'متوسط',[]] ]},
+   {title:'المالية والتشغيل', days:[40,90], desc:'', tasks:[
+     ['فتح الحساب البنكي وإعداد النظام المحاسبي',55,'عاجل',[]],
+     ['التعاقد مع الفريق الأول وتوثيق العقود',70,'متوسط',[]],
+     ['سياسات وإجراءات التشغيل الأساسية',80,'متوسط',[]],
+     ['الإطلاق التشغيلي ومراجعة ما بعد الإطلاق',90,'عاجل',[]] ]} ],
+   risks:[ ['تأخر إصدار التراخيص عن الجدول',3,4,'تقديم الطلبات المتوازية وتجهيز المستندات مبكرًا.'], ['تجاوز الميزانية المتوقعة',3,3,'ميزانية احتياطية 15% ومتابعة أسبوعية.'] ],
+   kpis:[ ['نسبة التراخيص المنجزة','%',0,100] ], resources:[] },
+
+ { key:'compliance', name:'مشروع امتثال وتراخيص', icon:'🛡️', color:3, days:60,
+   blurb:'فحص الامتثال النظامي لجهة أو نشاط، ومعالجة الفجوات وتوثيق الأدلة.',
+   goal:'تحقيق امتثال موثّق لكل المتطلبات النظامية المنطبقة ومنع تكرار المخالفات.',
+   description:'خطة فحص ومعالجة قصيرة المدى.',
+   phases:[
+   {title:'الحصر والتحليل', days:[0,15], desc:'', tasks:[
+     ['تحديد الأنظمة واللوائح المنطبقة على النشاط',5,'عاجل',[]],
+     ['جمع الوثائق والتراخيص الحالية',10,'عاجل',[]],
+     ['تحليل الفجوات وترتيبها بالأولوية',15,'عاجل',[]] ]},
+   {title:'المعالجة', days:[15,45], desc:'', tasks:[
+     ['تجديد/إصدار التراخيص الناقصة',30,'عاجل',[]],
+     ['تصحيح المخالفات والتواصل مع الجهات المختصة',40,'عاجل',[]],
+     ['تحديث السياسات الداخلية',45,'متوسط',[]] ]},
+   {title:'الإغلاق والمتابعة', days:[45,60], desc:'', tasks:[
+     ['ملف أدلة الامتثال المعتمد',55,'متوسط',[]],
+     ['جدول مراجعة دورية وتنبيهات التجديد',60,'متوسط',[]] ]} ],
+   risks:[ ['غرامات متراكمة قبل المعالجة',3,4,'ترتيب المعالجة بحسب الغرامة والأثر.'] ], kpis:[ ['نسبة الفجوات المغلقة','%',0,100] ], resources:[] },
+
+ { key:'dispute', name:'خطة إدارة نزاع أو قضية استراتيجية', icon:'⚖️', color:2, days:120,
+   blurb:'تحليل النزاع، البدائل، الأدلة، الإجراءات والتفاوض، مع سجل قرارات ومخاطر.',
+   goal:'تحقيق أفضل نتيجة ممكنة بأقل تكلفة ومخاطرة، سواء بالتسوية أو التقاضي.',
+   description:'خطة مرنة يعاد ترتيبها بحسب تطورات القضية.',
+   phases:[
+   {title:'التقييم والاستراتيجية', days:[0,14], desc:'', tasks:[
+     ['فرز الوقائع المؤكدة وغير المؤكدة والتناقضات',3,'عاجل',[]],
+     ['حصر المستندات والأدلة وتقييم قوتها',7,'عاجل',[]],
+     ['مقارنة السبل المتاحة (تسوية / وساطة / تقاضٍ / إجراء إداري)',12,'عاجل',[]],
+     ['تقدير المخاطر والتكلفة وقرار الاتجاه',14,'عاجل',[]] ]},
+   {title:'التنفيذ', days:[14,90], desc:'', tasks:[
+     ['إعداد المذكرات والطلبات وتجهيز المرفقات',30,'عاجل',[]],
+     ['مفاوضات التسوية (حدود التفويض والبدائل)',50,'متوسط',[]],
+     ['متابعة الجلسات والمواعيد النظامية',90,'عاجل',[]] ]},
+   {title:'التنفيذ والإغلاق', days:[90,120], desc:'', tasks:[
+     ['تنفيذ الحكم أو الاتفاق وتوثيقه',110,'عاجل',[]],
+     ['الدروس المستفادة وتحديث العقود والإجراءات',120,'عادي',[]] ]} ],
+   risks:[ ['فوات مدة نظامية أو موعد جلسة',2,5,'جدول مواعيد بتنبيهات مسبقة ومسؤول متابعة.'] ], kpis:[], resources:[] },
+
+ { key:'blank', name:'خطة فارغة', icon:'🎯', color:4, days:90,
+   blurb:'ابدأ من الصفر وابنِ مراحلك ومهامك بنفسك.', goal:'', description:'', phases:[], risks:[], kpis:[], resources:[] }
+];
+
+/* ================= PLANS (الخطط) =================
+   Long-running plans: plan → phases → tasks (+ checklists), risks, decisions, KPIs, resources, update log.
+   Each plan is one object in PLANS (stored under rd2:plans, merged by id like every other collection). */
+const PLN_COLORS = ['#0a84ff','#30d158','#ff9f0a','#bf5af2','#2bb3c0','#d9a400'];
+const PLN_ICONS  = ['🎯','🏢','⚖️','📜','🧭','🚀','🛡️','📈','🏗️','🤝','📑','🔧'];
+const PLN_STATUS = ['مسودة','نشطة','متوقفة','مكتملة','مؤرشفة'];
+const PLN_TSTATUS = ['لم يبدأ','جارٍ','معلّق','تم'];
+const PLN_TICON = {'لم يبدأ':'○','جارٍ':'◐','معلّق':'⏸','تم':'✓'};
+const PLN_TCLS  = {'لم يبدأ':'s-new','جارٍ':'s-prog','معلّق':'s-hold','تم':'done'};
+const PLN_PRI_COLOR = {'عاجل':'var(--orange)','متوسط':'var(--accent)','عادي':'var(--text-3)'};
+let PLN_UI = {id:'', tab:'overview', mode:'list', q:'', filter:'active', tf:'all', tq:'', who:'', open:{}, cl:{}};
+try{ const s=JSON.parse(localStorage.getItem('maham_plans_ui')||'null'); if(s){ PLN_UI.id=s.id||''; PLN_UI.tab=s.tab||'overview'; PLN_UI.mode=s.mode||'list'; PLN_UI.filter=s.filter||'active'; } }catch(e){}
+function plnSaveUi(){ try{ localStorage.setItem('maham_plans_ui', JSON.stringify({id:PLN_UI.id,tab:PLN_UI.tab,mode:PLN_UI.mode,filter:PLN_UI.filter})); }catch(e){} }
+
+/* ---------- helpers ---------- */
+function plnById(id){ return PLANS.find(p=>p.id===id); }
+function plnD(iso){ return _isoToDate(iso); }
+function plnDays(a,b){ const x=plnD(a), y=plnD(b); return (x&&y) ? Math.round((y-x)/864e5) : null; }
+function plnAdd(iso,n){ const d=plnD(iso)||new Date(); d.setDate(d.getDate()+n); return _dateToIso(d); }
+function plnColor(p){ return PLN_COLORS[p.color||0]||PLN_COLORS[0]; }
+function plnPersist(id,deleted){ return persistPlans(id,deleted); }
+function plnSave(p, rerender=true){
+  p.updatedAt=new Date().toISOString();
+  return plnPersist(p.id).then(()=>{ plnUpdateBadge(); if(rerender) renderPlansPage(); });
+}
+function plnLog(p,text,auto){ (p.log=p.log||[]).unshift({id:uid(),ts:new Date().toISOString(),text,auto:!!auto}); if(p.log.length>250) p.log.length=250; }
+function plnSorted(p){ return (p.tasks||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0)); }
+function plnNextOrder(p){ return (p.tasks||[]).reduce((m,t)=>Math.max(m,t.order||0),0)+1; }
+function plnPhaseTasks(p,phId){ return plnSorted(p).filter(t=>(t.phaseId||'')===(phId||'')); }
+function plnPct(sum,total){ return total? Math.round(sum/total*100):0; }
+function plnTaskWeight(t){
+  if(t.status==='تم') return 1;
+  const cl=t.checklist||[]; if(cl.length) return 0.9*cl.filter(c=>c.done).length/cl.length;
+  return 0;
+}
+function plnPhaseStats(p,phId){
+  const T=plnPhaseTasks(p,phId); const td=today(); let sum=0, done=0, late=0;
+  T.forEach(t=>{ sum+=plnTaskWeight(t); if(t.status==='تم') done++; else if(t.due&&t.due<td) late++; });
+  return {total:T.length, done, late, pct:plnPct(sum,T.length)};
+}
+function plnStats(p){
+  const T=p.tasks||[]; const td=today(); let sum=0, done=0, late=0, prog=0, hold=0, fresh=0;
+  T.forEach(t=>{ sum+=plnTaskWeight(t); if(t.status==='تم') done++; else { if(t.due&&t.due<td) late++; if(t.status==='جارٍ') prog++; else if(t.status==='معلّق') hold++; else fresh++; } });
+  const total=T.length, pct=plnPct(sum,total);
+  let exp=null, daysLeft=null, elapsed=null;
+  if(p.start&&p.end&&p.end>p.start){ const f=(plnD(td)-plnD(p.start))/(plnD(p.end)-plnD(p.start)); exp=Math.round(Math.min(1,Math.max(0,f))*100); elapsed=plnDays(p.start,td); }
+  if(p.end) daysLeft=plnDays(td,p.end);
+  const hiRisks=(p.risks||[]).filter(r=>r.status!=='مُغلق' && (r.prob||1)*(r.impact||1)>=15).length;
+  let h;
+  if(p.status==='مكتملة' || (total && done===total)) h={k:'done',l:'مكتملة',c:'green'};
+  else if(p.status==='مؤرشفة') h={k:'arch',l:'مؤرشفة',c:''};
+  else if(p.status==='مسودة') h={k:'draft',l:'مسودة',c:''};
+  else if(p.status==='متوقفة') h={k:'hold',l:'متوقفة',c:'orange'};
+  else if(!total) h={k:'empty',l:'بلا مهام بعد',c:''};
+  else if(p.end && td>p.end) h={k:'over',l:'تجاوزت الموعد',c:'purple'};
+  else {
+    const gap = exp==null ? 0 : exp-pct;
+    if(late>=3 || gap>20) h={k:'late',l:'متأخرة',c:'purple'};
+    else if(late>0 || gap>8) h={k:'warn',l:'تحتاج انتباهًا',c:'orange'};
+    else h={k:'ok',l:'على المسار',c:'green'};
+  }
+  return {total,done,late,prog,hold,fresh,pct,exp,daysLeft,elapsed,hiRisks,health:h};
+}
+function plnRing(pct,size,color,stroke){
+  stroke=stroke||6; const r=(size-stroke)/2, c=2*Math.PI*r, off=c*(1-Math.min(100,pct)/100);
+  return `<span class="pln-ring" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${stroke}"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/></svg><span>${pct}%</span></span>`;
+}
+function plnPill(h){ return `<span class="pln-pill ${h.c}">${esc(h.l)}</span>`; }
+function plnDue(t){
+  if(!t.due) return '';
+  const late=t.status!=='تم' && t.due<today();
+  return `<span class="badge${late?' late':''}"${dTitle(t.due)}>${late?'متأخرة · ':'📅 '}${fmtDate(t.due)}</span>`;
+}
+function plnRelDays(n){
+  if(n==null) return '';
+  if(n===0) return 'اليوم'; if(n===1) return 'غدًا'; if(n===-1) return 'أمس';
+  return n>0 ? `بعد ${n} يومًا` : `منذ ${-n} يومًا`;
+}
+function plnUpdateBadge(){
+  const b=document.getElementById('plnTabBadge'); if(!b) return;
+  const td=today(); let n=0;
+  PLANS.forEach(p=>{ if(p.status==='نشطة') (p.tasks||[]).forEach(t=>{ if(t.status!=='تم' && t.due && t.due<td) n++; }); });
+  if(n){ b.style.display='inline-flex'; b.textContent=n>9?'9+':n; } else b.style.display='none';
+}
+
+/* ---------- navigation ---------- */
+function goToPlans(id){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='plans'));
+  ['home','urgent','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
+  document.getElementById('page-plans').classList.add('active');
+  currentFileId=null;
+  if(id!==undefined) { PLN_UI.id=id||''; }
+  renderPlansPage();
+}
+function plnOpen(id,tab){ PLN_UI.id=id; PLN_UI.tab=tab||'overview'; PLN_UI.tq=''; PLN_UI.tf='all'; PLN_UI.who=''; plnSaveUi(); renderPlansPage(); window.scrollTo(0,0); }
+function plnBack(){ PLN_UI.id=''; plnSaveUi(); renderPlansPage(); }
+function plnTab(t){ PLN_UI.tab=t; plnSaveUi(); renderPlansPage(); }
+function plnMode(m){ PLN_UI.mode=m; plnSaveUi(); renderPlansPage(); }
+
+/* ---------- plans home ---------- */
+function renderPlansPage(){
+  const root=document.getElementById('plansRoot'); if(!root) return;
+  plnUpdateBadge();
+  const p = PLN_UI.id ? plnById(PLN_UI.id) : null;
+  if(PLN_UI.id && !p){ PLN_UI.id=''; }
+  root.innerHTML = p ? plnDetailHtml(p) : plnHomeHtml();
+  if(p) plnAfterRender(p);
+}
+function plnHomeHtml(){
+  const all=PLANS.slice();
+  const q=(PLN_UI.q||'').trim().toLowerCase();
+  const flt=PLN_UI.filter;
+  let list=all.filter(p=>{
+    if(flt==='active' && !['نشطة','مسودة','متوقفة'].includes(p.status)) return false;
+    if(flt==='done' && p.status!=='مكتملة') return false;
+    if(flt==='arch' && p.status!=='مؤرشفة') return false;
+    if(q && !(p.title+' '+(p.goal||'')+' '+(p.description||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const order={'نشطة':0,'متوقفة':1,'مسودة':2,'مكتملة':3,'مؤرشفة':4};
+  list.sort((a,b)=>(order[a.status]-order[b.status])||((b.updatedAt||'').localeCompare(a.updatedAt||'')));
+  const act=all.filter(p=>p.status==='نشطة');
+  let tt=0,td_=0,late=0,hi=0;
+  act.forEach(p=>{ const s=plnStats(p); tt+=s.total; td_+=s.done; late+=s.late; hi+=s.hiRisks; });
+  const weekEnd=plnAdd(today(),14);
+  const focus=[];
+  act.forEach(p=>(p.tasks||[]).forEach(t=>{ if(t.status!=='تم' && t.due && t.due<=weekEnd) focus.push({p,t}); }));
+  focus.sort((a,b)=>a.t.due.localeCompare(b.t.due));
+  const chips=[['active','الجارية'],['done','المكتملة'],['arch','المؤرشفة'],['all','الكل']].map(([k,l])=>`<button class="chip${flt===k?' active':''}" onclick="PLN_UI.filter='${k}';plnSaveUi();renderPlansPage()">${l}</button>`).join('');
+  let h=`<div class="section-head"><h2>🧭 الخطط <span class="settings-fold-count">${all.length?'('+all.length+')':''}</span></h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="plnTemplatePicker()">📋 من قالب</button><button class="btn btn-filled btn-sm" onclick="plnNewPlan()">+ خطة جديدة</button></div></div>
+  <div class="settings-desc" style="margin-bottom:12px;">لمتابعة المشاريع والخطط الطويلة: مراحل ومهام وجدول زمني ومخاطر وقرارات ومؤشرات وسجل تحديثات، مع مؤشر صحة تلقائي لكل خطة.</div>`;
+  if(!all.length){
+    h+=`<div class="pln-box pln-empty"><div style="font-size:44px">🧭</div><h3>ابدأ بأول خطة</h3><div class="settings-desc">اختر قالبًا جاهزًا (يمكنك تعديل كل شيء فيه) أو ابدأ من الصفر.</div>
+      <div class="pln-tpls">${PLN_TEMPLATES.map(plnTplCard).join('')}</div></div>`;
+    return h;
+  }
+  h+=`<div class="pln-stats">
+    <div class="pln-stat"><div class="n">${act.length}</div><div class="l">خطط نشطة</div></div>
+    <div class="pln-stat good"><div class="n">${plnPct(td_,tt)}%</div><div class="l">إنجاز المهام (${td_}/${tt})</div></div>
+    <div class="pln-stat ${late?'warn':''}"><div class="n">${late}</div><div class="l">مهام متأخرة</div></div>
+    <div class="pln-stat ${hi?'bad':''}"><div class="n">${hi}</div><div class="l">مخاطر عالية مفتوحة</div></div></div>`;
+  if(focus.length){
+    h+=`<div class="pln-focus"><h4><span>🎯 يستحق انتباهك (المتأخر وما يستحق خلال أسبوعين)</span><span class="pln-pill">${focus.length}</span></h4>${focus.slice(0,8).map(({p,t})=>{
+      const n=plnDays(today(),t.due);
+      return `<div class="pln-frow" onclick="plnOpen('${p.id}','tasks');setTimeout(()=>plnEditTask('${p.id}','${t.id}'),50)"><span class="pln-p-dot" style="background:${plnColor(p)}"></span><div class="t">${esc(t.title)}<div class="s">${esc(p.title)}</div></div><span class="pln-pill ${n<0?'purple':n<=2?'orange':''}"${dTitle(t.due)}>${plnRelDays(n)}</span></div>`;}).join('')}${focus.length>8?`<div class="s" style="font-size:11.5px;color:var(--text-3);padding-top:6px">و${focus.length-8} أخرى…</div>`:''}</div>`;
+  }
+  h+=`<div class="pln-top"><input type="text" class="grow" placeholder="بحث في الخطط..." value="${esc(PLN_UI.q||'')}" oninput="PLN_UI.q=this.value;plnHomeGrid()"><div class="filter-bar" style="margin:0">${chips}</div></div><div id="plnGridBox">${plnGridHtml(list)}</div>`;
+  return h;
+}
+function plnHomeGrid(){ const el=document.getElementById('plnGridBox'); if(!el) return; renderPlansPage(); const i=document.querySelector('#plansRoot .pln-top input'); if(i){ i.focus(); const v=i.value; i.value=''; i.value=v; } }
+function plnGridHtml(list){
+  if(!list.length) return `<div class="tasks-empty-note">لا خطط مطابقة.</div>`;
+  return `<div class="pln-grid">${list.map(p=>{
+    const s=plnStats(p), col=plnColor(p);
+    const next=(p.tasks||[]).filter(t=>t.status!=='تم'&&t.due).sort((a,b)=>a.due.localeCompare(b.due))[0];
+    return `<div class="pln-card" style="--pc:${col}" onclick="plnOpen('${p.id}')">
+      <div class="pln-card-h"><div class="pln-ico">${p.icon||'🎯'}</div><div class="pln-card-t">${esc(p.title)}</div>${plnRing(s.pct,52,col,5)}</div>
+      ${p.goal?`<div class="pln-card-g">${esc(p.goal)}</div>`:'<div style="height:10px"></div>'}
+      <div class="pln-bar"><i style="width:${s.pct}%"></i></div>
+      <div class="pln-card-f">${plnPill(s.health)}<span class="pln-pill">${s.done}/${s.total} مهمة</span>${s.late?`<span class="pln-pill orange">${s.late} متأخرة</span>`:''}${s.daysLeft!=null&&p.status==='نشطة'?`<span class="pln-pill blue"${dTitle(p.end)}>${s.daysLeft>=0?'متبقي '+s.daysLeft+' يومًا':'تجاوزت بـ '+(-s.daysLeft)+' يومًا'}</span>`:''}</div>
+      ${next?`<div class="pln-card-g" style="margin:8px 0 0">التالي: ${esc(next.title)} · <span${dTitle(next.due)}>${fmtDate(next.due)}</span></div>`:''}
+    </div>`; }).join('')}</div>`;
+}
+function plnTplCard(t,i){
+  return `<div class="pln-tpl" onclick="plnCreateFromTemplate(${i})"><span style="font-size:24px">${t.icon}</span><b>${esc(t.name)}</b><small>${esc(t.blurb)}</small></div>`;
+}
+
+/* ---------- generic form modal ---------- */
+let PLN_FORM=null;
+function plnForm(cfg){
+  PLN_FORM=cfg;
+  document.getElementById('plnFormTitle').textContent=cfg.title;
+  const body=document.getElementById('plnFormBody');
+  const v=cfg.values||{};
+  body.innerHTML = cfg.bodyHtml!==undefined ? cfg.bodyHtml : `<div class="pln-fgrid">${cfg.fields.map(f=>plnFieldHtml(f,v[f.k])).join('')}</div>`;
+  document.getElementById('plnFormSave').style.display = cfg.noSave?'none':'';
+  document.getElementById('plnFormDel').style.display = cfg.onDelete?'inline-flex':'none';
+  document.getElementById('plnFormModal').classList.toggle('wide', !!cfg.wide);
+  document.getElementById('plnFormOverlay').classList.add('open');
+  body.querySelectorAll('input[type=date]').forEach(upgradeDateInput);
+  if(!cfg.noSave) setTimeout(()=>{ const f=body.querySelector('input[type=text],textarea'); if(f) f.focus(); },60);
+}
+function plnFieldHtml(f,val){
+  const id='plnF_'+f.k, cls=f.full?' class="form-row full"':' class="form-row"';
+  const lab=`<label for="${id}">${esc(f.label)}${f.req?' *':''}</label>`;
+  const val0=val==null?'':val;
+  if(f.type==='textarea') return `<div${cls}>${lab}<textarea id="${id}" rows="${f.rows||3}" placeholder="${esc(f.ph||'')}">${esc(val0)}</textarea></div>`;
+  if(f.type==='select'){
+    const opts=(f.opts||[]).map(o=>{ const [ov,ol]=Array.isArray(o)?o:[o,o]; return `<option value="${esc(String(ov))}"${String(ov)===String(val0)?' selected':''}>${esc(ol)}</option>`; }).join('');
+    return `<div${cls}>${lab}<select id="${id}">${opts}</select></div>`;
+  }
+  if(f.type==='date') return `<div${cls}>${lab}<input type="date" id="${id}" value="${esc(val0)}"></div>`;
+  if(f.type==='number') return `<div${cls}>${lab}<input type="number" id="${id}" value="${esc(val0)}" step="any"></div>`;
+  if(f.type==='color') return `<div class="form-row full">${lab}<div class="pln-swatches" id="${id}" data-val="${val0}">${PLN_COLORS.map((c,i)=>`<button type="button" style="background:${c}" class="${i==val0?'on':''}" onclick="this.parentNode.dataset.val=${i};this.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));this.classList.add('on')"></button>`).join('')}</div></div>`;
+  if(f.type==='icon') return `<div class="form-row full">${lab}<div class="pln-swatches" id="${id}" data-val="${esc(val0)}">${PLN_ICONS.map(c=>`<button type="button" class="${c===val0?'on':''}" onclick="this.parentNode.dataset.val='${c}';this.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${c}</button>`).join('')}</div></div>`;
+  if(f.type==='checklist'){
+    const items=Array.isArray(val)?val:[];
+    return `<div class="form-row full">${lab}<div id="${id}">${items.map(plnClRow).join('')}</div><button type="button" class="btn btn-glass btn-sm" onclick="plnClAdd('${id}')">+ بند</button></div>`;
+  }
+  const list=f.list?` list="${f.list}"`:'';
+  return `<div${cls}>${lab}<input type="text" id="${id}" value="${esc(val0)}" placeholder="${esc(f.ph||'')}"${list}></div>`;
+}
+function plnClRow(c){ return `<div class="pln-clrow" data-cl="1"><input type="checkbox" ${c.done?'checked':''}><input type="text" value="${esc(c.t||'')}" placeholder="بند..." onkeydown="if(event.key==='Enter'){event.preventDefault();plnClAdd(this.closest('[id]').id)}"><button type="button" onclick="this.parentNode.remove()" title="حذف">✕</button></div>`; }
+function plnClAdd(id){ const box=document.getElementById(id); box.insertAdjacentHTML('beforeend',plnClRow({t:'',done:false})); const r=box.querySelectorAll('.pln-clrow'); r[r.length-1].querySelector('input[type=text]').focus(); }
+function plnFormClose(){ document.getElementById('plnFormOverlay').classList.remove('open'); PLN_FORM=null; }
+function plnFormSave(){
+  const cfg=PLN_FORM; if(!cfg||!cfg.fields) return;
+  const out={};
+  for(const f of cfg.fields){
+    const el=document.getElementById('plnF_'+f.k); if(!el) continue;
+    let v;
+    if(f.type==='color'||f.type==='icon') v=el.dataset.val;
+    else if(f.type==='checklist') v=[...el.querySelectorAll('[data-cl]')].map(r=>({id:uid(),t:r.querySelector('input[type=text]').value.trim(),done:r.querySelector('input[type=checkbox]').checked})).filter(c=>c.t);
+    else if(f.type==='number') v=el.value===''?'':+el.value;
+    else v=el.value.trim();
+    if(f.req && (v===''||v==null)){ _showToast('الرجاء تعبئة: '+f.label,'error'); el.focus&&el.focus(); return; }
+    out[f.k]=v;
+  }
+  plnFormClose();
+  cfg.onSave(out);
+}
+function plnFormDelete(){ const cfg=PLN_FORM; if(cfg&&cfg.onDelete){ plnFormClose(); cfg.onDelete(); } }
+
+/* ---------- plan create / edit ---------- */
+function plnPlanFields(){
+  return [
+    {k:'title',label:'اسم الخطة',type:'text',full:true,req:true,ph:'مثال: إعادة تنظيم الشركة'},
+    {k:'icon',label:'الأيقونة',type:'icon',full:true},
+    {k:'color',label:'اللون',type:'color',full:true},
+    {k:'goal',label:'الهدف الرئيسي',type:'textarea',full:true,rows:2,ph:'ما الذي ستحققه الخطة عند نجاحها؟'},
+    {k:'description',label:'وصف / نطاق الخطة',type:'textarea',full:true,rows:3},
+    {k:'status',label:'الحالة',type:'select',opts:PLN_STATUS},
+    {k:'priority',label:'الأولوية',type:'select',opts:['عاجل','متوسط','عادي']},
+    {k:'start',label:'تاريخ البدء',type:'date'},
+    {k:'end',label:'الموعد المستهدف للانتهاء',type:'date'},
+    {k:'owner',label:'مسؤول الخطة',type:'text',list:'plnWhoList'},
+    {k:'sponsor',label:'الراعي / الجهة الطالبة',type:'text',ph:'مثال: المدير العام'},
+    {k:'fileId',label:'ملف مرتبط (اختياري)',type:'select',full:true,opts:[['','— بدون —'],...FILES.map(f=>[f.id,f.title])]},
+  ];
+}
+function plnNewPlan(){
+  plnForm({title:'خطة جديدة',fields:plnPlanFields(),values:{icon:'🎯',color:0,status:'نشطة',priority:'متوسط',start:today(),end:plnAdd(today(),90)},
+    onSave:v=>{
+      const p={id:uid(),...v,color:+v.color,phases:[],tasks:[],risks:[],decisions:[],kpis:[],resources:[],log:[],createdAt:new Date().toISOString(),updatedAt:''};
+      plnLog(p,'تم إنشاء الخطة',true); PLANS.push(p); logActivity('add','plan',`إنشاء خطة: ${p.title}`);
+      PLN_UI.id=p.id; PLN_UI.tab='overview'; plnSaveUi(); plnSave(p); _showToast('تم إنشاء الخطة','success');
+    }});
+}
+function plnEditPlan(id){
+  const p=plnById(id); if(!p) return;
+  plnForm({title:'تعديل الخطة',fields:plnPlanFields(),values:p,
+    onSave:v=>{ const was=p.status; Object.assign(p,v,{color:+v.color}); if(was!==p.status) plnLog(p,`تغيّرت حالة الخطة إلى «${p.status}»`,true); logActivity('edit','plan',`تعديل خطة: ${p.title}`); plnSave(p); },
+    onDelete:()=>plnDelete(id)});
+}
+function plnDelete(id){
+  const p=plnById(id); if(!p) return;
+  _showConfirm(`حذف خطة «${p.title}» نهائيًا بكل مراحلها ومهامها (${(p.tasks||[]).length} مهمة)؟ يُنصح بأرشفتها بدل الحذف.`,{destructive:true,confirmLabel:'حذف نهائي'}).then(ok=>{
+    if(!ok) return;
+    PLANS=PLANS.filter(x=>x.id!==id); logActivity('delete','plan',`حذف خطة: ${p.title}`);
+    plnPersist(null,id).then(()=>{ PLN_UI.id=''; plnSaveUi(); plnUpdateBadge(); renderPlansPage(); _showToast('تم الحذف'); });
+  });
+}
+function plnSetStatus(id,st){ const p=plnById(id); if(!p) return; p.status=st; plnLog(p,`تغيّرت حالة الخطة إلى «${st}»`,true); logActivity('edit','plan',`حالة الخطة «${p.title}»: ${st}`); plnSave(p); }
+function plnDuplicate(id){
+  const p=plnById(id); if(!p) return;
+  const c=JSON.parse(JSON.stringify(p)); c.id=uid(); c.title=p.title+' (نسخة)'; c.status='مسودة'; c.createdAt=new Date().toISOString(); c.log=[];
+  const pm={}, tm={};
+  (c.phases||[]).forEach(ph=>{ const n=uid(); pm[ph.id]=n; ph.id=n; });
+  (c.tasks||[]).forEach(t=>{ const n=uid(); tm[t.id]=n; t.id=n; t.phaseId=pm[t.phaseId]||''; t.status='لم يبدأ'; t.doneAt=''; t.urgentId=''; (t.checklist||[]).forEach(x=>{x.id=uid();x.done=false;}); });
+  ['risks','decisions','kpis','resources'].forEach(k=>(c[k]||[]).forEach(x=>{x.id=uid();}));
+  plnLog(c,`نسخة من «${p.title}»`,true); PLANS.push(c); logActivity('add','plan',`تكرار خطة: ${p.title}`);
+  PLN_UI.id=c.id; PLN_UI.tab='overview'; plnSaveUi(); plnSave(c); _showToast('تم إنشاء نسخة كمسودة','success');
+}
+function plnTemplatePicker(){
+  plnForm({title:'اختر قالبًا',noSave:true,wide:true,bodyHtml:`<div class="settings-desc">القوالب نقطة انطلاق: كل المراحل والمهام والمخاطر قابلة للتعديل والحذف والإضافة، وتُحسب المواعيد من تاريخ اليوم.</div><div class="pln-tpls">${PLN_TEMPLATES.map(plnTplCard).join('')}</div>`});
+}
+function plnCreateFromTemplate(i){
+  const T=PLN_TEMPLATES[i]; if(!T) return;
+  plnFormClose();
+  const start=today();
+  const p={id:uid(),title:T.name,icon:T.icon,color:T.color,goal:T.goal,description:T.description,status:'نشطة',priority:'عاجل',start,end:plnAdd(start,T.days),owner:'',sponsor:'',fileId:'',
+    phases:[],tasks:[],risks:[],decisions:[],kpis:[],resources:[],log:[],createdAt:new Date().toISOString(),updatedAt:''};
+  let ord=1;
+  (T.phases||[]).forEach(ph=>{
+    const pid=uid(); p.phases.push({id:pid,title:ph.title,desc:ph.desc||'',start:plnAdd(start,ph.days[0]),end:plnAdd(start,ph.days[1])});
+    (ph.tasks||[]).forEach(tt=>{ p.tasks.push({id:uid(),phaseId:pid,title:tt[0],status:'لم يبدأ',priority:tt[2]||'متوسط',due:plnAdd(start,tt[1]),start:'',responsible:'',notes:tt[4]||'',checklist:(tt[3]||[]).map(x=>({id:uid(),t:x,done:false})),order:ord++,doneAt:'',urgentId:''}); });
+  });
+  (T.risks||[]).forEach(r=>p.risks.push({id:uid(),title:r[0],prob:r[1],impact:r[2],mitigation:r[3],owner:'',status:'مفتوح'}));
+  (T.kpis||[]).forEach(k=>p.kpis.push({id:uid(),name:k[0],unit:k[1],start:k[2],current:k[2],target:k[3]}));
+  (T.resources||[]).forEach(r=>p.resources.push({id:uid(),title:r[0],url:r[1],note:''}));
+  plnLog(p,`أُنشئت الخطة من قالب «${T.name}»`,true);
+  PLANS.push(p); logActivity('add','plan',`إنشاء خطة من قالب: ${p.title}`);
+  PLN_UI.id=p.id; PLN_UI.tab='overview'; plnSaveUi(); plnSave(p); _showToast('تم إنشاء الخطة من القالب — عدّل ما يلزم','success');
+}
+
+/* ---------- plan detail ---------- */
+function plnDetailHtml(p){
+  const s=plnStats(p), col=plnColor(p), f=p.fileId?fileOf(p.fileId):null;
+  const tabs=[['overview','نظرة عامة'],['tasks','المراحل والمهام',s.total],['risks','المخاطر',(p.risks||[]).filter(r=>r.status!=='مُغلق').length],['decisions','القرارات',(p.decisions||[]).length],['kpis','المؤشرات',(p.kpis||[]).length],['refs','المراجع والأطراف',(p.resources||[]).length+(p.contactIds||[]).length],['log','السجل',(p.log||[]).length]];
+  let h=`<div class="pln-noprint" style="margin-bottom:8px"><button class="btn btn-glass btn-sm" onclick="plnBack()">→ كل الخطط</button></div>
+  <div class="pln-hd" style="--pc:${col}">
+    <div class="pln-ico" style="width:52px;height:52px;font-size:28px;--pc:${col}">${p.icon||'🎯'}</div>
+    <div class="ttl"><h2>${esc(p.title)}</h2>
+      <div class="sub">${plnPill(s.health)}<span class="pln-pill blue">${esc(p.status)}</span>${p.owner?`<span class="pln-pill">👤 ${esc(p.owner)}</span>`:''}${p.start?`<span class="pln-pill"${dTitle(p.start)}>🗓️ ${fmtDate(p.start)}</span>`:''}${p.end?`<span class="pln-pill"${dTitle(p.end)}>🏁 ${fmtDate(p.end)}</span>`:''}${f?`<span class="pln-pill" style="cursor:pointer" onclick="goToFile('${f.id}')">📁 ${esc(f.title)}</span>`:''}</div></div>
+    <div class="pln-actions pln-noprint">
+      <select onchange="plnSetStatus('${p.id}',this.value)" title="حالة الخطة">${PLN_STATUS.map(x=>`<option${x===p.status?' selected':''}>${x}</option>`).join('')}</select>
+      <button class="btn btn-glass btn-sm" onclick="plnEditPlan('${p.id}')">✎ تعديل</button>
+      <button class="btn btn-glass btn-sm" onclick="plnMenu('${p.id}')">⋯ المزيد</button>
+    </div></div>
+  <div class="pln-tabs pln-noprint" style="--pc:${col}">${tabs.map(([k,l,c])=>`<button class="${PLN_UI.tab===k?'on':''}" onclick="plnTab('${k}')">${l}${c?`<span class="c">${c}</span>`:''}</button>`).join('')}</div>
+  <datalist id="plnWhoList">${plnPeople(p).map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+  <div style="--pc:${col}">`;
+  h+= ({overview:plnOverviewHtml,tasks:plnTasksHtml,risks:plnRisksHtml,decisions:plnDecisionsHtml,kpis:plnKpisHtml,refs:plnRefsHtml,log:plnLogHtml}[PLN_UI.tab]||plnOverviewHtml)(p,s);
+  return h+'</div>';
+}
+function plnPeople(p){
+  const set=new Set(); CONTACTS.forEach(c=>c.name&&set.add(c.name));
+  PLANS.forEach(x=>{ if(x.owner) set.add(x.owner); (x.tasks||[]).forEach(t=>t.responsible&&set.add(t.responsible)); });
+  return [...set];
+}
+function plnMenu(id){
+  const p=plnById(id); if(!p) return;
+  plnForm({title:'خيارات الخطة',noSave:true,bodyHtml:`<div style="display:grid;gap:8px">
+    <button class="btn btn-glass" onclick="plnFormClose();plnPrint('${id}')">🖨️ طباعة / حفظ PDF (تقرير كامل)</button>
+    <button class="btn btn-glass" onclick="plnFormClose();plnCopySummary('${id}')">📋 نسخ ملخص نصي (للواتساب / البريد)</button>
+    <button class="btn btn-glass" onclick="plnFormClose();plnDuplicate('${id}')">⧉ تكرار الخطة كمسودة</button>
+    <button class="btn btn-glass" onclick="plnFormClose();plnSetStatus('${id}','${p.status==='مؤرشفة'?'نشطة':'مؤرشفة'}')">${p.status==='مؤرشفة'?'📤 إلغاء الأرشفة':'🗄️ أرشفة الخطة'}</button>
+    <button class="btn btn-danger" onclick="plnFormClose();plnDelete('${id}')">حذف الخطة نهائيًا</button></div>`});
+}
+
+/* --- overview --- */
+function plnOverviewHtml(p,s){
+  const col=plnColor(p);
+  const next=(p.tasks||[]).filter(t=>t.status!=='تم').sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')).slice(0,6);
+  const lateL=(p.tasks||[]).filter(t=>t.status!=='تم'&&t.due&&t.due<today());
+  const hi=(p.risks||[]).filter(r=>r.status!=='مُغلق').sort((a,b)=>(b.prob*b.impact)-(a.prob*a.impact)).slice(0,3);
+  const expl = s.exp!=null && !['done','arch','draft','empty'].includes(s.health.k) ? `المتوقع بحسب الزمن المنقضي <b>${s.exp}%</b> مقابل المنجز فعليًا <b>${s.pct}%</b>${s.late?` — و<b>${s.late}</b> مهمة متأخرة`:''}.` : '';
+  let h=`<div class="pln-ov"><div style="display:grid;gap:14px;min-width:0">
+   <div class="pln-box"><div class="pln-hero">${plnRing(s.pct,112,col,10)}
+     <div class="kp"><div><b>${s.done}/${s.total}</b><span>مهام منجزة</span></div><div><b>${s.prog}</b><span>جارية الآن</span></div><div><b style="color:${s.late?'var(--orange)':'inherit'}">${s.late}</b><span>متأخرة</span></div><div><b>${s.daysLeft==null?'—':s.daysLeft}</b><span>${s.daysLeft!=null&&s.daysLeft<0?'يومًا بعد الموعد':'يومًا متبقيًا'}</span></div></div></div>
+     ${expl?`<div class="pln-note">${plnPill(s.health)} ${expl}</div>`:`<div class="pln-note">${plnPill(s.health)}</div>`}
+     ${p.goal?`<div class="pln-note"><b>🎯 الهدف:</b> ${esc(p.goal)}</div>`:''}${p.description?`<div class="pln-note" style="white-space:pre-wrap">${esc(p.description)}</div>`:''}
+   </div>
+   <div class="pln-box"><h4><span>📈 منحنى الإنجاز</span></h4><div class="pln-chart">${plnBurnChart(p,s)}</div>
+     <div class="pln-legend"><span><i style="background:var(--text-3)"></i>المسار المثالي</span><span><i style="background:${col}"></i>المنجز فعليًا</span></div></div>
+   <div class="pln-box"><h4><span>🧱 تقدم المراحل</span><button class="btn btn-glass btn-sm" onclick="plnTab('tasks')">فتح المهام</button></h4>
+     ${(p.phases||[]).length? p.phases.map(ph=>{ const ps=plnPhaseStats(p,ph.id); return `<div class="pln-ph-row" onclick="PLN_UI.open['${ph.id}']=true;plnTab('tasks')"><div class="r"><span>${esc(ph.title)}</span><span style="font-family:var(--font-body)">${ps.done}/${ps.total} · ${ps.pct}%</span></div><div class="pln-bar"><i style="width:${ps.pct}%"></i></div></div>`; }).join('') : '<div class="tasks-empty-note" style="padding:12px">لا مراحل بعد — أضفها من تبويب «المراحل والمهام».</div>'}
+   </div></div>
+   <div style="display:grid;gap:14px;min-width:0;align-content:start">
+    <div class="pln-box"><h4><span>⏭️ الإجراءات التالية</span></h4>${next.length? next.map(t=>{ const n=t.due?plnDays(today(),t.due):null; const ph=(p.phases||[]).find(x=>x.id===t.phaseId); return `<div class="pln-frow" onclick="plnTab('tasks');setTimeout(()=>plnEditTask('${p.id}','${t.id}'),50)"><span class="pln-p-dot" style="background:${PLN_PRI_COLOR[t.priority]||'var(--text-3)'}"></span><div class="t">${esc(t.title)}<div class="s">${ph?esc(ph.title):'بدون مرحلة'}${t.responsible?' · '+esc(t.responsible):''}</div></div>${t.due?`<span class="pln-pill ${n<0?'purple':n<=3?'orange':''}"${dTitle(t.due)}>${plnRelDays(n)}</span>`:''}</div>`; }).join('') : '<div class="tasks-empty-note" style="padding:12px">لا مهام معلّقة 🎉</div>'}
+      ${lateL.length>next.filter(t=>t.due&&t.due<today()).length?`<div class="pln-note">⚠️ ${lateL.length} مهمة متأخرة في المجمل.</div>`:''}</div>
+    <div class="pln-box"><h4><span>⚠️ أبرز المخاطر</span><button class="btn btn-glass btn-sm" onclick="plnTab('risks')">السجل</button></h4>${hi.length? hi.map(r=>{ const sc=r.prob*r.impact; return `<div class="pln-frow" onclick="plnTab('risks')"><span class="pln-pill ${sc>=15?'purple':sc>=10?'orange':''}">${sc}</span><div class="t">${esc(r.title)}</div></div>`; }).join('') : '<div class="tasks-empty-note" style="padding:12px">لم تُسجَّل مخاطر.</div>'}</div>
+    <div class="pln-box"><h4><span>📝 تحديث سريع</span></h4><div class="pln-quick"><input type="text" id="plnQuickNote" placeholder="سجّل ملاحظة أو تطورًا… Enter" onkeydown="if(event.key==='Enter')plnQuickNote('${p.id}')"><button class="btn btn-filled btn-sm" onclick="plnQuickNote('${p.id}')">إضافة</button></div>
+      <div class="pln-log" style="margin-top:12px">${(p.log||[]).slice(0,5).map(l=>plnLogItem(p,l,false)).join('')||'<div class="s" style="color:var(--text-3);font-size:12px">لا تحديثات.</div>'}</div></div>
+   </div></div>`;
+  return h;
+}
+function plnQuickNote(id){ const p=plnById(id); const i=document.getElementById('plnQuickNote'); if(!p||!i) return; const t=i.value.trim(); if(!t){ i.focus(); return; } plnLog(p,t,false); plnSave(p); }
+function plnBurnChart(p,s){
+  const W=600,H=170,L=34,R=12,T=12,B=8;
+  const start=p.start||(p.createdAt||'').slice(0,10)||today();
+  let end=p.end; const td=today();
+  if(!end||end<=start) end=plnAdd(start,90);
+  const total=Math.max(1,s.total), span=Math.max(1,plnDays(start,end));
+  const X=iso=>{ const f=Math.min(1,Math.max(0,plnDays(start,iso)/span)); return W-R-f*(W-L-R); };   // RTL: start on the right
+  const Y=v=>T+(1-v/total)*(H-T-B);
+  const done=(p.tasks||[]).filter(t=>t.status==='تم'&&t.doneAt).map(t=>t.doneAt.slice(0,10)).sort();
+  const todayX=X(td<start?start:(td>end?end:td));
+  let pts=[`${X(start)},${Y(0)}`]; let c=0;
+  done.forEach(d=>{ const x=X(d<start?start:d); pts.push(`${x},${Y(c)}`); c++; pts.push(`${x},${Y(c)}`); });
+  pts.push(`${todayX},${Y(c)}`);
+  const grid=[0,.25,.5,.75,1].map(f=>{ const y=Y(total*f); return `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--border)" stroke-width="1"/><text x="${L-6}" y="${y+3}" text-anchor="end">${Math.round(total*f)}</text>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="منحنى الإنجاز">${grid}
+   <line x1="${X(start)}" y1="${Y(0)}" x2="${X(end)}" y2="${Y(total)}" stroke="var(--text-3)" stroke-width="1.5" stroke-dasharray="5 4"/>
+   <line x1="${todayX}" x2="${todayX}" y1="${T}" y2="${H-B}" stroke="var(--purple)" stroke-width="1" stroke-dasharray="2 3"/>
+   <polyline points="${pts.join(' ')}" fill="none" stroke="${plnColor(p)}" stroke-width="2.6" stroke-linejoin="round"/>
+   <circle cx="${todayX}" cy="${Y(c)}" r="4" fill="${plnColor(p)}"/>
+   </svg><div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-3);padding:0 4px"><span>${fmtDate(start)}</span><span>${fmtDate(end)}</span></div>`;
+}
+
+/* --- tasks tab --- */
+function plnFilterTask(p,t){
+  const f=PLN_UI.tf, td=today();
+  if(f==='late' && !(t.status!=='تم'&&t.due&&t.due<td)) return false;
+  if(f==='prog' && t.status!=='جارٍ') return false;
+  if(f==='open' && t.status==='تم') return false;
+  if(f==='done' && t.status!=='تم') return false;
+  if(f==='hold' && t.status!=='معلّق') return false;
+  if(PLN_UI.who && (t.responsible||'')!==PLN_UI.who) return false;
+  const q=(PLN_UI.tq||'').trim().toLowerCase();
+  if(q && !((t.title||'')+' '+(t.notes||'')+' '+(t.responsible||'')+' '+(t.checklist||[]).map(c=>c.t).join(' ')).toLowerCase().includes(q)) return false;
+  return true;
+}
+function plnTasksHtml(p){
+  const who=[...new Set((p.tasks||[]).map(t=>t.responsible).filter(Boolean))];
+  let h=`<div class="pln-tbar pln-noprint">
+    <div class="pln-seg">${[['list','☰ قائمة'],['board','▦ لوحة'],['gantt','▤ زمني']].map(([k,l])=>`<button class="${PLN_UI.mode===k?'on':''}" onclick="plnMode('${k}')">${l}</button>`).join('')}</div>
+    <input type="text" id="plnTq" placeholder="بحث في المهام..." value="${esc(PLN_UI.tq||'')}" oninput="PLN_UI.tq=this.value;plnTasksRefresh()">
+    <select onchange="PLN_UI.tf=this.value;renderPlansPage()" title="تصفية">${[['all','كل المهام'],['open','غير المنجزة'],['late','المتأخرة'],['prog','الجارية'],['hold','المعلّقة'],['done','المنجزة']].map(([k,l])=>`<option value="${k}"${PLN_UI.tf===k?' selected':''}>${l}</option>`).join('')}</select>
+    ${who.length?`<select onchange="PLN_UI.who=this.value;renderPlansPage()" title="المسؤول"><option value="">كل المسؤولين</option>${who.map(w=>`<option${PLN_UI.who===w?' selected':''}>${esc(w)}</option>`).join('')}</select>`:''}
+    <button class="btn btn-glass btn-sm" onclick="plnEditPhase('${p.id}')">+ مرحلة</button><button class="btn btn-filled btn-sm" onclick="plnEditTask('${p.id}')">+ مهمة</button></div>`;
+  h+=`<div id="plnTasksBody">${plnTasksBody(p)}</div>`;
+  return h;
+}
+function plnTasksRefresh(){ const p=plnById(PLN_UI.id); const el=document.getElementById('plnTasksBody'); if(p&&el){ el.innerHTML=plnTasksBody(p); } }
+function plnTasksBody(p){
+  if(PLN_UI.mode==='board') return plnBoardHtml(p);
+  if(PLN_UI.mode==='gantt') return plnGanttHtml(p);
+  const phs=(p.phases||[]).slice();
+  const orphan=(p.tasks||[]).filter(t=>!(p.phases||[]).some(x=>x.id===t.phaseId));
+  if(orphan.length) phs.push({id:'',title:'بدون مرحلة',desc:'',_virtual:true});
+  if(!phs.length) return `<div class="pln-box pln-empty"><div style="font-size:38px">🧱</div><h3>لا توجد مراحل بعد</h3><div class="settings-desc">قسّم الخطة إلى مراحل (مثل: التشخيص، التنفيذ، المتابعة) ثم أضف المهام داخل كل مرحلة.</div><button class="btn btn-filled" onclick="plnEditPhase('${p.id}')">+ إضافة مرحلة</button></div>`;
+  const filtering = PLN_UI.tf!=='all' || PLN_UI.tq || PLN_UI.who;
+  const firstInc=phs.find(x=>plnPhaseStats(p,x.id).pct<100); const firstOpenId=firstInc?firstInc.id:null;
+  return `<div id="plnPhases">${phs.map(ph=>{
+    const all=plnPhaseTasks(p,ph.id), tasks=all.filter(t=>plnFilterTask(p,t));
+    if(filtering && !tasks.length) return '';
+    const ps=plnPhaseStats(p,ph.id);
+    const open = filtering || (PLN_UI.open[ph.id]===undefined ? ph.id===firstOpenId : !!PLN_UI.open[ph.id]);
+    const range = ph.start||ph.end ? `${ph.start?fmtDate(ph.start):''} ← ${ph.end?fmtDate(ph.end):''}` : '';
+    return `<div class="pln-phase${open?' open':''}" data-id="${ph.id}">
+      <div class="pln-phead" onclick="plnTogglePhase('${ph.id}')">
+        ${ph._virtual?'':'<span class="pln-grip pln-noprint" data-kind="phase" onclick="event.stopPropagation()" title="اسحب لإعادة ترتيب المراحل">⠿</span>'}
+        <span class="pln-chev">▸</span>
+        <div class="pt"><b>${esc(ph.title)}</b><small>${range?`<span${ph.end?dTitle(ph.end):''}>${range}</span> · `:''}${ps.done}/${ps.total} مهمة${ps.late?` · <span style="color:var(--orange)">${ps.late} متأخرة</span>`:''}</small></div>
+        <div class="pb"><div class="pln-bar"><i style="width:${ps.pct}%"></i></div></div><div class="pp">${ps.pct}%</div>
+        ${ph._virtual?'':`<button class="urg-act pln-noprint" onclick="event.stopPropagation();plnEditPhase('${p.id}','${ph.id}')">✎</button>`}
+      </div>
+      <div class="pln-pbody"><div class="pln-tasks" data-phase="${ph.id}">${tasks.map(t=>plnTaskRow(p,t)).join('')}</div>
+        <div class="pln-qadd pln-noprint"><input type="text" placeholder="+ مهمة جديدة في «${esc(ph.title)}» — اكتب واضغط Enter" onkeydown="if(event.key==='Enter')plnQuickTask('${p.id}','${ph.id}',this)"></div></div></div>`; }).join('')}</div>`;
+}
+function plnTogglePhase(id){ const cur=document.querySelector(`.pln-phase[data-id="${id}"]`); const o=cur?cur.classList.contains('open'):false; PLN_UI.open[id]=!o; if(cur) cur.classList.toggle('open',!o); }
+function plnTaskRow(p,t){
+  const cl=t.checklist||[], cd=cl.filter(c=>c.done).length, uq=t.urgentId?TASKS.find(x=>x.id===t.urgentId):null;
+  const open=!!PLN_UI.cl[t.id];
+  return `<div class="pln-task ${PLN_TCLS[t.status]||'s-new'}" data-id="${t.id}">
+    <span class="pln-grip pln-noprint" data-kind="task" title="اسحب لإعادة الترتيب">⠿</span>
+    <button class="pln-st pln-noprint" onclick="plnCycle('${p.id}','${t.id}')" title="${esc(t.status)} — اضغط لتغيير الحالة">${PLN_TICON[t.status]||'○'}</button>
+    <div class="pln-tbody" onclick="plnEditTask('${p.id}','${t.id}')">
+      <div class="pln-ttitle"><span class="pln-p-dot" style="background:${PLN_PRI_COLOR[t.priority]||'var(--text-3)'};margin-left:6px" title="${esc(t.priority||'')}"></span>${esc(t.title)}</div>
+      <div class="pln-tmeta">${t.status==='معلّق'?'<span class="badge">⏸ معلّقة</span>':''}${plnDue(t)}${t.responsible?`<span class="badge">👤 ${esc(t.responsible)}</span>`:''}${cl.length?`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();plnToggleCl('${t.id}')">☑ ${cd}/${cl.length}</span>`:''}${t.notes?'<span class="badge" title="'+esc(t.notes.slice(0,120))+'">📝</span>':''}${uq?`<span class="badge" style="${uq.done?'background:var(--green-glow);color:var(--green)':''}">⚡ ${uq.done?'أُنجزت في العاجلة':'في العاجلة'}</span>`:''}</div>
+      ${cl.length&&open?`<div class="pln-cl" onclick="event.stopPropagation()">${cl.map(c=>`<label class="${c.done?'d':''}"><input type="checkbox" ${c.done?'checked':''} onchange="plnToggleCl2('${p.id}','${t.id}','${c.id}')"><span>${esc(c.t)}</span></label>`).join('')}</div>`:''}
+    </div>
+    ${t.urgentId?'':`<button class="urg-act pln-noprint" onclick="plnToUrgent('${p.id}','${t.id}')" title="أرسلها إلى المهام العاجلة">⚡</button>`}
+  </div>`;
+}
+function plnToggleCl(tid){ PLN_UI.cl[tid]=!PLN_UI.cl[tid]; plnTasksRefresh(); }
+function plnToggleCl2(pid,tid,cid){ const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); const c=t&&(t.checklist||[]).find(x=>x.id===cid); if(!c) return; c.done=!c.done; plnSave(p); }
+function plnSetTaskStatus(p,t,st){
+  const was=t.status; t.status=st;
+  if(st==='تم'){ t.doneAt=new Date().toISOString(); plnLog(p,`✔ أُنجزت: ${t.title}`,true); haptic(8); }
+  else { if(was==='تم') t.doneAt=''; if(was==='تم'||st==='معلّق') plnLog(p,`${st==='معلّق'?'⏸ عُلّقت':'↺ أُعيد فتح'}: ${t.title}`,true); }
+}
+function plnCycle(pid,tid){
+  const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); if(!t) return;
+  const nxt={'لم يبدأ':'جارٍ','جارٍ':'تم','تم':'لم يبدأ','معلّق':'جارٍ'}[t.status]||'جارٍ';
+  plnSetTaskStatus(p,t,nxt); plnSave(p);
+}
+function plnQuickTask(pid,phId,inp){
+  const p=plnById(pid); const title=inp.value.trim(); if(!p||!title) return;
+  const ph=(p.phases||[]).find(x=>x.id===phId);
+  p.tasks.push({id:uid(),phaseId:phId||'',title,status:'لم يبدأ',priority:'متوسط',due:'',start:'',responsible:'',notes:'',checklist:[],order:plnNextOrder(p),doneAt:'',urgentId:''});
+  PLN_UI.open[phId]=true; haptic(6); plnSave(p).then(()=>{ const i=document.querySelector(`.pln-tasks[data-phase="${phId}"]`); const q=i&&i.parentNode.querySelector('.pln-qadd input'); if(q) q.focus(); });
+}
+function plnEditPhase(pid,phId){
+  const p=plnById(pid); if(!p) return; const ph=phId?(p.phases||[]).find(x=>x.id===phId):null;
+  plnForm({title:ph?'تعديل المرحلة':'مرحلة جديدة',values:ph||{},
+    fields:[{k:'title',label:'اسم المرحلة',type:'text',full:true,req:true},{k:'desc',label:'وصف مختصر',type:'textarea',full:true,rows:2},{k:'start',label:'البداية',type:'date'},{k:'end',label:'النهاية',type:'date'}],
+    onSave:v=>{ if(ph){ Object.assign(ph,v); logActivity('edit','plan',`تعديل مرحلة في ${p.title}: ${v.title}`); } else { const n={id:uid(),...v}; p.phases.push(n); PLN_UI.open[n.id]=true; plnLog(p,`أُضيفت مرحلة: ${v.title}`,true); } plnSave(p); },
+    onDelete: ph? ()=>{
+      const n=plnPhaseTasks(p,ph.id).length;
+      _showConfirm(`حذف المرحلة «${ph.title}»${n?` مع ${n} مهمة بداخلها`:''}؟`,{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(!ok) return; p.tasks=p.tasks.filter(t=>t.phaseId!==ph.id); p.phases=p.phases.filter(x=>x.id!==ph.id); plnLog(p,`حُذفت مرحلة: ${ph.title}`,true); plnSave(p); });
+    } : null});
+}
+function plnEditTask(pid,tid,phId){
+  const p=plnById(pid); if(!p) return; const t=tid?(p.tasks||[]).find(x=>x.id===tid):null;
+  const phOpts=[['','— بدون مرحلة —'],...(p.phases||[]).map(x=>[x.id,x.title])];
+  const vals=t?t:{status:'لم يبدأ',priority:'متوسط',phaseId:phId||(p.phases[0]&&p.phases[0].id)||''};
+  plnForm({title:t?'تعديل المهمة':'مهمة جديدة',values:vals,wide:true,
+    fields:[
+      {k:'title',label:'عنوان المهمة',type:'text',full:true,req:true},
+      {k:'phaseId',label:'المرحلة',type:'select',opts:phOpts},
+      {k:'status',label:'الحالة',type:'select',opts:PLN_TSTATUS},
+      {k:'priority',label:'الأولوية',type:'select',opts:['عاجل','متوسط','عادي']},
+      {k:'responsible',label:'المسؤول',type:'text',list:'plnWhoList'},
+      {k:'start',label:'تاريخ البدء',type:'date'},
+      {k:'due',label:'الموعد النهائي',type:'date'},
+      {k:'checklist',label:'قائمة التحقق (خطوات المهمة)',type:'checklist',full:true},
+      {k:'notes',label:'ملاحظات',type:'textarea',full:true,rows:3}],
+    onSave:v=>{
+      if(t){ const was=t.status; const {status,...rest}=v; Object.assign(t,rest); if(status!==was) plnSetTaskStatus(p,t,status); logActivity('edit','plan',`تعديل مهمة في ${p.title}: ${t.title}`); }
+      else { const n={id:uid(),...v,status:'لم يبدأ',order:plnNextOrder(p),doneAt:'',urgentId:''}; p.tasks.push(n); if(v.status&&v.status!=='لم يبدأ') plnSetTaskStatus(p,n,v.status); PLN_UI.open[n.phaseId]=true; plnLog(p,`أُضيفت مهمة: ${v.title}`,true); }
+      plnSave(p); },
+    onDelete: t? ()=>_showConfirm(`حذف المهمة «${t.title}»؟`,{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(!ok) return; p.tasks=p.tasks.filter(x=>x.id!==t.id); plnLog(p,`حُذفت مهمة: ${t.title}`,true); plnSave(p); }) : null});
+}
+function plnToUrgent(pid,tid){
+  const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); if(!t||t.urgentId) return;
+  const ph=(p.phases||[]).find(x=>x.id===t.phaseId);
+  const x={id:uid(),quick:true,done:false,title:t.title,type:'متابعة',priority:t.priority||'عاجل',date:t.due||today(),notes:`من خطة «${p.title}»${ph?` — ${ph.title}`:''}`,responsible:t.responsible||'',fileId:p.fileId||'',groupId:'',category:'',roundId:'',parentId:'',order:urgNextOrder(),createdAt:new Date().toISOString(),doneAt:''};
+  const f=x.fileId?fileOf(x.fileId):null; if(f) x.category=f.category||'';
+  TASKS.push(x); t.urgentId=x.id; plnLog(p,`⚡ أُرسلت إلى المهام العاجلة: ${t.title}`,true);
+  const sync=urgSyncToFile(x);
+  logActivity('add','task',`إرسال مهمة من خطة إلى العاجلة: ${t.title}`);
+  Promise.all([urgPersist(x.id,sync), plnSave(p)]).then(()=>{ _showToast('أُضيفت إلى «المهام العاجلة» ⚡','success'); });
+}
+
+/* --- board --- */
+function plnBoardHtml(p){
+  const cols=PLN_TSTATUS.map(st=>{
+    const T=plnSorted(p).filter(t=>t.status===st && plnFilterTask(p,t));
+    return `<div class="pln-col" data-status="${st}"><h5><span>${PLN_TICON[st]} ${st}</span><span>${T.length}</span></h5><div class="pln-colbody" data-status="${st}" style="min-height:40px">${T.map(t=>{
+      const ph=(p.phases||[]).find(x=>x.id===t.phaseId); const cl=t.checklist||[];
+      return `<div class="pln-card2" data-id="${t.id}"><span class="pln-grip" data-kind="card" title="اسحب لتغيير الحالة">⠿</span><div style="flex:1;min-width:0;cursor:pointer" onclick="plnEditTask('${p.id}','${t.id}')"><div class="pln-ttitle" style="font-size:13px">${esc(t.title)}</div><div class="pln-tmeta">${ph?`<span class="badge">${esc(ph.title)}</span>`:''}${plnDue(t)}${t.responsible?`<span class="badge">👤 ${esc(t.responsible)}</span>`:''}${cl.length?`<span class="badge">☑ ${cl.filter(c=>c.done).length}/${cl.length}</span>`:''}</div></div></div>`; }).join('')}</div></div>`;
+  }).join('');
+  return `<div class="settings-desc pln-noprint" style="margin-bottom:8px">اسحب البطاقة بالمقبض ⠿ إلى عمود آخر لتغيير حالتها.</div><div class="pln-board">${cols}</div>`;
+}
+
+/* --- gantt --- */
+function plnGanttHtml(p){
+  const dates=[]; if(p.start) dates.push(p.start); if(p.end) dates.push(p.end);
+  (p.phases||[]).forEach(ph=>{ if(ph.start)dates.push(ph.start); if(ph.end)dates.push(ph.end); });
+  (p.tasks||[]).forEach(t=>{ if(t.start)dates.push(t.start); if(t.due)dates.push(t.due); });
+  dates.push(today());
+  dates.sort(); let a=dates[0], b=dates[dates.length-1]; if(plnDays(a,b)<14) b=plnAdd(a,14);
+  const span=plnDays(a,b);
+  const pos=iso=>Math.min(100,Math.max(0,plnDays(a,iso)/span*100));
+  const bar=(s,e,cls,prog,onclick,title)=>{ const r=pos(s), w=Math.max(0.8,pos(e)-pos(s)); return `<div class="pln-g-bar ${cls||''}" style="right:${r}%;width:${w}%" ${onclick?`onclick="${onclick}"`:''} title="${esc(title||'')}">${prog!=null?`<i style="width:${prog}%"></i>`:''}</div>`; };
+  const ticks=[0,1,2,3,4,5,6].map(i=>{ const d=plnAdd(a,Math.round(span*i/6)); return `<span style="right:${i/6*100}%">${fmtDate(d)}</span>`; }).join('');
+  let rows='';
+  (p.phases||[]).forEach(ph=>{
+    const T=plnPhaseTasks(p,ph.id).filter(t=>plnFilterTask(p,t)); const ps=plnPhaseStats(p,ph.id);
+    const ts=T.map(t=>t.start||t.due).filter(Boolean).sort(), te=T.map(t=>t.due).filter(Boolean).sort();
+    const s0=ph.start||ts[0], e0=ph.end||te[te.length-1];
+    rows+=`<div class="pln-g-row ph"><div class="pln-g-l" title="${esc(ph.title)}">${esc(ph.title)}</div><div class="pln-g-t">${s0&&e0?bar(s0,e0,'',ps.pct,'','التقدم '+ps.pct+'%'):''}</div></div>`;
+    T.forEach(t=>{
+      const late=t.status!=='تم'&&t.due&&t.due<today();
+      const s1=t.start||(t.due?plnAdd(t.due,-1):''), e1=t.due||t.start;
+      rows+=`<div class="pln-g-row"><div class="pln-g-l" title="${esc(t.title)}">${esc(t.title)}</div><div class="pln-g-t">${s1&&e1?bar(s1,e1,t.status==='تم'?'done':late?'late':'',null,`plnEditTask('${p.id}','${t.id}')`,t.title+(t.due?' — '+fmtDate(t.due):'')):''}</div></div>`;
+    });
+  });
+  const none=(p.tasks||[]).filter(t=>!t.due&&!t.start).length;
+  return `<div class="pln-gantt"><div class="pln-g-in"><div style="position:relative"><div class="pln-g-axis">${ticks}</div>
+    <div style="position:relative;margin-right:170px"><div class="pln-g-today" style="right:${pos(today())}%"></div></div>
+    <div style="position:relative">${rows||'<div class="tasks-empty-note">أضف مراحل ومهامًا بتواريخ لتظهر هنا.</div>'}</div></div></div></div>
+    <div class="pln-legend"><span><i style="background:${plnColor(p)}"></i>جارية / لم تبدأ</span><span><i style="background:var(--green)"></i>منجزة</span><span><i style="background:var(--orange)"></i>متأخرة</span>${none?`<span>(${none} مهمة بلا تواريخ لا تظهر)</span>`:''}</div>`;
+}
+
+/* --- risks --- */
+function plnRiskClass(sc){ return sc>=15?'pln-r4':sc>=10?'pln-r3':sc>=5?'pln-r2':'pln-r1'; }
+function plnRisksHtml(p){
+  const R=(p.risks||[]).slice().sort((a,b)=>(b.prob*b.impact)-(a.prob*a.impact));
+  const open=R.filter(r=>r.status!=='مُغلق');
+  let cells='<div class="ax"></div>'+[1,2,3,4,5].map(i=>`<div class="ax">${i}</div>`).join('');
+  for(let im=5;im>=1;im--){
+    cells+=`<div class="ax">${im}</div>`;
+    for(let pr=1;pr<=5;pr++){
+      const here=open.filter(r=>r.prob===pr&&r.impact===im);
+      cells+=`<div class="c ${plnRiskClass(pr*im)}">${here.map(r=>`<span class="dot" onclick="plnEditRisk('${p.id}','${r.id}')" title="${esc(r.title)}">${R.indexOf(r)+1}</span>`).join('')}</div>`;
+    }
+  }
+  return `<div class="pln-risk-wrap"><div><div class="pln-box"><h4><span>مصفوفة المخاطر</span></h4><div class="pln-mx">${cells}</div>
+    <div class="pln-note" style="text-align:center">الأفقي: الاحتمال (1 ← 5) · العمودي: الأثر (1 ↑ 5) — الرقم داخل الدائرة هو ترتيب الخطر في القائمة</div></div></div>
+    <div><div class="section-head" style="margin-bottom:10px"><h4 style="margin:0">سجل المخاطر (${open.length} مفتوحة)</h4><button class="btn btn-filled btn-sm" onclick="plnEditRisk('${p.id}')">+ خطر</button></div>
+    ${R.length? R.map((r,i)=>{ const sc=r.prob*r.impact; return `<div class="pln-item" onclick="plnEditRisk('${p.id}','${r.id}')" style="${r.status==='مُغلق'?'opacity:.55':''}"><div class="sc ${plnRiskClass(sc)}">${sc}</div><div class="b"><b>${i+1}. ${esc(r.title)}</b><div class="pln-tmeta"><span class="badge">احتمال ${r.prob}</span><span class="badge">أثر ${r.impact}</span><span class="badge">${esc(r.status||'مفتوح')}</span>${r.owner?`<span class="badge">👤 ${esc(r.owner)}</span>`:''}</div>${r.mitigation?`<p>🛡️ ${esc(r.mitigation)}</p>`:''}</div></div>`; }).join('') : '<div class="tasks-empty-note">لا مخاطر مسجلة. سجّل ما يمكن أن يعطّل الخطة وكيف ستعالجه.</div>'}</div></div>`;
+}
+function plnEditRisk(pid,rid){
+  const p=plnById(pid); if(!p) return; const r=rid?p.risks.find(x=>x.id===rid):null;
+  const sc=[1,2,3,4,5].map(n=>[n,n+(n===1?' — منخفض جدًا':n===5?' — مرتفع جدًا':'')]);
+  plnForm({title:r?'تعديل خطر':'خطر جديد',values:r||{prob:3,impact:3,status:'مفتوح'},
+    fields:[{k:'title',label:'وصف الخطر',type:'textarea',full:true,rows:2,req:true},{k:'prob',label:'الاحتمال (1-5)',type:'select',opts:sc},{k:'impact',label:'الأثر (1-5)',type:'select',opts:sc},
+      {k:'status',label:'الحالة',type:'select',opts:['مفتوح','قيد المعالجة','مُغلق']},{k:'owner',label:'مسؤول المعالجة',type:'text',list:'plnWhoList'},{k:'mitigation',label:'خطة المعالجة / التخفيف',type:'textarea',full:true,rows:3}],
+    onSave:v=>{ v.prob=+v.prob; v.impact=+v.impact; if(r) Object.assign(r,v); else { p.risks.push({id:uid(),...v}); plnLog(p,`⚠️ سُجّل خطر: ${v.title}`,true); } plnSave(p); },
+    onDelete:r? ()=>_showConfirm('حذف هذا الخطر؟',{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(ok){ p.risks=p.risks.filter(x=>x.id!==r.id); plnSave(p); } }) : null});
+}
+
+/* --- decisions --- */
+function plnDecisionsHtml(p){
+  const D=(p.decisions||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  return `<div class="section-head" style="margin-bottom:10px"><div class="settings-desc" style="margin:0">سجل القرارات: لماذا قررنا ما قررنا، ومن قرر، وماذا بدائلنا — مرجع نفيس عند المراجعة لاحقًا.</div><button class="btn btn-filled btn-sm" onclick="plnEditDecision('${p.id}')">+ قرار</button></div>
+  ${D.length? `<div class="pln-log">${D.map(d=>`<div class="it" style="cursor:pointer" onclick="plnEditDecision('${p.id}','${d.id}')"><span class="d"${dTitle(d.date)}>${d.date?fmtDate(d.date):''}${d.by?' · '+esc(d.by):''}</span><b>${esc(d.title)}</b>${d.rationale?`<div style="color:var(--text-2);white-space:pre-wrap">${esc(d.rationale)}</div>`:''}${d.alternatives?`<div style="color:var(--text-3);font-size:12px;white-space:pre-wrap">البدائل: ${esc(d.alternatives)}</div>`:''}</div>`).join('')}</div>` : '<div class="tasks-empty-note">لا قرارات مسجلة.</div>'}`;
+}
+function plnEditDecision(pid,did){
+  const p=plnById(pid); if(!p) return; const d=did?p.decisions.find(x=>x.id===did):null;
+  plnForm({title:d?'تعديل قرار':'قرار جديد',values:d||{date:today()},
+    fields:[{k:'title',label:'القرار',type:'text',full:true,req:true},{k:'date',label:'التاريخ',type:'date'},{k:'by',label:'صاحب القرار',type:'text',list:'plnWhoList'},{k:'rationale',label:'المبررات',type:'textarea',full:true,rows:3},{k:'alternatives',label:'البدائل التي استُبعدت',type:'textarea',full:true,rows:2}],
+    onSave:v=>{ if(d) Object.assign(d,v); else { p.decisions.push({id:uid(),...v}); plnLog(p,`⚖️ قرار: ${v.title}`,true); } plnSave(p); },
+    onDelete:d? ()=>_showConfirm('حذف هذا القرار؟',{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(ok){ p.decisions=p.decisions.filter(x=>x.id!==d.id); plnSave(p); } }) : null});
+}
+
+/* --- KPIs --- */
+function plnKpiPct(k){ const a=+k.start||0, b=+k.target||0, c=+k.current||0; if(a===b) return c===b?100:0; return Math.max(0,Math.min(100,Math.round((c-a)/(b-a)*100))); }
+function plnKpisHtml(p){
+  const K=p.kpis||[];
+  return `<div class="section-head" style="margin-bottom:10px"><div class="settings-desc" style="margin:0">مؤشرات الأداء: أرقام تقيس نجاح الخطة (وليس فقط إنجاز المهام). حدّث القيمة الحالية دوريًا.</div><button class="btn btn-filled btn-sm" onclick="plnEditKpi('${p.id}')">+ مؤشر</button></div>
+  ${K.length? K.map(k=>{ const pc=plnKpiPct(k); return `<div class="pln-kpi" onclick="plnEditKpi('${p.id}','${k.id}')"><div class="r"><b>${esc(k.name)}</b><span>${k.current}${esc(k.unit&&k.unit.length<3?k.unit:'')} / ${k.target}${esc(k.unit&&k.unit.length<3?k.unit:'')}${k.unit&&k.unit.length>=3?' '+esc(k.unit):''} · ${pc}%</span></div><div class="pln-bar"><i style="width:${pc}%"></i></div></div>`; }).join('') : '<div class="tasks-empty-note">لا مؤشرات بعد.</div>'}`;
+}
+function plnEditKpi(pid,kid){
+  const p=plnById(pid); if(!p) return; const k=kid?p.kpis.find(x=>x.id===kid):null;
+  plnForm({title:k?'تعديل مؤشر':'مؤشر جديد',values:k||{start:0,current:0,target:100,unit:'%'},
+    fields:[{k:'name',label:'اسم المؤشر',type:'text',full:true,req:true},{k:'unit',label:'الوحدة',type:'text',ph:'% / عميل / ريال'},{k:'start',label:'القيمة الابتدائية',type:'number'},{k:'current',label:'القيمة الحالية',type:'number'},{k:'target',label:'المستهدف',type:'number'}],
+    onSave:v=>{ if(k){ const ch=v.current!==k.current; Object.assign(k,v); if(ch) plnLog(p,`📊 ${k.name}: ${k.current}${k.unit}`,true); } else p.kpis.push({id:uid(),...v}); plnSave(p); },
+    onDelete:k? ()=>_showConfirm('حذف هذا المؤشر؟',{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(ok){ p.kpis=p.kpis.filter(x=>x.id!==k.id); plnSave(p); } }) : null});
+}
+
+/* --- references & stakeholders --- */
+function plnRefsHtml(p){
+  const R=p.resources||[], ids=p.contactIds||[];
+  const people=ids.map(id=>CONTACTS.find(c=>c.id===id)).filter(Boolean);
+  const free=CONTACTS.filter(c=>!ids.includes(c.id));
+  return `<div class="pln-cols2"><div><div class="section-head" style="margin-bottom:10px"><h4 style="margin:0">🔗 المراجع والروابط</h4><button class="btn btn-filled btn-sm" onclick="plnEditRes('${p.id}')">+ مرجع</button></div>
+   ${R.length? R.map(r=>`<div class="pln-item" onclick="plnEditRes('${p.id}','${r.id}')"><div class="b"><b>${esc(r.title)}</b>${r.url?`<p><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${esc(r.url)}</a></p>`:''}${r.note?`<p>${esc(r.note)}</p>`:''}</div></div>`).join('') : '<div class="tasks-empty-note">لا مراجع.</div>'}</div>
+   <div><div class="section-head" style="margin-bottom:10px"><h4 style="margin:0">👥 الأطراف المعنية</h4></div>
+   ${people.map(c=>`<div class="pln-item"><div class="b"><b>${esc(c.name)}</b><p>${esc(c.role||'')}${c.phone?' · '+esc(c.phone):''}</p></div><button class="urg-act" onclick="plnRemovePerson('${p.id}','${c.id}')">إزالة</button></div>`).join('') || '<div class="tasks-empty-note">لم تُربط جهات اتصال بالخطة.</div>'}
+   ${free.length?`<select onchange="plnAddPerson('${p.id}',this.value)" style="width:100%"><option value="">+ ربط جهة اتصال بالخطة…</option>${free.map(c=>`<option value="${c.id}">${esc(c.name)}${c.role?' — '+esc(c.role):''}</option>`).join('')}</select>`:''}</div></div>`;
+}
+function plnAddPerson(pid,cid){ const p=plnById(pid); if(!p||!cid) return; (p.contactIds=p.contactIds||[]).push(cid); plnSave(p); }
+function plnRemovePerson(pid,cid){ const p=plnById(pid); if(!p) return; p.contactIds=(p.contactIds||[]).filter(x=>x!==cid); plnSave(p); }
+function plnEditRes(pid,rid){
+  const p=plnById(pid); if(!p) return; const r=rid?p.resources.find(x=>x.id===rid):null;
+  plnForm({title:r?'تعديل مرجع':'مرجع جديد',values:r||{},fields:[{k:'title',label:'العنوان',type:'text',full:true,req:true},{k:'url',label:'الرابط',type:'text',full:true,ph:'https://...'},{k:'note',label:'ملاحظة',type:'textarea',full:true,rows:2}],
+    onSave:v=>{ if(v.url && !/^https?:\/\//i.test(v.url)) v.url='https://'+v.url; if(r) Object.assign(r,v); else p.resources.push({id:uid(),...v}); plnSave(p); },
+    onDelete:r? ()=>{ p.resources=p.resources.filter(x=>x.id!==r.id); plnSave(p); } : null});
+}
+
+/* --- log --- */
+function plnLogItem(p,l,del){ return `<div class="it ${l.auto?'auto':''}"><span class="d"${dTitleTs(l.ts)}>${fmtDateTime(l.ts)}${l.auto?' · تلقائي':''}</span>${del?`<button class="x" onclick="plnDelLog('${p.id}','${l.id}')" title="حذف">✕</button>`:''}${esc(l.text)}</div>`; }
+function plnLogHtml(p){
+  return `<div class="pln-quick" style="margin:0 0 14px"><input type="text" id="plnQuickNote" placeholder="سجّل ملاحظة أو تطورًا… Enter" onkeydown="if(event.key==='Enter')plnQuickNote('${p.id}')"><button class="btn btn-filled btn-sm" onclick="plnQuickNote('${p.id}')">إضافة</button></div>
+  <div class="pln-log">${(p.log||[]).map(l=>plnLogItem(p,l,true)).join('')||'<div class="tasks-empty-note">لا سجل.</div>'}</div>`;
+}
+function plnDelLog(pid,lid){ const p=plnById(pid); if(!p) return; p.log=p.log.filter(x=>x.id!==lid); plnSave(p); }
+
+/* ---------- export: text summary & printable report ---------- */
+function plnSummaryText(p){
+  const s=plnStats(p); const L=[];
+  L.push(`📌 ${p.title}`, `الحالة: ${p.status} — ${s.health.l}`, `الإنجاز: ${s.pct}% (${s.done}/${s.total} مهمة)`+(s.late?` — ${s.late} متأخرة`:''));
+  if(p.start||p.end) L.push(`المدة: ${p.start?fmtDate(p.start):'—'} ← ${p.end?fmtDate(p.end):'—'}`+(s.daysLeft!=null?` (${s.daysLeft>=0?'متبقي '+s.daysLeft+' يومًا':'تجاوزت '+(-s.daysLeft)+' يومًا'})`:''));
+  if(p.goal) L.push('', `🎯 الهدف: ${p.goal}`);
+  (p.phases||[]).forEach(ph=>{ const ps=plnPhaseStats(p,ph.id); L.push('', `▪ ${ph.title} — ${ps.pct}%`); plnPhaseTasks(p,ph.id).forEach(t=>L.push(`   ${t.status==='تم'?'✅':t.status==='جارٍ'?'🔄':t.status==='معلّق'?'⏸':'⬜'} ${t.title}${t.due?' ('+fmtDate(t.due)+')':''}${t.responsible?' — '+t.responsible:''}`)); });
+  const hi=(p.risks||[]).filter(r=>r.status!=='مُغلق'&&r.prob*r.impact>=10); if(hi.length){ L.push('', '⚠️ أبرز المخاطر:'); hi.forEach(r=>L.push(`   • ${r.title}`)); }
+  return L.join('\n');
+}
+function plnCopySummary(id){
+  const p=plnById(id); if(!p) return; const txt=plnSummaryText(p);
+  const done=()=>_showToast('تم نسخ الملخص','success');
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>plnForm({title:'الملخص',noSave:true,bodyHtml:`<textarea rows="14" style="width:100%" onfocus="this.select()">${esc(txt)}</textarea>`}));
+  else plnForm({title:'الملخص',noSave:true,bodyHtml:`<textarea rows="14" style="width:100%" onfocus="this.select()">${esc(txt)}</textarea>`});
+}
+function plnPrint(id){
+  const p=plnById(id); if(!p) return; const s=plnStats(p);
+  const E=esc, col=plnColor(p);
+  const rows=(p.phases||[]).map(ph=>{ const ps=plnPhaseStats(p,ph.id); return `<h3>${E(ph.title)} <small>— ${ps.pct}% (${ps.done}/${ps.total})</small></h3><table><tr><th>المهمة</th><th>الحالة</th><th>المسؤول</th><th>الموعد</th></tr>${plnPhaseTasks(p,ph.id).map(t=>`<tr><td>${E(t.title)}${(t.checklist||[]).length?`<div class="cl">${t.checklist.map(c=>`${c.done?'☑':'☐'} ${E(c.t)}`).join('<br>')}</div>`:''}</td><td>${E(t.status)}</td><td>${E(t.responsible||'')}</td><td>${t.due?fmtDate(t.due):''}</td></tr>`).join('')}</table>`; }).join('');
+  const risks=(p.risks||[]).length?`<h2>المخاطر</h2><table><tr><th>الخطر</th><th>الدرجة</th><th>الحالة</th><th>المعالجة</th></tr>${p.risks.slice().sort((a,b)=>b.prob*b.impact-a.prob*a.impact).map(r=>`<tr><td>${E(r.title)}</td><td>${r.prob*r.impact}</td><td>${E(r.status||'')}</td><td>${E(r.mitigation||'')}</td></tr>`).join('')}</table>`:'';
+  const dec=(p.decisions||[]).length?`<h2>القرارات</h2><table><tr><th>التاريخ</th><th>القرار</th><th>المبررات</th></tr>${p.decisions.map(d=>`<tr><td>${d.date?fmtDate(d.date):''}</td><td>${E(d.title)}</td><td>${E(d.rationale||'')}</td></tr>`).join('')}</table>`:'';
+  const kp=(p.kpis||[]).length?`<h2>المؤشرات</h2><table><tr><th>المؤشر</th><th>الحالي</th><th>المستهدف</th><th>%</th></tr>${p.kpis.map(k=>`<tr><td>${E(k.name)}</td><td>${k.current} ${E(k.unit||'')}</td><td>${k.target} ${E(k.unit||'')}</td><td>${plnKpiPct(k)}%</td></tr>`).join('')}</table>`:'';
+  const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${E(p.title)}</title><style>
+  body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;color:#1c1c1e;margin:28px;line-height:1.7;font-size:13px}
+  h1{margin:0 0 4px;font-size:24px;border-bottom:3px solid ${col};padding-bottom:8px} h2{margin:26px 0 8px;font-size:17px;color:${col}} h3{margin:18px 0 6px;font-size:14px} h3 small{color:#666;font-weight:400}
+  .meta{color:#555;margin:6px 0 14px} .kp{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0} .kp div{border:1px solid #ddd;border-radius:8px;padding:8px 14px;min-width:110px} .kp b{display:block;font-size:20px}
+  table{width:100%;border-collapse:collapse;margin-bottom:6px} th,td{border:1px solid #ccc;padding:5px 8px;text-align:right;vertical-align:top} th{background:#f0f0f4} .cl{color:#555;font-size:11.5px;margin-top:4px}
+  .foot{margin-top:28px;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:8px} @media print{body{margin:12mm} h3,table{page-break-inside:avoid}}
+  </style></head><body><h1>${p.icon||''} ${E(p.title)}</h1>
+  <div class="meta">الحالة: ${E(p.status)} — ${E(s.health.l)}${p.owner?' · المسؤول: '+E(p.owner):''}${p.sponsor?' · الراعي: '+E(p.sponsor):''}${p.start?' · من '+fmtDate(p.start):''}${p.end?' إلى '+fmtDate(p.end):''}</div>
+  <div class="kp"><div><b>${s.pct}%</b>نسبة الإنجاز</div><div><b>${s.done}/${s.total}</b>مهام منجزة</div><div><b>${s.late}</b>متأخرة</div><div><b>${s.daysLeft==null?'—':s.daysLeft}</b>يوم متبقٍ</div></div>
+  ${p.goal?`<p><b>الهدف:</b> ${E(p.goal)}</p>`:''}${p.description?`<p>${E(p.description)}</p>`:''}
+  <h2>المراحل والمهام</h2>${rows||'<p>لا مراحل.</p>'}${risks}${dec}${kp}
+  <div class="foot">طُبع بتاريخ ${fmtDate(today())} — مهام صَفوان</div>
+  <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`;
+  const w=window.open('','_blank');
+  if(!w){ _showToast('اسمح بالنوافذ المنبثقة للطباعة','error'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+/* ---------- drag & drop (pointer events: mouse + touch) ---------- */
+let PLN_DRAG=null;
+function plnDragInit(){
+  const root=document.getElementById('plansRoot'); if(!root || root._dragInit) return; root._dragInit=true;
+  root.addEventListener('pointerdown',e=>{
+    const grip=e.target.closest('.pln-grip'); if(!grip) return;
+    const kind=grip.dataset.kind; if(!kind) return;
+    const item = kind==='task'?grip.closest('.pln-task') : kind==='phase'?grip.closest('.pln-phase') : grip.closest('.pln-card2');
+    if(!item) return;
+    e.preventDefault();
+    const ind=document.createElement('div'); ind.className='pln-drop-ind'; ind.style.height=Math.min(item.offsetHeight,48)+'px';
+    PLN_DRAG={kind,item,grip,pid:e.pointerId,sx:e.clientX,sy:e.clientY,ss:window.scrollY,ind};
+    item.classList.add('dragging');
+    if(kind==='phase') item.classList.remove('open');
+    try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+    grip.addEventListener('pointermove',plnDragMove); grip.addEventListener('pointerup',plnDragEnd); grip.addEventListener('pointercancel',plnDragEnd);
+  });
+}
+function plnDragMove(e){
+  const d=PLN_DRAG; if(!d||e.pointerId!==d.pid) return;
+  if(e.clientY<90) window.scrollBy(0,-14); else if(e.clientY>window.innerHeight-90) window.scrollBy(0,14);
+  /* the dragged node is only translated (never moved in the DOM) so pointer capture survives; a thin indicator shows the drop slot */
+  d.item.style.transform=`translate(${e.clientX-d.sx}px,${e.clientY-d.sy+(window.scrollY-d.ss)}px)`;
+  let box;
+  if(d.kind==='phase') box=document.getElementById('plnPhases');
+  else {
+    const under=document.elementsFromPoint(e.clientX,e.clientY).find(el=>!d.item.contains(el) && el!==d.ind);
+    const sel = d.kind==='task' ? '.pln-tasks' : '.pln-colbody';
+    box = under && under.closest(sel);
+    if(!box && d.kind==='task'){ const ph=under&&under.closest('.pln-phase'); if(ph){ box=ph.querySelector('.pln-tasks'); if(!ph.classList.contains('open')) ph.classList.add('open'); } }
+    document.querySelectorAll('.pln-col').forEach(c=>c.classList.toggle('over', !!box && c.contains(box)));
+  }
+  if(!box) return;
+  const itemSel = d.kind==='phase'?'.pln-phase':d.kind==='task'?'.pln-task':'.pln-card2';
+  const sibs=[...box.querySelectorAll(':scope > '+itemSel)].filter(c=>c!==d.item);
+  const next=sibs.find(c=>{ const r=c.getBoundingClientRect(); return e.clientY < r.top+r.height/2; });
+  if(next) box.insertBefore(d.ind,next); else box.appendChild(d.ind);
+}
+function plnDragEnd(e){
+  const d=PLN_DRAG; if(!d||e.pointerId!==d.pid) return;
+  d.grip.removeEventListener('pointermove',plnDragMove); d.grip.removeEventListener('pointerup',plnDragEnd); d.grip.removeEventListener('pointercancel',plnDragEnd);
+  d.item.classList.remove('dragging'); d.item.style.transform=''; PLN_DRAG=null;
+  if(d.ind.parentNode){ d.ind.parentNode.insertBefore(d.item,d.ind); }
+  d.ind.remove(); document.querySelectorAll('.pln-col.over').forEach(c=>c.classList.remove('over'));
+  const p=plnById(PLN_UI.id); if(!p){ renderPlansPage(); return; }
+  if(d.kind==='phase'){
+    const ids=[...document.querySelectorAll('#plnPhases > .pln-phase')].map(x=>x.dataset.id).filter(Boolean);
+    p.phases.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+  } else if(d.kind==='task'){
+    const tid=d.item.dataset.id; let ord=1;
+    document.querySelectorAll('#plnPhases .pln-tasks').forEach(box=>{ const ph=box.dataset.phase||''; box.querySelectorAll(':scope > .pln-task').forEach(el=>{ const t=p.tasks.find(x=>x.id===el.dataset.id); if(t){ t.phaseId=ph; t.order=ord++; } }); });
+    // tasks hidden by a filter keep their relative order after the visible ones
+    p.tasks.filter(t=>!document.querySelector(`.pln-task[data-id="${t.id}"]`)).forEach(t=>{ t.order=ord++; });
+  } else {
+    const box=d.item.closest('.pln-colbody'); const t=p.tasks.find(x=>x.id===d.item.dataset.id);
+    if(box && t && box.dataset.status!==t.status) plnSetTaskStatus(p,t,box.dataset.status);
+  }
+  haptic(8); plnSave(p);
+}
+function plnAfterRender(p){ plnDragInit(); }
+
+plnUpdateBadge();
 
 /* ---------- toast / confirm ---------- */
 function _showToast(msg, type='info', duration=3000){
