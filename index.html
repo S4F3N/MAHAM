@@ -137,6 +137,31 @@
   @keyframes pageFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
   @media(prefers-reduced-motion:reduce){.page.active{animation:none;}}
 
+
+  /* ===== AI layer ===== */
+  #axOverlay{z-index:800;}
+  .ax-loading{display:flex;align-items:center;gap:10px;justify-content:center;padding:34px 10px;color:var(--text-2);font-size:14px;}
+  .ax-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--surface-3);border-top-color:var(--accent);animation:axspin .8s linear infinite;display:inline-block;}
+  @keyframes axspin{to{transform:rotate(360deg);}}
+  .ax-text{font-size:14px;line-height:1.8;}
+  .ax-text h4{margin:12px 0 4px;font-size:14px;color:var(--accent);}
+  .ax-text p{margin:0 0 8px;} .ax-text ul{margin:0 0 8px;padding-inline-start:20px;} .ax-text li{margin-bottom:3px;}
+  .ax-priv{font-size:11.5px;color:var(--text-3);margin-top:12px;line-height:1.6;}
+  .ax-opts{display:grid;gap:8px;}
+  .ax-opt{display:flex;gap:12px;align-items:center;text-align:start;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 13px;cursor:pointer;color:var(--text-1);font-family:inherit;}
+  .ax-opt:hover{background:var(--surface-3);}
+  .ax-opt>span{font-size:22px;} .ax-opt b{display:block;font-size:14px;} .ax-opt small{display:block;color:var(--text-2);font-size:12px;margin-top:2px;}
+  .ax-picks{display:grid;gap:7px;}
+  .ax-pick{display:flex;gap:10px;align-items:flex-start;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:9px 12px;cursor:pointer;}
+  .ax-pick input{margin-top:4px;flex:none;} .ax-pick b{font-size:13.5px;display:block;} .ax-pick small{display:block;color:var(--text-2);font-size:12px;margin-top:2px;}
+  .ax-ol{padding-inline-start:22px;margin:8px 0;} .ax-ol li{margin-bottom:8px;font-size:14px;} .ax-ol small{display:block;color:var(--text-2);font-size:12px;}
+  .ax-chatlog{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  .ax-msg{padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.7;max-width:92%;}
+  .ax-msg.u{background:var(--accent-glow);align-self:flex-start;} .ax-msg.a{background:var(--surface-2);align-self:flex-end;}
+  .ax-msg p{margin:0 0 4px;} .ax-msg ul{margin:0;padding-inline-start:18px;}
+  .ax-fbtn{margin-top:6px;}
+  .ax-scopebox{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;} .ax-scope{font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;}
+  #axCmdIn{width:100%;}
   .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
   .settings-fold-head{cursor:pointer;margin-bottom:0;}
   .settings-fold-count{font-size:11.5px;color:var(--text-3);font-weight:500;}
@@ -930,6 +955,7 @@
       <div class="icon-btn" id="notifBtn" title="التنبيهات">🔔<span class="notif-badge" id="notifBadge" style="display:none"></span></div>
       <div class="notif-drop" id="notifDrop"></div>
     </div>
+    <div class="icon-btn" id="axCmdBtn" title="اطلب من المساعد (أمر سريع)" onclick="axCommandOpen()">✨</div>
     <div class="icon-btn" id="aiBtn" title="المساعد الذكي" onclick="openAIApp()">🤖</div>
     <div class="icon-btn" id="themeToggle" title="تبديل المظهر">🌙</div>
   </div>
@@ -967,7 +993,7 @@
       </div>
     </div>
 
-    <div class="section-head"><h2>إجراءات مطلوبة لم تُنفذ بعد</h2></div>
+    <div class="section-head"><h2>إجراءات مطلوبة لم تُنفذ بعد</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="axBriefing(1)">✨ إحاطة اليوم</button><button class="btn btn-glass btn-sm" onclick="axBriefing(7)">✨ إحاطة الأسبوع</button></div></div>
     <div class="oc-controls" id="openControls">
       <button class="oc-btn" id="ocGroupToggleBtn" onclick="toggleOpenGrouping()">🗂 تجميع حسب المجموعة</button>
       <select class="oc-select" id="ocSort" onchange="setOpenSort(this.value)">
@@ -1072,11 +1098,12 @@
   <!-- URGENT / QUICK TASKS -->
   <section class="page" id="page-urgent">
     <div class="section-head"><h2>⚡ المهام العاجلة <span class="settings-fold-count" id="urgentCount"></span></h2>
-      <button class="btn btn-filled btn-sm" onclick="openUrgentModal(null)">+ مهمة بتفاصيل</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="axUrgentPlan()">✨ رتّب يومي</button><button class="btn btn-filled btn-sm" onclick="openUrgentModal(null)">+ مهمة بتفاصيل</button></div>
     </div>
     <div class="settings-desc" style="margin-bottom:12px;">المهام السريعة واليومية التي تخلصها الآن (تدقيق عقد، كتابة خطاب، إرسال إيميل...). ضع علامة ✓ فتنتقل إلى «المنفذة». وإذا ربطتها بملف تُسجَّل فيه تلقائيًا ضمن مسار «المهام السريعة».</div>
     <div class="urg-add">
       <input type="text" id="urgQuickInput" placeholder="اكتب مهمة عاجلة واضغط Enter..." onkeydown="if(event.key==='Enter') quickAddUrgent();">
+      <button class="btn btn-glass btn-sm" id="urgAiBtn" onclick="axUrgentParse()" title="حلّل النص بالذكاء الاصطناعي وعبّئ التفاصيل">✨</button>
       <button class="btn btn-filled btn-sm" onclick="quickAddUrgent()">إضافة</button>
     </div>
     <div id="urgentList"></div>
@@ -1105,7 +1132,7 @@
   <!-- TASKS -->
   <section class="page" id="page-tasks">
     <div class="section-head"><h2>المهام والمواعيد</h2>
-      <button class="btn btn-filled btn-sm" onclick="openTaskModal(null, today())">+ موعد / مهمة جديدة</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="axTaskParse()">✨ إضافة ذكية</button><button class="btn btn-filled btn-sm" onclick="openTaskModal(null, today())">+ موعد / مهمة جديدة</button></div>
     </div>
     <div class="settings-desc" style="margin-bottom:14px;">سجّل هنا أي موعد أو اجتماع أو مهمة وقتية أو تذكير — كل شي تحتاج ما تفوتك تاريخه، بدون ربطه بملف بالضرورة.</div>
     <div class="filter-bar">
@@ -1235,7 +1262,11 @@
       <div class="setup-actions" style="margin-top:4px;">
         <button class="btn btn-glass btn-sm" onclick="saveAIKey()">حفظ المفتاح</button>
         <button class="btn btn-danger btn-sm" onclick="clearAIKey()">حذف المفتاح</button>
+        <button class="btn btn-glass btn-sm" onclick="axTestConn(this)">اختبار الاتصال</button>
       </div>
+      <div class="settings-desc" style="margin:12px 0 6px;font-weight:600;">بيانات تُضمَّن في سياق المحادثة والبحث الذكي</div>
+      <div class="settings-desc" style="margin:0 0 6px;">الملفات تُضمَّن دائمًا. اختر ما يُضاف إليها (لا يُرسل شيء إلا عند طلبك من المساعد).</div>
+      <div id="axScopeBox" class="ax-scopebox"></div>
     </div>
 
     <div class="settings-block">
@@ -1415,6 +1446,7 @@
       <label>الإجراء المطلوب (الخطوة القادمة)</label>
       <textarea id="rActionNeeded"></textarea>
       <button type="button" class="btn btn-glass btn-sm" style="margin-top:6px;" onclick="aiSuggestRoundAction()">✨ اقترح الإجراء والأولوية</button>
+      <button type="button" class="btn btn-glass btn-sm" style="margin-top:6px;" onclick="axPolishRound(this)">✨ صياغة مهنية للجولة</button>
     </div>
     <div class="form-4col">
       <div class="form-row"><label>حالة تنفيذ الإجراء</label><select id="rExec"><option value="لم">لم يُنفذ بعد</option><option value="جارٍ">جارٍ التنفيذ</option><option value="تم">تم التنفيذ</option></select></div>
@@ -1494,7 +1526,7 @@
     <div class="modal-handle"></div>
     <h3>إنجاز المهمة</h3>
     <div class="settings-desc" id="urgNoteTitle" style="margin:0 0 8px;font-weight:600;"></div>
-    <div class="form-row"><label>ملاحظة الإنجاز (اختياري)</label><textarea id="urgNoteText" rows="4" placeholder="ماذا تم؟ نتيجة، ملاحظة، رقم مرجعي..."></textarea></div>
+    <div class="form-row"><label>ملاحظة الإنجاز (اختياري)</label><textarea id="urgNoteText" rows="4" placeholder="ماذا تم؟ نتيجة، ملاحظة، رقم مرجعي..."></textarea><button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="axSuggestDoneNote(this)">✨ اقترح الملاحظة</button></div>
     <div class="modal-actions">
       <button class="btn btn-glass" onclick="urgNoteCancel()">إلغاء</button>
       <button class="btn btn-filled" onclick="urgNoteOk()">✓ إنجاز</button>
@@ -1518,7 +1550,7 @@
       <div class="form-row"><label>الموعد (اختياري)</label><input type="date" id="uDate"></div>
       <div class="form-row"><label>المسؤول (اختياري)</label><input type="text" id="uResponsible" placeholder="اسم المسؤول"></div>
     </div>
-    <div class="form-row"><label>التفاصيل / ملاحظات</label><textarea id="uNotes"></textarea></div>
+    <div class="form-row"><label>التفاصيل / ملاحظات</label><textarea id="uNotes"></textarea><button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="axUrgentDraft()">✨ اكتب مسودة (خطاب / بريد / ملاحظات)</button></div>
     <div class="settings-block" style="margin:6px 0 12px;padding:12px 14px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:8px;">🔗 الربط (اختياري)</div>
       <div class="form-row" id="uDoneNoteRow" style="display:none"><label>ملاحظة الإنجاز</label><textarea id="uDoneNote" rows="2"></textarea></div>
@@ -1537,6 +1569,15 @@
 </div>
 
 <!-- PLANS FORM MODAL -->
+<div class="overlay" id="axOverlay" onclick="if(event.target===this)axClose()">
+  <div class="modal wide" id="axModal">
+    <div class="modal-handle"></div>
+    <h3 id="axTitle">✨ المساعد</h3>
+    <div id="axBody"></div>
+    <div class="modal-actions" id="axActions"></div>
+    <div class="modal-actions" style="margin-top:6px"><button class="btn btn-glass" onclick="axClose()">إغلاق</button></div>
+  </div>
+</div>
 <div class="overlay" id="plnFormOverlay">
   <div class="modal" id="plnFormModal">
     <div class="modal-handle"></div>
@@ -3416,6 +3457,9 @@ function renderFilePage(){
       </div>
       <div class="fh-actions">
         <button class="btn btn-glass btn-sm" onclick="aiSummarizeFile('${f.id}')">✨ تلخيص بالذكاء الاصطناعي</button>
+        <button class="btn btn-glass btn-sm" onclick="axFileAnalyze('${f.id}')">🧠 تحليل</button>
+        <button class="btn btn-glass btn-sm" onclick="axFileDraft('${f.id}')">✍️ مسودة</button>
+        <button class="btn btn-glass btn-sm" onclick="axFilePlan('${f.id}')">🧭 خطة للملف</button>
         <button class="btn btn-glass btn-sm" onclick="toggleFileCompleted('${f.id}')">${f.status==='مكتملة'?'↺ إعادة فتح':'✅ تصنيف كمكتملة'}</button>
         <button class="btn btn-glass btn-sm" onclick="openFileModal('${f.id}')">تعديل</button>
         <button class="btn btn-danger btn-sm" onclick="document.getElementById('fId').value='${f.id}'; deleteFile();">حذف</button>
@@ -3723,7 +3767,7 @@ function renderContacts(){
       ${c.email?`<div class="cline">✉️ ${esc(c.email)}</div>`:''}
       ${linkedFiles?`<div class="cline">مرتبط بـ ${linkedFiles} ملف</div>`:''}
       ${c.notes?`<div class="cline">${esc(c.notes)}</div>`:''}
-      <div class="cactions"><button class="btn btn-glass btn-sm" onclick="openContactModal('${c.id}')">تعديل</button></div>
+      <div class="cactions"><button class="btn btn-glass btn-sm" onclick="axContactMsg('${c.id}')">✨ مراسلة</button><button class="btn btn-glass btn-sm" onclick="openContactModal('${c.id}')">تعديل</button></div>
     </div>
     </div>`;
   }).join('');
@@ -3777,7 +3821,7 @@ function quickDelete(kind, id){
 }
 
 /* ---------- SETTINGS / CATEGORIES ---------- */
-function renderSettings(){
+function renderSettings(){ try{ axRenderScope(); }catch(e){}
   renderAppearanceControls();
   renderAIKeyStatus();
   document.getElementById('catList').innerHTML = CATEGORIES.map(c=>{
@@ -4510,7 +4554,7 @@ function _urgRowHtml(x, isSub){
   if(f && (!isSub || true)) b.push(`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${f.id}')" title="فتح الملف">📁 ${esc(f.title)}${x.roundId?' ✓ مسجّلة':''}</span>`);
   if(x.done && x.doneAt) b.push(`<span class="badge" style="background:var(--green-glow);color:var(--green)"${dTitleTs(x.doneAt)}>أُنجزت ${fmtDateTime(x.doneAt)}</span>`);
   const grip = x.done ? '' : `<span class="urg-grip" title="اسحب لإعادة الترتيب">⠿</span>`;
-  const addBtn = (!isSub && !x.done) ? `<button class="urg-act" onclick="event.stopPropagation();urgToggleSubAdd('${x.id}')">+ فرعية</button>` : '';
+  const addBtn = (!isSub && !x.done) ? `<button class="urg-act" onclick="event.stopPropagation();urgToggleSubAdd('${x.id}')">+ فرعية</button><button class="urg-act" onclick="event.stopPropagation();axUrgentSplit('${x.id}')" title="قسّمها بالذكاء الاصطناعي">✨ فرعيات</button>` : '';
   const row = `<div class="urg-row ${x.done?'done':''}">
     ${grip}
     <button class="urg-chk ${x.done?'on':''}" onclick="toggleUrgent('${x.id}')" title="${x.done?'إرجاع إلى قيد التنفيذ':'تمت — انقلها إلى المنفذة'}">✓</button>
@@ -4685,7 +4729,7 @@ function toggleUrgent(id){
 let _urgNoteResolve=null;
 function urgAskNote(x){
   return new Promise(res=>{
-    _urgNoteResolve=res;
+    _urgNoteResolve=res; window.__urgNoteTask=x;
     document.getElementById('urgNoteTitle').textContent=x.title;
     const t=document.getElementById('urgNoteText'); t.value='';
     document.getElementById('urgNoteOverlay').classList.add('open');
@@ -5097,7 +5141,7 @@ function plnHomeHtml(){
   focus.sort((a,b)=>a.t.due.localeCompare(b.t.due));
   const chips=[['active','الجارية'],['done','المكتملة'],['arch','المؤرشفة'],['all','الكل']].map(([k,l])=>`<button class="chip${flt===k?' active':''}" onclick="PLN_UI.filter='${k}';plnSaveUi();renderPlansPage()">${l}</button>`).join('');
   let h=`<div class="section-head"><h2>🧭 الخطط <span class="settings-fold-count">${all.length?'('+all.length+')':''}</span></h2>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="plnTemplatePicker()">📋 من قالب</button><button class="btn btn-filled btn-sm" onclick="plnNewPlan()">+ خطة جديدة</button></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="axPlanFromPrompt()">✨ خطة بالذكاء الاصطناعي</button><button class="btn btn-glass btn-sm" onclick="plnTemplatePicker()">📋 من قالب</button><button class="btn btn-filled btn-sm" onclick="plnNewPlan()">+ خطة جديدة</button></div></div>
   <div class="settings-desc" style="margin-bottom:12px;">لمتابعة المشاريع والخطط الطويلة: مراحل ومهام وجدول زمني ومخاطر وقرارات ومؤشرات وسجل تحديثات، مع مؤشر صحة تلقائي لكل خطة.</div>`;
   if(!all.length){
     h+=`<div class="pln-box pln-empty"><div style="font-size:44px">🧭</div><h3>ابدأ بأول خطة</h3><div class="settings-desc">اختر قالبًا جاهزًا (يمكنك تعديل كل شيء فيه) أو ابدأ من الصفر.</div>
@@ -5144,10 +5188,12 @@ function plnForm(cfg){
   const v=cfg.values||{};
   body.innerHTML = cfg.bodyHtml!==undefined ? cfg.bodyHtml : `<div class="pln-fgrid">${cfg.fields.map(f=>plnFieldHtml(f,v[f.k])).join('')}</div>`;
   document.getElementById('plnFormSave').style.display = cfg.noSave?'none':'';
+  document.getElementById('plnFormSave').textContent = cfg.saveLabel||'حفظ';
   document.getElementById('plnFormDel').style.display = cfg.onDelete?'inline-flex':'none';
   document.getElementById('plnFormModal').classList.toggle('wide', !!cfg.wide);
   document.getElementById('plnFormOverlay').classList.add('open');
   body.querySelectorAll('input[type=date]').forEach(upgradeDateInput);
+  (cfg.fields||[]).forEach(f=>{ if(!f.ai) return; const el=document.getElementById('plnF_'+f.k); const row=el&&el.closest('.form-row'); if(row) row.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="${f.ai}(this)">${f.aiLabel||'✨ بالذكاء الاصطناعي'}</button>`); });
   if(!cfg.noSave) setTimeout(()=>{ const f=body.querySelector('input[type=text],textarea'); if(f) f.focus(); },60);
 }
 function plnFieldHtml(f,val){
@@ -5171,7 +5217,7 @@ function plnFieldHtml(f,val){
   return `<div${cls}>${lab}<input type="text" id="${id}" value="${esc(val0)}" placeholder="${esc(f.ph||'')}"${list}></div>`;
 }
 function plnClRow(c){ return `<div class="pln-clrow" data-cl="1"><input type="checkbox" ${c.done?'checked':''}><input type="text" value="${esc(c.t||'')}" placeholder="بند..." onkeydown="if(event.key==='Enter'){event.preventDefault();plnClAdd(this.closest('[id]').id)}"><button type="button" onclick="this.parentNode.remove()" title="حذف">✕</button></div>`; }
-function plnClAdd(id){ const box=document.getElementById(id); box.insertAdjacentHTML('beforeend',plnClRow({t:'',done:false})); const r=box.querySelectorAll('.pln-clrow'); r[r.length-1].querySelector('input[type=text]').focus(); }
+function plnClAdd(id,text){ const box=document.getElementById(id); box.insertAdjacentHTML('beforeend',plnClRow({t:text||'',done:false})); const r=box.querySelectorAll('.pln-clrow'); if(!text) r[r.length-1].querySelector('input[type=text]').focus(); }
 function plnFormClose(){ document.getElementById('plnFormOverlay').classList.remove('open'); PLN_FORM=null; }
 function plnFormSave(){
   const cfg=PLN_FORM; if(!cfg||!cfg.fields) return;
@@ -5197,7 +5243,7 @@ function plnPlanFields(){
     {k:'title',label:'اسم الخطة',type:'text',full:true,req:true,ph:'مثال: إعادة تنظيم الشركة'},
     {k:'icon',label:'الأيقونة',type:'icon',full:true},
     {k:'color',label:'اللون',type:'color',full:true},
-    {k:'goal',label:'الهدف الرئيسي',type:'textarea',full:true,rows:2,ph:'ما الذي ستحققه الخطة عند نجاحها؟'},
+    {k:'goal',label:'الهدف الرئيسي',type:'textarea',full:true,rows:2,ph:'ما الذي ستحققه الخطة عند نجاحها؟',ai:'axImproveGoal',aiLabel:'✨ صغ الهدف والنطاق'},
     {k:'description',label:'وصف / نطاق الخطة',type:'textarea',full:true,rows:3},
     {k:'status',label:'الحالة',type:'select',opts:PLN_STATUS},
     {k:'priority',label:'الأولوية',type:'select',opts:['عاجل','متوسط','عادي']},
@@ -5274,6 +5320,7 @@ function plnDetailHtml(p){
       <div class="sub">${plnPill(s.health)}<span class="pln-pill blue">${esc(p.status)}</span>${p.owner?`<span class="pln-pill">👤 ${esc(p.owner)}</span>`:''}${p.start?`<span class="pln-pill"${dTitle(p.start)}>🗓️ ${fmtDate(p.start)}</span>`:''}${p.end?`<span class="pln-pill"${dTitle(p.end)}>🏁 ${fmtDate(p.end)}</span>`:''}${f?`<span class="pln-pill" style="cursor:pointer" onclick="goToFile('${f.id}')">📁 ${esc(f.title)}</span>`:''}</div></div>
     <div class="pln-actions pln-noprint">
       <select onchange="plnSetStatus('${p.id}',this.value)" title="حالة الخطة">${PLN_STATUS.map(x=>`<option${x===p.status?' selected':''}>${x}</option>`).join('')}</select>
+      <button class="btn btn-filled btn-sm" onclick="axPlanMenu('${p.id}')">✨ المساعد</button>
       <button class="btn btn-glass btn-sm" onclick="plnEditPlan('${p.id}')">✎ تعديل</button>
       <button class="btn btn-glass btn-sm" onclick="plnMenu('${p.id}')">⋯ المزيد</button>
     </div></div>
@@ -5394,7 +5441,7 @@ function plnTasksBody(p){
         <span class="pln-chev">▸</span>
         <div class="pt"><b>${esc(ph.title)}</b><small>${range?`<span${ph.end?dTitle(ph.end):''}>${range}</span> · `:''}${ps.done}/${ps.total} مهمة${ps.late?` · <span style="color:var(--orange)">${ps.late} متأخرة</span>`:''}</small></div>
         <div class="pb"><div class="pln-bar"><i style="width:${ps.pct}%"></i></div></div><div class="pp">${ps.pct}%</div>
-        ${ph._virtual?'':`<button class="urg-act pln-noprint" onclick="event.stopPropagation();plnEditPhase('${p.id}','${ph.id}')">✎</button>`}
+        ${ph._virtual?'':`<button class="urg-act pln-noprint" onclick="event.stopPropagation();axPlanSuggest('${p.id}','tasks','${ph.id}')" title="اقترح مهام لهذه المرحلة">✨</button><button class="urg-act pln-noprint" onclick="event.stopPropagation();plnEditPhase('${p.id}','${ph.id}')">✎</button>`}
       </div>
       <div class="pln-pbody"><div class="pln-tasks" data-phase="${ph.id}">${tasks.map(t=>plnTaskRow(p,t)).join('')}</div>
         <div class="pln-qadd pln-noprint"><input type="text" placeholder="+ مهمة جديدة في «${esc(ph.title)}» — اكتب واضغط Enter" onkeydown="if(event.key==='Enter')plnQuickTask('${p.id}','${ph.id}',this)"></div></div></div>`; }).join('')}</div>`;
@@ -5411,6 +5458,7 @@ function plnTaskRow(p,t){
       <div class="pln-tmeta">${t.status==='معلّق'?'<span class="badge">⏸ معلّقة</span>':''}${plnDue(t)}${t.responsible?`<span class="badge">👤 ${esc(t.responsible)}</span>`:''}${cl.length?`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();plnToggleCl('${t.id}')">☑ ${cd}/${cl.length}</span>`:''}${t.notes?'<span class="badge" title="'+esc(t.notes.slice(0,120))+'">📝</span>':''}${uq?`<span class="badge" style="${uq.done?'background:var(--green-glow);color:var(--green)':''}">⚡ ${uq.done?'أُنجزت في العاجلة':'في العاجلة'}</span>`:''}</div>
       ${cl.length&&open?`<div class="pln-cl" onclick="event.stopPropagation()">${cl.map(c=>`<label class="${c.done?'d':''}"><input type="checkbox" ${c.done?'checked':''} onchange="plnToggleCl2('${p.id}','${t.id}','${c.id}')"><span>${esc(c.t)}</span></label>`).join('')}</div>`:''}
     </div>
+    <button class="urg-act pln-noprint" onclick="axTaskMenu('${p.id}','${t.id}')" title="مساعد المهمة">✨</button>
     ${t.urgentId?'':`<button class="urg-act pln-noprint" onclick="plnToUrgent('${p.id}','${t.id}')" title="أرسلها إلى المهام العاجلة">⚡</button>`}
   </div>`;
 }
@@ -5455,7 +5503,7 @@ function plnEditTask(pid,tid,phId){
       {k:'responsible',label:'المسؤول',type:'text',list:'plnWhoList'},
       {k:'start',label:'تاريخ البدء',type:'date'},
       {k:'due',label:'الموعد النهائي',type:'date'},
-      {k:'checklist',label:'قائمة التحقق (خطوات المهمة)',type:'checklist',full:true},
+      {k:'checklist',label:'قائمة التحقق (خطوات المهمة)',type:'checklist',full:true,ai:'axFillChecklist',aiLabel:'✨ اقترح الخطوات'},
       {k:'notes',label:'ملاحظات',type:'textarea',full:true,rows:3}],
     onSave:v=>{
       if(t){ const was=t.status; const {status,...rest}=v; Object.assign(t,rest); if(status!==was) plnSetTaskStatus(p,t,status); logActivity('edit','plan',`تعديل مهمة في ${p.title}: ${t.title}`); }
@@ -5530,7 +5578,7 @@ function plnRisksHtml(p){
   }
   return `<div class="pln-risk-wrap"><div><div class="pln-box"><h4><span>مصفوفة المخاطر</span></h4><div class="pln-mx">${cells}</div>
     <div class="pln-note" style="text-align:center">الأفقي: الاحتمال (1 ← 5) · العمودي: الأثر (1 ↑ 5) — الرقم داخل الدائرة هو ترتيب الخطر في القائمة</div></div></div>
-    <div><div class="section-head" style="margin-bottom:10px"><h4 style="margin:0">سجل المخاطر (${open.length} مفتوحة)</h4><button class="btn btn-filled btn-sm" onclick="plnEditRisk('${p.id}')">+ خطر</button></div>
+    <div><div class="section-head" style="margin-bottom:10px"><h4 style="margin:0">سجل المخاطر (${open.length} مفتوحة)</h4><span style="display:flex;gap:6px"><button class="btn btn-glass btn-sm" onclick="axPlanSuggest('${p.id}','risks')">✨ اقترح</button><button class="btn btn-filled btn-sm" onclick="plnEditRisk('${p.id}')">+ خطر</button></span></div>
     ${R.length? R.map((r,i)=>{ const sc=r.prob*r.impact; return `<div class="pln-item" onclick="plnEditRisk('${p.id}','${r.id}')" style="${r.status==='مُغلق'?'opacity:.55':''}"><div class="sc ${plnRiskClass(sc)}">${sc}</div><div class="b"><b>${i+1}. ${esc(r.title)}</b><div class="pln-tmeta"><span class="badge">احتمال ${r.prob}</span><span class="badge">أثر ${r.impact}</span><span class="badge">${esc(r.status||'مفتوح')}</span>${r.owner?`<span class="badge">👤 ${esc(r.owner)}</span>`:''}</div>${r.mitigation?`<p>🛡️ ${esc(r.mitigation)}</p>`:''}</div></div>`; }).join('') : '<div class="tasks-empty-note">لا مخاطر مسجلة. سجّل ما يمكن أن يعطّل الخطة وكيف ستعالجه.</div>'}</div></div>`;
 }
 function plnEditRisk(pid,rid){
@@ -5552,7 +5600,7 @@ function plnDecisionsHtml(p){
 function plnEditDecision(pid,did){
   const p=plnById(pid); if(!p) return; const d=did?p.decisions.find(x=>x.id===did):null;
   plnForm({title:d?'تعديل قرار':'قرار جديد',values:d||{date:today()},
-    fields:[{k:'title',label:'القرار',type:'text',full:true,req:true},{k:'date',label:'التاريخ',type:'date'},{k:'by',label:'صاحب القرار',type:'text',list:'plnWhoList'},{k:'rationale',label:'المبررات',type:'textarea',full:true,rows:3},{k:'alternatives',label:'البدائل التي استُبعدت',type:'textarea',full:true,rows:2}],
+    fields:[{k:'title',label:'القرار',type:'text',full:true,req:true},{k:'date',label:'التاريخ',type:'date'},{k:'by',label:'صاحب القرار',type:'text',list:'plnWhoList'},{k:'rationale',label:'المبررات',type:'textarea',full:true,rows:3,ai:'axFillDecision',aiLabel:'✨ اقترح المبررات والبدائل'},{k:'alternatives',label:'البدائل التي استُبعدت',type:'textarea',full:true,rows:2}],
     onSave:v=>{ if(d) Object.assign(d,v); else { p.decisions.push({id:uid(),...v}); plnLog(p,`⚖️ قرار: ${v.title}`,true); } plnSave(p); },
     onDelete:d? ()=>_showConfirm('حذف هذا القرار؟',{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(ok){ p.decisions=p.decisions.filter(x=>x.id!==d.id); plnSave(p); } }) : null});
 }
@@ -5561,7 +5609,7 @@ function plnEditDecision(pid,did){
 function plnKpiPct(k){ const a=+k.start||0, b=+k.target||0, c=+k.current||0; if(a===b) return c===b?100:0; return Math.max(0,Math.min(100,Math.round((c-a)/(b-a)*100))); }
 function plnKpisHtml(p){
   const K=p.kpis||[];
-  return `<div class="section-head" style="margin-bottom:10px"><div class="settings-desc" style="margin:0">مؤشرات الأداء: أرقام تقيس نجاح الخطة (وليس فقط إنجاز المهام). حدّث القيمة الحالية دوريًا.</div><button class="btn btn-filled btn-sm" onclick="plnEditKpi('${p.id}')">+ مؤشر</button></div>
+  return `<div class="section-head" style="margin-bottom:10px"><div class="settings-desc" style="margin:0">مؤشرات الأداء: أرقام تقيس نجاح الخطة (وليس فقط إنجاز المهام). حدّث القيمة الحالية دوريًا.</div><span style="display:flex;gap:6px"><button class="btn btn-glass btn-sm" onclick="axPlanSuggest('${p.id}','kpis')">✨ اقترح</button><button class="btn btn-filled btn-sm" onclick="plnEditKpi('${p.id}')">+ مؤشر</button></span></div>
   ${K.length? K.map(k=>{ const pc=plnKpiPct(k); return `<div class="pln-kpi" onclick="plnEditKpi('${p.id}','${k.id}')"><div class="r"><b>${esc(k.name)}</b><span>${k.current}${esc(k.unit&&k.unit.length<3?k.unit:'')} / ${k.target}${esc(k.unit&&k.unit.length<3?k.unit:'')}${k.unit&&k.unit.length>=3?' '+esc(k.unit):''} · ${pc}%</span></div><div class="pln-bar"><i style="width:${pc}%"></i></div></div>`; }).join('') : '<div class="tasks-empty-note">لا مؤشرات بعد.</div>'}`;
 }
 function plnEditKpi(pid,kid){
@@ -5703,6 +5751,519 @@ function plnDragEnd(e){
 function plnAfterRender(p){ plnDragInit(); }
 
 plnUpdateBadge();
+
+
+/* ================= AI LAYER (الذكاء الاصطناعي في كل المنصة) =================
+   One shared core (axAsk + result panel) used by every surface: plans, urgent tasks, files, rounds,
+   tasks/calendar, home briefing, contacts, global command bar, chat context and smart search.
+   Every call is an explicit user click; only the summary needed for that request is sent to OpenAI. */
+const AX_PRIV = '🔒 أُرسل ملخص بيانات هذا الطلب فقط إلى OpenAI. راجع المخرجات قبل اعتمادها — المساعد قد يخطئ.';
+function axBase(){
+  const d=new Date();
+  let s='أنت مساعد ذكي مدمج في منصة «مهام صَفوان» لمتابعة الملفات والقضايا والخطط والمهام. المستخدم مدير شؤون قانونية يعمل بالعربية. '
+   +'القواعد: أجب بالعربية الفصحى المهنية الموجزة والعملية. لا تختلق وقائع أو أرقامًا أو أسماء أو مواد نظامية أو أحكامًا أو مواعيد؛ إن لم تكن متأكدًا فاذكر ذلك صراحة وميّز المؤكد من الافتراض. '
+   +'لا تذكر رقم مادة نظامية إلا إذا كنت متأكدًا تمامًا. التواريخ بصيغة YYYY-MM-DD. اليوم هو '+today()+' ('+d.toLocaleDateString('ar-SA',{weekday:'long'})+').';
+  if(typeof AI_MEMORY_TEXT!=='undefined' && AI_MEMORY_TEXT && AI_MEMORY_TEXT.trim()) s+='\n\nمعلومات دائمة عن المستخدم وسياق عمله:\n'+AI_MEMORY_TEXT.trim().slice(0,2500);
+  return s;
+}
+function axScope(){ const s=(APP_SETTINGS&&APP_SETTINGS.aiScope)||{}; return {plans:s.plans!==false, urgent:s.urgent!==false, tasks:s.tasks!==false}; }
+async function axAsk(tag, sys, user, ctx, opts){
+  opts=opts||{};
+  if(!getAIKey()){ _showToast('أدخل مفتاح OpenAI أولًا من الإعدادات لتفعيل الذكاء الاصطناعي','error'); return null; }
+  const messages=[{role:'system',content:`[[tag:${tag}]]\n`+axBase()+'\n\n'+sys+(opts.json?'\n\nأعد الرد بصيغة JSON فقط (JSON object) وفق المخطط المطلوب تمامًا دون أي نص خارجه.':'')}];
+  if(ctx!=null) messages.push({role:'system',content:'السياق (JSON):\n'+JSON.stringify(ctx).slice(0,opts.max||50000)});
+  messages.push({role:'user',content:String(user||'نفّذ المطلوب.').slice(0,8000)});
+  const body={model:AI_MODEL,messages,temperature:opts.temp!=null?opts.temp:0.3};
+  if(opts.json) body.response_format={type:'json_object'};
+  const r=await _aiRequest(getAIKey(),body);
+  if(r==null) return null;
+  if(!opts.json) return r;
+  try{ return JSON.parse(r); }catch(e){
+    const m=/\{[\s\S]*\}/.exec(r); if(m){ try{ return JSON.parse(m[0]); }catch(_){} }
+    _showToast('تعذر فهم رد المساعد — أعد المحاولة','error'); return null;
+  }
+}
+const axArr=x=>Array.isArray(x)?x:[];
+const axStr=x=>(x==null?'':String(x)).trim();
+const axInt=(x,d,lo,hi)=>{ x=Math.round(+x); if(isNaN(x)) x=d; return Math.max(lo,Math.min(hi,x)); };
+const axPri=x=>['عاجل','متوسط','عادي'].includes(x)?x:'متوسط';
+const axIso=x=>/^\d{4}-\d{2}-\d{2}$/.test(axStr(x))?axStr(x):'';
+
+/* ---------- result panel ---------- */
+let AX_PANEL={actions:[]};
+function axOpen(title){ document.getElementById('axTitle').textContent=title; axLoading('جارٍ العمل…'); document.getElementById('axOverlay').classList.add('open'); }
+function axClose(){ document.getElementById('axOverlay').classList.remove('open'); }
+function axLoading(t){ document.getElementById('axBody').innerHTML=`<div class="ax-loading"><span class="ax-spin"></span>${esc(t||'جارٍ العمل…')}</div>`; document.getElementById('axActions').innerHTML=''; AX_PANEL.actions=[]; }
+function axShow(html,actions){
+  document.getElementById('axBody').innerHTML=html;
+  AX_PANEL.actions=actions||[];
+  document.getElementById('axActions').innerHTML=AX_PANEL.actions.map((a,i)=>`<button class="btn ${a.cls||'btn-glass'}" onclick="axAct(${i})">${esc(a.label)}</button>`).join('');
+}
+function axAct(i){ const a=AX_PANEL.actions[i]; if(a&&a.fn) a.fn(); }
+function axMd(t){
+  const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  let h='', list=false;
+  String(t||'').split('\n').forEach(l=>{
+    const m=/^\s*(?:[-•*]|\d+[.)])\s+(.*)/.exec(l);
+    if(m){ if(!list){h+='<ul>';list=true;} h+='<li>'+inline(m[1])+'</li>'; return; }
+    if(list){ h+='</ul>'; list=false; }
+    const hd=/^#{1,4}\s*(.*)/.exec(l); if(hd){ h+='<h4>'+inline(hd[1])+'</h4>'; return; }
+    if(l.trim()) h+='<p>'+inline(l)+'</p>';
+  });
+  return h+(list?'</ul>':'');
+}
+function axCopy(text){
+  const ok=()=>_showToast('تم النسخ','success');
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok).catch(()=>axCopyFallback(text));
+  else axCopyFallback(text);
+}
+function axCopyFallback(text){ const t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); _showToast('تم النسخ','success'); }catch(e){ _showToast('تعذر النسخ','error'); } t.remove(); }
+function axPick(items,rowFn){ return `<div class="ax-picks">${items.map((it,i)=>`<label class="ax-pick"><input type="checkbox" data-i="${i}" checked><div>${rowFn(it)}</div></label>`).join('')}</div>`; }
+function axPicked(items){ return [...document.querySelectorAll('#axBody .ax-pick input:checked')].map(c=>items[+c.dataset.i]).filter(Boolean); }
+function axTextResult(text,extra){
+  const acts=[{label:'📋 نسخ',fn:()=>axCopy(text)}].concat(extra||[]);
+  axShow(`<div class="ax-text">${axMd(text)}</div><div class="ax-priv">${AX_PRIV}</div>`,acts);
+}
+function axFail(){ axShow('<div class="tasks-empty-note">تعذر الحصول على نتيجة. تحقق من المفتاح والاتصال ثم أعد المحاولة.</div>',[]); }
+
+/* ---------- context builders ---------- */
+function axPlanCtx(p){
+  const s=plnStats(p);
+  return {today:today(),
+    plan:{id:p.id,title:p.title,goal:p.goal,description:(p.description||'').slice(0,700),status:p.status,start:p.start,end:p.end,owner:p.owner,sponsor:p.sponsor,progressPct:s.pct,expectedPct:s.exp,health:s.health.l,lateTasks:s.late,daysLeft:s.daysLeft},
+    phases:(p.phases||[]).map(ph=>({id:ph.id,title:ph.title,start:ph.start,end:ph.end,pct:plnPhaseStats(p,ph.id).pct})),
+    tasks:(p.tasks||[]).slice(0,160).map(t=>{ const cl=t.checklist||[]; return {id:t.id,phaseId:t.phaseId,title:t.title,status:t.status,priority:t.priority,due:t.due,responsible:t.responsible,checklist:cl.length?`${cl.filter(c=>c.done).length}/${cl.length}`:'',doneAt:t.doneAt?t.doneAt.slice(0,10):'',notes:(t.notes||'').slice(0,140)}; }),
+    risks:(p.risks||[]).map(r=>({title:r.title,prob:r.prob,impact:r.impact,status:r.status,mitigation:(r.mitigation||'').slice(0,120)})),
+    decisions:(p.decisions||[]).slice(-6).map(d=>({date:d.date,title:d.title})),
+    kpis:(p.kpis||[]).map(k=>({name:k.name,unit:k.unit,start:k.start,current:k.current,target:k.target})),
+    recentLog:(p.log||[]).slice(0,12).map(l=>({date:(l.ts||'').slice(0,10),text:l.text}))};
+}
+function axPlansBrief(){
+  return PLANS.filter(p=>p.status!=='مؤرشفة').map(p=>{ const s=plnStats(p); return {id:p.id,title:p.title,status:p.status,progressPct:s.pct,health:s.health.l,daysLeft:s.daysLeft,lateTasks:s.late,
+    next:(p.tasks||[]).filter(t=>t.status!=='تم'&&t.due).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5).map(t=>({task:t.title,due:t.due,status:t.status}))}; });
+}
+function axUrgentBrief(){
+  return quickTasks().filter(t=>!t.done).slice(0,60).map(t=>{ const par=t.parentId?TASKS.find(x=>x.id===t.parentId):null; const f=t.fileId?fileOf(t.fileId):null;
+    return {id:t.id,title:t.title,type:t.type,priority:t.priority,date:t.date,responsible:t.responsible,parent:par?par.title:'',file:f?f.title:'',notes:(t.notes||'').slice(0,100)}; });
+}
+function axTasksBrief(){
+  const td=today(), end=plnAdd(td,14);
+  return CTASKS().filter(t=>!t.done && t.date && t.date<=end).slice(0,60).map(t=>({id:t.id,title:t.title,type:t.type,date:t.date,time:t.time,priority:t.priority,file:(fileOf(t.fileId)||{}).title||'',overdue:t.date<td}));
+}
+function axFilesBrief(max){ return FILES.slice(0,max||80).map(f=>({id:f.id,title:f.title,party:f.party,status:f.status,category:f.category})); }
+function axChatContext(){
+  const sc=axScope(); const c={files:buildAIFilesContext(),today:today()};
+  if(sc.plans) c.plans=axPlansBrief();
+  if(sc.urgent) c.urgentTasks=axUrgentBrief();
+  if(sc.tasks) c.tasksAndAppointments=axTasksBrief();
+  return c;
+}
+function axFileCtx(f){
+  const rs=ROUNDS.filter(r=>r.fileId===f.id).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,20);
+  return {today:today(),file:{id:f.id,title:f.title,status:f.status,priority:f.priority,category:f.category,party:f.party,opened:f.opened,target:f.target,notes:(f.notes||'').slice(0,1500)},
+    contacts:(f.contactIds||[]).map(id=>CONTACTS.find(c=>c.id===id)).filter(Boolean).map(c=>({name:c.name,role:c.role})),
+    rounds:rs.map(r=>({date:r.date,type:r.type,exec:r.exec,finding:(r.finding||'').slice(0,400),actionTaken:(r.actionTaken||'').slice(0,300),actionNeeded:(r.actionNeeded||'').slice(0,300),due:r.due,amount:r.amount})),
+    tasks:TASKS.filter(t=>t.fileId===f.id&&!t.done).slice(0,15).map(t=>({title:t.title,date:t.date,quick:!!t.quick}))};
+}
+
+/* ====================== PLANS ====================== */
+/* build a plan from a generic spec (AI output or template-like) */
+function plnMaterialize(spec,opts){
+  opts=opts||{}; const start=today(); const days=axInt(spec.days,90,14,730);
+  const p={id:uid(),title:axStr(spec.title)||'خطة جديدة',icon:PLN_ICONS.includes(spec.icon)?spec.icon:'🎯',color:opts.color!=null?opts.color:Math.floor(Math.random()*PLN_COLORS.length),
+    goal:axStr(spec.goal),description:axStr(spec.description),status:'نشطة',priority:'متوسط',start,end:plnAdd(start,days),owner:'',sponsor:'',fileId:opts.fileId||'',
+    phases:[],tasks:[],risks:[],decisions:[],kpis:[],resources:[],log:[],createdAt:new Date().toISOString(),updatedAt:''};
+  let ord=1;
+  axArr(spec.phases).forEach(ph=>{
+    const pid=uid(); const a=axInt(ph.startDay,0,0,days), b=axInt(ph.endDay,days,a,days);
+    p.phases.push({id:pid,title:axStr(ph.title)||'مرحلة',desc:axStr(ph.desc),start:plnAdd(start,a),end:plnAdd(start,b)});
+    axArr(ph.tasks).forEach(t=>{ p.tasks.push({id:uid(),phaseId:pid,title:axStr(t.title)||'مهمة',status:'لم يبدأ',priority:axPri(t.priority),due:plnAdd(start,axInt(t.dueDay,b,0,days)),start:'',responsible:'',notes:axStr(t.notes),checklist:axArr(t.checklist).map(x=>({id:uid(),t:axStr(x),done:false})).filter(c=>c.t),order:ord++,doneAt:'',urgentId:''}); });
+  });
+  axArr(spec.risks).forEach(r=>p.risks.push({id:uid(),title:axStr(r.title),prob:axInt(r.prob,3,1,5),impact:axInt(r.impact,3,1,5),mitigation:axStr(r.mitigation),owner:'',status:'مفتوح'}));
+  axArr(spec.kpis).forEach(k=>p.kpis.push({id:uid(),name:axStr(k.name),unit:axStr(k.unit),start:+k.start||0,current:+k.start||0,target:+k.target||0}));
+  plnLog(p,'أُنشئت الخطة بمساعدة الذكاء الاصطناعي — راجعها وعدّل ما يلزم',true);
+  return p;
+}
+const AX_PLAN_SCHEMA='المخطط: {"title":"","icon":"إيموجي واحد من: 🎯🏢⚖️📜🧭🚀🛡️📈🏗️🤝📑🔧","goal":"","description":"","days":رقم إجمالي الأيام,"phases":[{"title":"","desc":"","startDay":رقم,"endDay":رقم,"tasks":[{"title":"","dueDay":رقم أيام من اليوم,"priority":"عاجل|متوسط|عادي","checklist":["خطوة"],"notes":""}]}],"risks":[{"title":"","prob":1-5,"impact":1-5,"mitigation":""}],"kpis":[{"name":"","unit":"","start":رقم,"target":رقم}]}';
+function axPlanFromPrompt(fileId,idea){
+  plnForm({title:'✨ خطة بالذكاء الاصطناعي',saveLabel:'✨ ولّد الخطة',values:{idea:idea||'',days:90,depth:'متوسط'},
+    fields:[{k:'idea',label:'صف الخطة التي تريدها',type:'textarea',full:true,rows:5,req:true,ph:'مثال: خطة لتنظيم إدارة العقود في الشركة خلال 3 أشهر، تشمل نماذج العقود والمراجعة والصلاحيات'},
+      {k:'days',label:'المدة المتوقعة',type:'select',opts:[[30,'شهر'],[60,'شهران'],[90,'3 أشهر'],[180,'6 أشهر'],[365,'سنة']]},
+      {k:'depth',label:'مستوى التفصيل',type:'select',opts:['مختصر','متوسط','مفصل']}],
+    onSave:v=>axPlanGen(v,fileId)});
+}
+async function axPlanGen(v,fileId){
+  axOpen('✨ بناء الخطة'); axLoading('أبني المراحل والمهام والمخاطر والمؤشرات…');
+  const f=fileId?fileOf(fileId):null;
+  const n={'مختصر':'3-4 مراحل وفي كل مرحلة 3-4 مهام','متوسط':'4-6 مراحل وفي كل مرحلة 4-6 مهام','مفصل':'6-8 مراحل وفي كل مرحلة 5-8 مهام'}[v.depth]||'4-6 مراحل';
+  const spec=await axAsk('plan_gen','مهمتك: بناء خطة عمل واقعية وقابلة للتنفيذ من وصف المستخدم. استخدم '+n+'، ومواعيد نسبية متدرجة منطقيًا ضمن '+v.days+' يومًا، وخطوات (checklist) للمهام المهمة فقط، و3-6 مخاطر حقيقية و2-5 مؤشرات قياس إن كانت مناسبة. لا تضع أسماء أشخاص أو أرقامًا لم يذكرها المستخدم. '+AX_PLAN_SCHEMA,v.idea,f?axFileCtx(f):null,{json:true,temp:0.4,max:30000});
+  if(!spec||!axArr(spec.phases).length){ axFail(); return; }
+  spec.days=v.days;
+  const p=plnMaterialize(spec,{fileId:fileId||''});
+  const nt=p.tasks.length;
+  axShow(`<div class="ax-text"><h4>${p.icon} ${esc(p.title)}</h4><p>${esc(p.goal)}</p>
+    <ul>${p.phases.map(ph=>`<li><b>${esc(ph.title)}</b> — ${p.tasks.filter(t=>t.phaseId===ph.id).length} مهمة</li>`).join('')}</ul>
+    <p>${nt} مهمة · ${p.risks.length} مخاطر · ${p.kpis.length} مؤشرات · ${p.days||v.days} يومًا</p></div><div class="ax-priv">${AX_PRIV} ستجد كل شيء قابلاً للتعديل بعد الإنشاء.</div>`,
+    [{label:'✅ إنشاء الخطة',cls:'btn-filled',fn:()=>{ PLANS.push(p); logActivity('add','plan',`إنشاء خطة بالذكاء الاصطناعي: ${p.title}`); PLN_UI.id=p.id; PLN_UI.tab='overview'; plnSaveUi(); axClose(); goToPlans(p.id); plnSave(p); _showToast('تم إنشاء الخطة — راجعها وعدّل ما يلزم','success'); }},
+     {label:'↻ أعد التوليد',fn:()=>axPlanGen(v,fileId)}]);
+}
+function axPlanMenu(pid){
+  const p=plnById(pid); if(!p) return;
+  axOpen('✨ مساعد الخطة — '+p.title);
+  const btn=(ic,t,d,fn)=>`<button class="ax-opt" onclick="${fn}"><span>${ic}</span><div><b>${t}</b><small>${d}</small></div></button>`;
+  axShow(`<div class="ax-opts">
+    ${btn('🔍','مراجعة الخطة وسدّ الفجوات','ما الذي ينقصها؟ مهام ومخاطر ومؤشرات مقترحة تضيفها بنقرة',`axPlanReview('${pid}')`)}
+    ${btn('📅','المراجعة الأسبوعية','ملخص المنجز والمتأخر وأولويات الأسبوع القادم',`axPlanWeekly('${pid}')`)}
+    ${btn('📑','تقرير للإدارة','تقرير رسمي موجز عن حالة الخطة جاهز للمدير العام',`axPlanReport('${pid}')`)}
+    ${btn('⏱️','تحليل التأخر وإعادة الجدولة','يقترح مواعيد جديدة واقعية للمهام المتأخرة',`axPlanReschedule('${pid}')`)}
+    ${btn('💬','اسأل عن الخطة','اسأل أي سؤال عن حالة الخطة ومهامها ومخاطرها',`axPlanAsk('${pid}')`)}
+    </div><div class="ax-priv">${AX_PRIV}</div>`,[]);
+}
+async function axPlanReview(pid){
+  const p=plnById(pid); if(!p) return; axOpen('🔍 مراجعة الخطة'); axLoading('أراجع الخطة وأبحث عن الفجوات…');
+  const r=await axAsk('plan_review','راجع هذه الخطة كخبير إدارة مشاريع. قيّم جودتها بإيجاز، واذكر نقاط القوة والفجوات (مهام أو مراحل ناقصة، تبعيات، مواعيد غير واقعية، غياب مسؤول، مخاطر غير مغطاة، مؤشرات ناقصة). ثم اقترح إضافات محددة غير مكررة مع ما هو موجود. المخطط: {"assessment":"","strengths":[""],"gaps":[""],"tasks":[{"phase":"اسم مرحلة موجودة أو جديدة","title":"","priority":"عاجل|متوسط|عادي","dueDay":رقم أيام من اليوم,"why":""}],"risks":[{"title":"","prob":1-5,"impact":1-5,"mitigation":""}],"kpis":[{"name":"","unit":"","start":رقم,"target":رقم}]}','راجع الخطة.',axPlanCtx(p),{json:true,max:45000});
+  if(!r){ axFail(); return; }
+  const tasks=axArr(r.tasks).filter(t=>axStr(t.title)), risks=axArr(r.risks).filter(x=>axStr(x.title)), kpis=axArr(r.kpis).filter(x=>axStr(x.name));
+  const items=[...tasks.map(t=>({k:'t',d:t})),...risks.map(x=>({k:'r',d:x})),...kpis.map(x=>({k:'k',d:x}))];
+  const row=it=>it.k==='t'?`<b>📌 ${esc(it.d.title)}</b><small>${esc(it.d.phase||'')} · ${esc(axPri(it.d.priority))}${it.d.why?' — '+esc(it.d.why):''}</small>`:it.k==='r'?`<b>⚠️ ${esc(it.d.title)}</b><small>احتمال ${axInt(it.d.prob,3,1,5)} × أثر ${axInt(it.d.impact,3,1,5)} — ${esc(it.d.mitigation||'')}</small>`:`<b>📊 ${esc(it.d.name)}</b><small>من ${+it.d.start||0} إلى ${+it.d.target||0} ${esc(it.d.unit||'')}</small>`;
+  axShow(`<div class="ax-text"><p>${esc(r.assessment||'')}</p>${axArr(r.strengths).length?`<h4>✅ نقاط القوة</h4><ul>${axArr(r.strengths).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}${axArr(r.gaps).length?`<h4>🕳️ الفجوات</h4><ul>${axArr(r.gaps).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}</div>
+    ${items.length?`<h4 style="margin:14px 0 6px">➕ إضافات مقترحة (حدّد ما تريد)</h4>${axPick(items,row)}`:''}<div class="ax-priv">${AX_PRIV}</div>`,
+    items.length?[{label:'➕ أضف المحدد إلى الخطة',cls:'btn-filled',fn:()=>axApplyReview(pid,axPicked(items))}]:[]);
+}
+function axApplyReview(pid,sel){
+  const p=plnById(pid); if(!p||!sel.length) return; let nt=0,nr=0,nk=0;
+  sel.forEach(it=>{
+    if(it.k==='t'){
+      let ph=(p.phases||[]).find(x=>x.title===axStr(it.d.phase)) || (p.phases||[]).find(x=>axStr(it.d.phase) && (x.title.includes(axStr(it.d.phase))||axStr(it.d.phase).includes(x.title)));
+      if(!ph){ ph={id:uid(),title:axStr(it.d.phase)||'مهام إضافية',desc:'',start:'',end:''}; p.phases.push(ph); }
+      p.tasks.push({id:uid(),phaseId:ph.id,title:axStr(it.d.title),status:'لم يبدأ',priority:axPri(it.d.priority),due:plnAdd(today(),axInt(it.d.dueDay,14,0,730)),start:'',responsible:'',notes:axStr(it.d.why),checklist:[],order:plnNextOrder(p),doneAt:'',urgentId:''}); nt++;
+    } else if(it.k==='r'){ p.risks.push({id:uid(),title:axStr(it.d.title),prob:axInt(it.d.prob,3,1,5),impact:axInt(it.d.impact,3,1,5),mitigation:axStr(it.d.mitigation),owner:'',status:'مفتوح'}); nr++; }
+    else { p.kpis.push({id:uid(),name:axStr(it.d.name),unit:axStr(it.d.unit),start:+it.d.start||0,current:+it.d.start||0,target:+it.d.target||0}); nk++; }
+  });
+  plnLog(p,`✨ أُضيفت اقتراحات المساعد: ${nt} مهمة، ${nr} مخاطر، ${nk} مؤشرات`,true);
+  logActivity('edit','plan',`إضافة اقتراحات الذكاء الاصطناعي إلى ${p.title}`);
+  axClose(); plnSave(p); _showToast(`أُضيف: ${nt} مهمة · ${nr} مخاطر · ${nk} مؤشرات`,'success');
+}
+async function axPlanWeekly(pid){
+  const p=plnById(pid); if(!p) return; axOpen('📅 المراجعة الأسبوعية'); axLoading('أحضّر المراجعة الأسبوعية…');
+  const t=await axAsk('plan_weekly','اكتب مراجعة أسبوعية لهذه الخطة بالأقسام التالية (عناوين قصيرة ونقاط موجزة): الموجز (سطران)، المنجز هذا الأسبوع (من doneAt خلال 7 أيام والسجل)، المتأخر والأسباب المحتملة، أولويات الأسبوع القادم (5 كحد أقصى مع المسؤول إن وُجد)، تنبيهات ومخاطر تحتاج قرارًا. كن دقيقًا ولا تذكر إلا ما في السياق.','اكتب المراجعة الأسبوعية.',axPlanCtx(p));
+  if(t==null){ axFail(); return; }
+  axTextResult(t,[{label:'📝 حفظ في سجل الخطة',fn:()=>{ plnLog(p,'📅 مراجعة أسبوعية:\n'+t.slice(0,1500),false); plnSave(p); axClose(); _showToast('حُفظت في السجل','success'); }}]);
+}
+async function axPlanReport(pid){
+  const p=plnById(pid); if(!p) return; axOpen('📑 تقرير للإدارة'); axLoading('أكتب التقرير…');
+  const t=await axAsk('plan_report','اكتب تقريرًا رسميًا موجزًا للمدير العام عن حالة هذه الخطة بصياغة مهنية: عنوان، موجز تنفيذي (3 أسطر)، نسبة الإنجاز والموقف الزمني، أبرز الإنجازات، أبرز التحديات والمخاطر، القرارات المطلوبة من الإدارة، الخطوات القادمة. لا تضف معلومة غير موجودة في السياق.','اكتب التقرير.',axPlanCtx(p));
+  if(t==null){ axFail(); return; }
+  axTextResult(t);
+}
+async function axPlanReschedule(pid){
+  const p=plnById(pid); if(!p) return; axOpen('⏱️ إعادة الجدولة'); axLoading('أحلل التأخر…');
+  const r=await axAsk('plan_resched','حلّل المهام المتأخرة وغير المنجزة في هذه الخطة. اقترح مواعيد جديدة واقعية (YYYY-MM-DD لا تسبق اليوم) مع مراعاة التبعيات بين المهام وتوزيع الحمل وعدم تكديس عدة مهام ثقيلة في يوم واحد وعدم تجاوز موعد الخطة إن أمكن. اقترح تعديلًا فقط للمهام التي تستحق. المخطط: {"analysis":"","changes":[{"taskId":"","newDue":"YYYY-MM-DD","reason":""}]}','اقترح إعادة جدولة.',axPlanCtx(p),{json:true});
+  if(!r){ axFail(); return; }
+  const ch=axArr(r.changes).map(c=>({t:(p.tasks||[]).find(x=>x.id===c.taskId),due:axIso(c.newDue),reason:axStr(c.reason)})).filter(c=>c.t&&c.due&&c.due>=today());
+  axShow(`<div class="ax-text"><p>${esc(r.analysis||'')}</p></div>${ch.length?axPick(ch,c=>`<b>${esc(c.t.title)}</b><small>${c.t.due?fmtDate(c.t.due):'بلا موعد'} ← <b>${fmtDate(c.due)}</b>${c.reason?' — '+esc(c.reason):''}</small>`):'<div class="tasks-empty-note">لا تعديلات مقترحة.</div>'}<div class="ax-priv">${AX_PRIV}</div>`,
+    ch.length?[{label:'✅ طبّق المحدد',cls:'btn-filled',fn:()=>{ const sel=axPicked(ch); sel.forEach(c=>{ c.t.due=c.due; }); plnLog(p,`⏱️ أُعيدت جدولة ${sel.length} مهمة بمساعدة المساعد`,true); axClose(); plnSave(p); _showToast('تم تطبيق التعديلات','success'); }}]:[]);
+}
+let AX_CHAT=[];
+function axPlanAsk(pid){
+  const p=plnById(pid); if(!p) return; AX_CHAT=[]; axOpen('💬 اسأل عن «'+p.title+'»');
+  axShow(`<div id="axChatLog" class="ax-chatlog"><div class="tasks-empty-note" style="padding:8px">اسأل مثلًا: ما أخطر ما يهدد الخطة؟ من المتأخر؟ ماذا أنجزنا هذا الشهر؟</div></div>
+    <div class="pln-quick"><input type="text" id="axChatIn" placeholder="اكتب سؤالك… Enter" onkeydown="if(event.key==='Enter')axPlanAskSend('${pid}')"><button class="btn btn-filled btn-sm" onclick="axPlanAskSend('${pid}')">إرسال</button></div><div class="ax-priv">${AX_PRIV}</div>`,[]);
+  setTimeout(()=>{ const i=document.getElementById('axChatIn'); if(i) i.focus(); },60);
+}
+async function axPlanAskSend(pid){
+  const p=plnById(pid), i=document.getElementById('axChatIn'), log=document.getElementById('axChatLog'); if(!p||!i||!log) return;
+  const q=i.value.trim(); if(!q) return; i.value='';
+  if(!AX_CHAT.length) log.innerHTML='';
+  AX_CHAT.push({r:'u',t:q}); log.insertAdjacentHTML('beforeend',`<div class="ax-msg u">${esc(q)}</div><div class="ax-msg a" id="axPending">…</div>`); log.scrollTop=log.scrollHeight;
+  const hist=AX_CHAT.slice(-7,-1).map(m=>(m.r==='u'?'المستخدم: ':'المساعد: ')+m.t).join('\n');
+  const a=await axAsk('plan_ask','أجب عن سؤال المستخدم حول هذه الخطة اعتمادًا على السياق فقط، بإيجاز ودقة. إن لم تكن المعلومة في السياق فقل إنها غير متوفرة.',(hist?hist+'\nالمستخدم: ':'')+q,axPlanCtx(p));
+  const el=document.getElementById('axPending'); if(!el) return;
+  el.removeAttribute('id'); el.innerHTML=axMd(a==null?'تعذر الحصول على إجابة.':a); if(a!=null) AX_CHAT.push({r:'a',t:a}); log.scrollTop=log.scrollHeight;
+}
+/* suggest additions for a phase / risks / KPIs */
+async function axPlanSuggest(pid,kind,phId){
+  const p=plnById(pid); if(!p) return;
+  const ph=phId?(p.phases||[]).find(x=>x.id===phId):null;
+  const cfg={
+    tasks:{t:'➕ مهام مقترحة للمرحلة',sys:'اقترح 4-8 مهام تنفيذية محددة وغير مكررة لمرحلة «'+(ph?ph.title:'')+'» في هذه الخطة. المخطط: {"items":[{"title":"","priority":"عاجل|متوسط|عادي","dueDay":رقم أيام من اليوم,"why":""}]}'},
+    risks:{t:'⚠️ مخاطر مقترحة',sys:'اقترح 3-6 مخاطر حقيقية لم تُسجَّل بعد في هذه الخطة مع تقدير الاحتمال والأثر وخطة التخفيف. المخطط: {"items":[{"title":"","prob":1-5,"impact":1-5,"mitigation":""}]}'},
+    kpis:{t:'📊 مؤشرات مقترحة',sys:'اقترح 2-5 مؤشرات قياس كمية مناسبة لهذه الخطة (غير مكررة) بقيمة ابتدائية وهدف. المخطط: {"items":[{"name":"","unit":"","start":رقم,"target":رقم}]}'}}[kind];
+  axOpen(cfg.t); axLoading('أفكّر…');
+  const r=await axAsk('plan_suggest_'+kind,cfg.sys,'اقترح.',axPlanCtx(p),{json:true});
+  const items=axArr(r&&r.items).filter(x=>axStr(x.title||x.name)); if(!items.length){ axFail(); return; }
+  const row=kind==='tasks'?x=>`<b>${esc(x.title)}</b><small>${esc(axPri(x.priority))}${x.why?' — '+esc(x.why):''}</small>`:kind==='risks'?x=>`<b>${esc(x.title)}</b><small>احتمال ${axInt(x.prob,3,1,5)} × أثر ${axInt(x.impact,3,1,5)} — ${esc(x.mitigation||'')}</small>`:x=>`<b>${esc(x.name)}</b><small>من ${+x.start||0} إلى ${+x.target||0} ${esc(x.unit||'')}</small>`;
+  axShow(axPick(items,row)+`<div class="ax-priv">${AX_PRIV}</div>`,[{label:'➕ أضف المحدد',cls:'btn-filled',fn:()=>{
+    const sel=axPicked(items);
+    sel.forEach(x=>{
+      if(kind==='tasks') p.tasks.push({id:uid(),phaseId:phId||'',title:axStr(x.title),status:'لم يبدأ',priority:axPri(x.priority),due:plnAdd(today(),axInt(x.dueDay,14,0,730)),start:'',responsible:'',notes:axStr(x.why),checklist:[],order:plnNextOrder(p),doneAt:'',urgentId:''});
+      else if(kind==='risks') p.risks.push({id:uid(),title:axStr(x.title),prob:axInt(x.prob,3,1,5),impact:axInt(x.impact,3,1,5),mitigation:axStr(x.mitigation),owner:'',status:'مفتوح'});
+      else p.kpis.push({id:uid(),name:axStr(x.name),unit:axStr(x.unit),start:+x.start||0,current:+x.start||0,target:+x.target||0});
+    });
+    if(phId) PLN_UI.open[phId]=true;
+    plnLog(p,`✨ أُضيف ${sel.length} من اقتراحات المساعد`,true); axClose(); plnSave(p); _showToast(`أُضيف ${sel.length}`,'success');
+  }}]);
+}
+/* per-task helper menu */
+function axTaskMenu(pid,tid){
+  const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); if(!t) return;
+  axOpen('✨ مساعد المهمة'); const btn=(ic,tt,d,fn)=>`<button class="ax-opt" onclick="${fn}"><span>${ic}</span><div><b>${tt}</b><small>${d}</small></div></button>`;
+  axShow(`<div class="ax-text"><p><b>${esc(t.title)}</b></p></div><div class="ax-opts">
+    ${btn('☑️','اقتراح خطوات التنفيذ','قائمة تحقق تُضاف إلى المهمة',`axTaskSteps('${pid}','${tid}')`)}
+    ${btn('✍️','كتابة مسودة','خطاب أو بريد أو مذكرة أو محضر بحسب طبيعة المهمة',`axTaskDraft('${pid}','${tid}')`)}
+    ${btn('🚧','ما الذي قد يعطّلها؟','معوّقات متوقعة وكيف تتفاداها',`axTaskBlockers('${pid}','${tid}')`)}</div><div class="ax-priv">${AX_PRIV}</div>`,[]);
+}
+function axTaskCtx(p,t){ const ph=(p.phases||[]).find(x=>x.id===t.phaseId); return {plan:{title:p.title,goal:p.goal},phase:ph?ph.title:'',task:{title:t.title,status:t.status,priority:t.priority,due:t.due,responsible:t.responsible,notes:t.notes,checklist:(t.checklist||[]).map(c=>c.t)}}; }
+async function axTaskSteps(pid,tid){
+  const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); if(!t) return; axOpen('☑️ خطوات التنفيذ'); axLoading('أفصّل الخطوات…');
+  const r=await axAsk('task_steps','قسّم المهمة إلى 4-9 خطوات تنفيذية متسلسلة وواضحة وقابلة للتحقق، لا تكرر خطوات القائمة الحالية. المخطط: {"steps":[""]}','فصّل المهمة.',axTaskCtx(p,t),{json:true});
+  const steps=axArr(r&&r.steps).map(axStr).filter(Boolean); if(!steps.length){ axFail(); return; }
+  axShow(axPick(steps,s=>`<b>${esc(s)}</b>`)+`<div class="ax-priv">${AX_PRIV}</div>`,[{label:'➕ أضف إلى قائمة التحقق',cls:'btn-filled',fn:()=>{ const sel=axPicked(steps); t.checklist=(t.checklist||[]).concat(sel.map(x=>({id:uid(),t:x,done:false}))); PLN_UI.cl[t.id]=true; axClose(); plnSave(p); _showToast('أُضيفت الخطوات','success'); }}]);
+}
+async function axTaskDraft(pid,tid){
+  const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); if(!t) return; axOpen('✍️ مسودة'); axLoading('أكتب المسودة…');
+  const d=await axAsk('task_draft','اكتب مسودة جاهزة للمُخرَج المناسب لهذه المهمة (خطاب رسمي، بريد إلكتروني، مذكرة، محضر اجتماع، نموذج…) باللغة العربية المهنية. ضع المعلومات الناقصة بين أقواس مربعة مثل [اسم الجهة] ولا تختلقها. ابدأ بسطر يحدد نوع المستند المختار.','اكتب المسودة.',axTaskCtx(p,t));
+  if(d==null){ axFail(); return; }
+  axTextResult(d,[{label:'📝 حفظ في ملاحظات المهمة',fn:()=>{ t.notes=((t.notes?t.notes+'\n\n':'')+'— مسودة المساعد —\n'+d).slice(0,6000); axClose(); plnSave(p); _showToast('حُفظت في الملاحظات','success'); }}]);
+}
+async function axTaskBlockers(pid,tid){
+  const p=plnById(pid); const t=p&&(p.tasks||[]).find(x=>x.id===tid); if(!t) return; axOpen('🚧 المعوّقات المتوقعة'); axLoading('أحلل…');
+  const d=await axAsk('task_blockers','اذكر أهم 3-6 معوّقات محتملة لتنفيذ هذه المهمة في موعدها، ولكل معوّق: كيف تتفاداه أو تعالجه مبكرًا. نقاط موجزة.','حلل المعوّقات.',axTaskCtx(p,t));
+  if(d==null){ axFail(); return; } axTextResult(d);
+}
+/* field-level helpers inside the generic form modal */
+async function axFillChecklist(btn){
+  const title=(document.getElementById('plnF_title')||{}).value||''; if(!title.trim()){ _showToast('اكتب عنوان المهمة أولًا','error'); return; }
+  const notes=(document.getElementById('plnF_notes')||{}).value||''; const p=plnById(PLN_UI.id);
+  const old=btn.textContent; btn.disabled=true; btn.textContent='…جارٍ الاقتراح';
+  const existing=[...document.querySelectorAll('#plnF_checklist [data-cl] input[type=text]')].map(i=>i.value).filter(Boolean);
+  const r=await axAsk('field_steps','قسّم المهمة إلى 4-8 خطوات تنفيذية متسلسلة وواضحة، ولا تكرر الخطوات الموجودة. المخطط: {"steps":[""]}','فصّل المهمة.',{plan:p?p.title:'',task:title,notes,existing},{json:true});
+  btn.disabled=false; btn.textContent=old;
+  axArr(r&&r.steps).map(axStr).filter(Boolean).forEach(s=>plnClAdd('plnF_checklist',s));
+}
+async function axImproveGoal(btn){
+  const g=id=>(document.getElementById(id)||{}).value||''; const title=g('plnF_title').trim(); if(!title){ _showToast('اكتب اسم الخطة أولًا','error'); return; }
+  const old=btn.textContent; btn.disabled=true; btn.textContent='…جارٍ الصياغة';
+  const r=await axAsk('field_goal','صغ هدفًا رئيسيًا واضحًا قابلًا للقياس (SMART) وجملة وصف للنطاق لهذه الخطة اعتمادًا على ما كتبه المستخدم دون إضافة وقائع. المخطط: {"goal":"","description":""}','حسّن الصياغة.',{title,goal:g('plnF_goal'),description:g('plnF_description'),start:g('plnF_start'),end:g('plnF_end')},{json:true});
+  btn.disabled=false; btn.textContent=old; if(!r) return;
+  if(axStr(r.goal)) document.getElementById('plnF_goal').value=axStr(r.goal);
+  if(axStr(r.description)&&!g('plnF_description').trim()) document.getElementById('plnF_description').value=axStr(r.description);
+}
+async function axFillDecision(btn){
+  const g=id=>(document.getElementById(id)||{}).value||''; const title=g('plnF_title').trim(); if(!title){ _showToast('اكتب القرار أولًا','error'); return; }
+  const p=plnById(PLN_UI.id); const old=btn.textContent; btn.disabled=true; btn.textContent='…جارٍ الصياغة';
+  const r=await axAsk('field_decision','اكتب مبررات هذا القرار باختصار (2-4 أسطر) والبدائل المعقولة التي تُستبعد عادة معه، دون اختلاق وقائع غير موجودة. المخطط: {"rationale":"","alternatives":""}','صغ المبررات والبدائل.',{plan:p?p.title:'',goal:p?p.goal:'',decision:title,rationale:g('plnF_rationale')},{json:true});
+  btn.disabled=false; btn.textContent=old; if(!r) return;
+  if(axStr(r.rationale)) document.getElementById('plnF_rationale').value=axStr(r.rationale);
+  if(axStr(r.alternatives)) document.getElementById('plnF_alternatives').value=axStr(r.alternatives);
+}
+
+/* ====================== URGENT TASKS ====================== */
+function axMakeUrgent(f){
+  const x={id:uid(),quick:true,done:false,title:axStr(f.title),type:Object.keys(URG_TYPES).includes(f.type)?f.type:'أخرى',priority:axPri(f.priority||'عاجل'),date:axIso(f.date)||today(),notes:axStr(f.notes),responsible:axStr(f.responsible),fileId:f.fileId&&fileOf(f.fileId)?f.fileId:'',groupId:'',category:'',roundId:'',parentId:f.parentId||'',order:urgNextOrder(),createdAt:new Date().toISOString(),doneAt:''};
+  const fl=x.fileId?fileOf(x.fileId):null; if(fl){ x.category=fl.category||''; x.groupId=fl.groupId||''; }
+  TASKS.push(x); logActivity('add','task',`إضافة مهمة عاجلة (ذكاء اصطناعي): ${x.title}`);
+  return urgPersist(x.id,urgSyncToFile(x)).then(()=>x);
+}
+async function axUrgentParse(){
+  const inp=document.getElementById('urgQuickInput'); const text=inp.value.trim();
+  if(!text){ _showToast('اكتب المهمة بلغتك في الخانة أولًا ثم اضغط ✨','error'); inp.focus(); return; }
+  const btn=document.getElementById('urgAiBtn'); if(btn){ btn.disabled=true; btn.textContent='…'; }
+  const r=await axAsk('urgent_parse','حوّل وصف المستخدم إلى مهمة عاجلة منظمة. استنتج التاريخ من الكلمات (اليوم/غدًا/الخميس…) بالنسبة لتاريخ اليوم، واجعل الأولوية عاجل إن لم يُذكر غير ذلك، واختر type من: '+Object.keys(URG_TYPES).join('، ')+'. إن ذُكر ملف أو قضية فاختر fileId الأنسب من قائمة الملفات وإلا اتركه فارغًا. العنوان قصير وواضح. المخطط: {"title":"","type":"","priority":"عاجل|متوسط|عادي","date":"YYYY-MM-DD","responsible":"","notes":"","fileId":""}',text,{files:axFilesBrief()},{json:true});
+  if(btn){ btn.disabled=false; btn.textContent='✨'; }
+  if(!r||!axStr(r.title)) return;
+  openUrgentModal(null);
+  document.getElementById('uTitle').value=axStr(r.title);
+  if(Object.keys(URG_TYPES).includes(r.type)) document.getElementById('uType').value=r.type;
+  document.getElementById('uPriority').value=axPri(r.priority||'عاجل');
+  if(axIso(r.date)) document.getElementById('uDate').value=axIso(r.date);
+  document.getElementById('uResponsible').value=axStr(r.responsible);
+  document.getElementById('uNotes').value=axStr(r.notes);
+  const fl=r.fileId&&fileOf(r.fileId); if(fl) urgRebuildLinks(fl.groupId||'',fl.category||'',fl.id);
+  inp.value=''; _showToast('عبّأ المساعد الحقول — راجعها واحفظ','success');
+}
+async function axUrgentPlan(){
+  const pend=axUrgentBrief().filter(t=>!t.parent); if(!pend.length){ _showToast('لا مهام عاجلة معلّقة لترتيبها','error'); return; }
+  axOpen('✨ رتّب يومي'); axLoading('أرتّب المهام بحسب الأولوية والموعد…');
+  const r=await axAsk('urgent_plan','رتّب المهام العاجلة المعلّقة بالترتيب الأنسب للتنفيذ اليوم مراعيًا الموعد والأولوية والاعتمادية (المهام التي تُنجز سريعًا أو تفتح الطريق لغيرها أولًا) وبطء المهام الثقيلة. قدّر لكل مهمة الدقائق اللازمة بتقدير معقول، وأشر إلى ما يمكن تأجيله. المخطط: {"summary":"","order":[{"id":"","why":"","minutes":رقم}],"defer":[{"id":"","why":""}]}','رتب مهامي.',{tasks:pend,todayAppointments:axTasksBrief().filter(t=>t.date===today()),plansDue:axPlansBrief().map(p=>({title:p.title,next:p.next.slice(0,2)}))},{json:true});
+  if(!r){ axFail(); return; }
+  const ord=axArr(r.order).map(o=>({t:TASKS.find(x=>x.id===o.id&&x.quick&&!x.parentId&&!x.done),why:axStr(o.why),min:+o.minutes||0})).filter(o=>o.t);
+  if(!ord.length){ axFail(); return; }
+  const tot=ord.reduce((s,o)=>s+o.min,0), dfr=axArr(r.defer).map(o=>({t:TASKS.find(x=>x.id===o.id),why:axStr(o.why)})).filter(o=>o.t);
+  axShow(`<div class="ax-text"><p>${esc(r.summary||'')}</p></div><ol class="ax-ol">${ord.map(o=>`<li><b>${esc(o.t.title)}</b>${o.min?` <span class="pln-pill">${o.min} د</span>`:''}<small>${esc(o.why)}</small></li>`).join('')}</ol>
+    ${tot?`<div class="ax-text"><p>⏱️ المجموع التقديري: <b>${Math.floor(tot/60)} ساعة و${tot%60} دقيقة</b></p></div>`:''}${dfr.length?`<div class="ax-text"><h4>⏳ يمكن تأجيله</h4><ul>${dfr.map(o=>`<li>${esc(o.t.title)} — ${esc(o.why)}</li>`).join('')}</ul></div>`:''}<div class="ax-priv">${AX_PRIV}</div>`,
+    [{label:'✅ طبّق هذا الترتيب',cls:'btn-filled',fn:()=>{ const ch=[]; ord.forEach((o,i)=>{ if(o.t.order!==i+1){ o.t.order=i+1; ch.push(o.t.id); } }); const rest=quickTasks().filter(t=>!t.parentId&&!t.done&&!ord.some(o=>o.t===t)); rest.forEach((t,i)=>{ t.order=ord.length+i+1; ch.push(t.id); }); axClose(); persistTasks(ch).then(()=>renderUrgentPage()); _showToast('رُتّبت المهام','success'); }}]);
+}
+async function axUrgentSplit(id){
+  const x=TASKS.find(t=>t.id===id); if(!x) return; axOpen('✨ تقسيم إلى مهام فرعية'); axLoading('أقسّم المهمة…');
+  const r=await axAsk('urgent_split','قسّم هذه المهمة إلى 3-7 مهام فرعية صغيرة عملية متسلسلة، كل منها يمكن إنجازها بجلسة واحدة. المخطط: {"subtasks":[{"title":"","priority":"عاجل|متوسط|عادي"}]}','قسّم المهمة.',{task:{title:x.title,type:x.type,notes:x.notes,date:x.date},existing:urgKids(id).map(k=>k.title)},{json:true});
+  const subs=axArr(r&&r.subtasks).filter(s=>axStr(s.title)); if(!subs.length){ axFail(); return; }
+  axShow(axPick(subs,s=>`<b>${esc(s.title)}</b><small>${esc(axPri(s.priority))}</small>`)+`<div class="ax-priv">${AX_PRIV}</div>`,[{label:'➕ أضف كمهام فرعية',cls:'btn-filled',fn:async()=>{ const sel=axPicked(subs); axClose(); for(const s of sel) await axMakeUrgent({title:s.title,type:'أخرى',priority:s.priority,date:'',parentId:x.id,fileId:x.fileId,notes:''}); _showToast(`أُضيفت ${sel.length} مهام فرعية`,'success'); }}]);
+}
+async function axUrgentDraft(){
+  const title=document.getElementById('uTitle').value.trim(); if(!title){ _showToast('اكتب عنوان المهمة أولًا','error'); return; }
+  const fid=document.getElementById('uFile').value, f=fid?fileOf(fid):null;
+  axOpen('✍️ مسودة'); axLoading('أكتب المسودة…');
+  const d=await axAsk('urgent_draft','اكتب مسودة جاهزة لما تتطلبه هذه المهمة (خطاب رسمي، بريد إلكتروني، ملاحظات مراجعة عقد، نقاط اتصال…) حسب نوعها. ضع المعلومات الناقصة بين أقواس مربعة [..] ولا تختلقها. ابدأ بسطر يحدد نوع المستند.','اكتب المسودة.',{task:{title,type:document.getElementById('uType').value,notes:document.getElementById('uNotes').value},file:f?axFileCtx(f):null});
+  if(d==null){ axFail(); return; }
+  axTextResult(d,[{label:'📝 أضف إلى ملاحظات المهمة',fn:()=>{ const n=document.getElementById('uNotes'); n.value=((n.value?n.value+'\n\n':'')+d).slice(0,6000); axClose(); }}]);
+}
+async function axSuggestDoneNote(btn){
+  const x=window.__urgNoteTask; if(!x) return;
+  const old=btn.textContent; btn.disabled=true; btn.textContent='…';
+  const t=await axAsk('done_note','اكتب ملاحظة إنجاز قصيرة (سطر أو سطران) تصف ما أُنجز في هذه المهمة بصيغة الماضي، اعتمادًا على عنوانها وملاحظاتها فقط دون اختلاق تفاصيل أو أرقام. أعد النص فقط.','اكتب ملاحظة الإنجاز.',{title:x.title,type:x.type,notes:x.notes},{temp:0.4});
+  btn.disabled=false; btn.textContent=old; if(t) document.getElementById('urgNoteText').value=t.trim();
+}
+
+/* ====================== FILES & ROUNDS ====================== */
+async function axFileAnalyze(id){
+  const f=fileOf(id); if(!f) return; axOpen('🧠 تحليل الملف — '+f.title); axLoading('أحلل الملف…');
+  const t=await axAsk('file_analyze','حلّل هذا الملف تحليلًا يشبه مستشارًا قانونيًا خبيرًا ومتحفظًا. الأقسام: (1) الوقائع المؤكدة (2) ما هو غير مؤكد أو ناقص أو متناقض (3) نقاط القوة ونقاط الضعف (4) المخاطر مرتبة (عالٍ/متوسط/منخفض) مع السبب (5) الخيارات المتاحة مع مقارنتها بإيجاز (6) الخطوة التالية المقترحة والمواعيد القريبة (7) أسئلة يجب حسمها. اعتمد على السياق فقط، ولا تذكر مواد نظامية أو سوابق إلا إن كنت متأكدًا، وقل صراحة ما لا يمكن التحقق منه. هذا تحليل مساعد لا يغني عن مراجعة المختص.','حلل الملف.',axFileCtx(f),{max:45000});
+  if(t==null){ axFail(); return; } axTextResult(t);
+}
+function axFilePlan(id){ const f=fileOf(id); if(!f) return; axPlanFromPrompt(id,`خطة متابعة وإدارة الملف: ${f.title}${f.party?' (الطرف: '+f.party+')':''}. تشمل الإجراءات القادمة والمستندات المطلوبة والمواعيد والمخاطر.`); }
+function axFileDraft(id){
+  const f=fileOf(id); if(!f) return;
+  plnForm({title:'✍️ مسودة خطاب / مذكرة',saveLabel:'✨ اكتب المسودة',values:{kind:'خطاب متابعة',note:''},
+    fields:[{k:'kind',label:'نوع المستند',type:'select',full:true,opts:['خطاب متابعة','خطاب مطالبة','إنذار رسمي','رد على خطاب','مذكرة موجزة للإدارة','بريد إلكتروني رسمي','محضر اجتماع','ملخص للعميل']},
+      {k:'note',label:'ما المطلوب تحديدًا؟ (اختياري)',type:'textarea',full:true,rows:3,ph:'مثال: نطلب فيه الرد خلال 7 أيام ونذكّر بالمرفقات'}],
+    onSave:async v=>{ axOpen('✍️ '+v.kind); axLoading('أكتب المسودة…');
+      const d=await axAsk('file_draft','اكتب '+v.kind+' باللغة العربية المهنية الرسمية اعتمادًا على بيانات الملف وجولاته. ضع المعلومات الناقصة بين أقواس مربعة [..] (أسماء، أرقام، مواعيد) ولا تختلقها، ولا تستشهد بمواد نظامية إلا إن كانت مذكورة في السياق. '+(v.note?'تعليمات المستخدم: '+v.note:''),'اكتب المسودة.',axFileCtx(f));
+      if(d==null){ axFail(); return; } axTextResult(d); }});
+}
+async function axPolishRound(btn){
+  const g=id=>document.getElementById(id).value.trim(); const finding=g('rFinding'), taken=g('rActionTaken'), needed=g('rActionNeeded');
+  if(!finding&&!taken&&!needed){ _showToast('اكتب ملاحظاتك أولًا','error'); return; }
+  const old=btn.textContent; btn.disabled=true; btn.textContent='…جارٍ الصياغة';
+  const r=await axAsk('round_polish','أعد صياغة النصوص التالية بلغة عربية مهنية واضحة ومرتبة دون إضافة أي وقائع أو أرقام أو أسماء غير موجودة فيها. أبقِ الحقل الفارغ فارغًا. المخطط: {"finding":"","actionTaken":"","actionNeeded":""}','أعد الصياغة.',{finding,actionTaken:taken,actionNeeded:needed},{json:true});
+  btn.disabled=false; btn.textContent=old; if(!r) return;
+  if(finding&&axStr(r.finding)) document.getElementById('rFinding').value=axStr(r.finding);
+  if(taken&&axStr(r.actionTaken)) document.getElementById('rActionTaken').value=axStr(r.actionTaken);
+  if(needed&&axStr(r.actionNeeded)) document.getElementById('rActionNeeded').value=axStr(r.actionNeeded);
+  _showToast('أُعيدت الصياغة — راجعها قبل الحفظ','success');
+}
+
+/* ====================== TASKS / CALENDAR / HOME / CONTACTS ====================== */
+function axTaskParse(){
+  plnForm({title:'✨ إضافة ذكية لموعد / مهمة',saveLabel:'✨ حلّل وعبّئ',values:{text:''},
+    fields:[{k:'text',label:'اكتب الموعد أو المهمة بلغتك',type:'textarea',full:true,rows:3,req:true,ph:'مثال: اجتماع مع المحامي يوم الخميس القادم الساعة 10 صباحًا بخصوص قضية الإيجار'}],
+    onSave:async v=>{
+      axOpen('✨ إضافة ذكية'); axLoading('أحلل النص…');
+      const r=await axAsk('task_parse','حوّل وصف المستخدم إلى موعد أو مهمة منظمة. استنتج التاريخ والوقت (24 ساعة HH:MM) من الكلمات نسبةً لتاريخ اليوم، واختر type من: موعد، اجتماع، مهمة، تذكير. وإن ذُكر ملف فاختر fileId الأنسب وإلا اتركه فارغًا. المخطط: {"title":"","type":"","date":"YYYY-MM-DD","time":"","priority":"عاجل|متوسط|عادي","notes":"","fileId":""}',v.text,{files:axFilesBrief()},{json:true});
+      if(!r||!axStr(r.title)){ axFail(); return; }
+      axClose(); openTaskModal(null,axIso(r.date)||today());
+      document.getElementById('tTitle').value=axStr(r.title);
+      if(['موعد','اجتماع','مهمة','تذكير'].includes(r.type)) document.getElementById('tType').value=r.type;
+      if(/^\d{2}:\d{2}$/.test(axStr(r.time))) document.getElementById('tTime').value=axStr(r.time);
+      document.getElementById('tPriority').value=axPri(r.priority);
+      document.getElementById('tNotes').value=axStr(r.notes);
+      if(r.fileId&&fileOf(r.fileId)) document.getElementById('tFile').value=r.fileId;
+      _showToast('عبّأ المساعد الحقول — راجعها واحفظ','success');
+    }});
+}
+function axBriefingCtx(days){
+  const td=today(), end=plnAdd(td,days);
+  const rounds=ROUNDS.filter(r=>r.exec!=='تم'&&r.due&&r.due<=end).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,25).map(r=>({file:(fileOf(r.fileId)||{}).title||'',action:(r.actionNeeded||'').slice(0,140),due:r.due,priority:r.priority,exec:r.exec,overdue:r.due<td}));
+  const c={today:td,horizonDays:days,requiredActions:rounds};
+  c.tasksAndAppointments=CTASKS().filter(t=>!t.done&&t.date&&t.date<=end).slice(0,40).map(t=>({title:t.title,type:t.type,date:t.date,time:t.time,priority:t.priority,file:(fileOf(t.fileId)||{}).title||'',overdue:t.date<td}));
+  c.urgentTasks=axUrgentBrief();
+  c.plans=axPlansBrief();
+  return c;
+}
+async function axBriefing(days){
+  days=days||1; axOpen(days>1?'✨ إحاطة الأسبوع':'✨ إحاطة اليوم'); axLoading('أجمع ما يهمّك من كل أقسام المنصة…');
+  const t=await axAsk('briefing','اكتب إحاطة '+(days>1?'للأسبوع القادم':'ليوم اليوم')+' للمستخدم من بيانات المنصة: (1) أهم 3-5 أولويات الآن مع السبب (2) المتأخر الذي يحتاج تدخلًا (3) المواعيد (بالوقت) (4) المهام العاجلة (5) الخطط: ما يستحق المتابعة منها (6) تنبيه واحد إلى ما قد يُنسى. كن موجزًا جدًا وعمليًا ورتّب بحسب الأهمية، ولا تذكر إلا ما في السياق.','اكتب الإحاطة.',axBriefingCtx(days));
+  if(t==null){ axFail(); return; } axTextResult(t);
+}
+function axContactMsg(id){
+  const c=CONTACTS.find(x=>x.id===id); if(!c) return;
+  const files=FILES.filter(f=>(f.contactIds||[]).includes(id));
+  plnForm({title:'✉️ مراسلة '+c.name,saveLabel:'✨ اكتب الرسالة',values:{channel:'واتساب',fileId:files[0]?files[0].id:'',purpose:''},
+    fields:[{k:'channel',label:'القناة',type:'select',opts:['واتساب','بريد إلكتروني','خطاب رسمي']},
+      {k:'fileId',label:'الملف ذو الصلة',type:'select',opts:[['','— بدون —'],...files.map(f=>[f.id,f.title])]},
+      {k:'purpose',label:'غرض الرسالة',type:'textarea',full:true,rows:3,req:true,ph:'مثال: أطلب موعدًا لتسليم المستندات المتبقية'}],
+    onSave:async v=>{ axOpen('✉️ رسالة إلى '+c.name); axLoading('أكتب الرسالة…');
+      const f=v.fileId?fileOf(v.fileId):null;
+      const d=await axAsk('contact_msg','اكتب رسالة '+v.channel+' مهذبة ومهنية إلى '+c.name+(c.role?' ('+c.role+')':'')+' بحسب غرض المستخدم'+(v.channel==='واتساب'?' بإيجاز':'')+'. ضع المعلومات الناقصة بين أقواس مربعة [..] ولا تختلقها.',v.purpose,{contact:{name:c.name,role:c.role,notes:(c.notes||'').slice(0,300)},file:f?axFileCtx(f):null});
+      if(d==null){ axFail(); return; }
+      axTextResult(d,c.phone&&v.channel==='واتساب'?[{label:'↗ فتح واتساب',fn:()=>{ const num=String(c.phone).replace(/[^\d]/g,''); window.open('https://wa.me/'+num+'?text='+encodeURIComponent(d),'_blank','noopener'); }}]:[]); }});
+}
+
+/* ====================== GLOBAL COMMAND BAR ====================== */
+function axCommandOpen(){
+  axOpen('✨ اطلب من المساعد');
+  axShow(`<div class="settings-desc" style="margin:0 0 8px">اكتب أمرًا بلغتك وسأحوّله إلى إجراء تراجعه قبل التنفيذ: أضف مهمة عاجلة، سجّل موعدًا، أضف مهمة أو ملاحظة إلى خطة، أنشئ خطة، افتح ملفًا، أو اسأل عن أولوياتك.</div>
+    <textarea id="axCmdIn" rows="3" placeholder="مثال: ذكّرني غدًا بإرسال العقد المعدل لشركة النقل — عاجل"></textarea>
+    <div class="ax-priv">${AX_PRIV}</div>`,[{label:'✨ نفّذ',cls:'btn-filled',fn:axCommandRun}]);
+  setTimeout(()=>{ const i=document.getElementById('axCmdIn'); if(i){ i.focus(); i.addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) axCommandRun(); }); } },60);
+}
+async function axCommandRun(){
+  const text=(document.getElementById('axCmdIn')||{}).value; if(!text||!text.trim()) return;
+  axLoading('أفهم طلبك…');
+  const sc=axScope();
+  const ctx={files:axFilesBrief(),plans:PLANS.filter(p=>p.status!=='مؤرشفة').map(p=>({id:p.id,title:p.title,phases:(p.phases||[]).map(x=>x.title)})),urgentTypes:Object.keys(URG_TYPES)};
+  if(sc.urgent) ctx.urgentTasks=axUrgentBrief().slice(0,25); if(sc.tasks) ctx.tasks=axTasksBrief().slice(0,25); if(sc.plans) ctx.plansBrief=axPlansBrief();
+  const r=await axAsk('command','حوّل طلب المستخدم إلى إجراء واحد بالضبط من: urgent_task (مهمة عاجلة/سريعة)، task (موعد أو مهمة وقتية في التقويم)، plan_task (مهمة داخل خطة)، plan_note (ملاحظة في سجل خطة)، new_plan (إنشاء خطة جديدة)، open_file (فتح ملف)، open_plan (فتح خطة)، answer (سؤال أو طلب معلومات: أجب في حقل answer). اختر planId وfileId من القوائم بدقة (أو اتركه فارغًا). استنتج التواريخ نسبةً لليوم. المخطط: {"intent":"","summary":"وصف قصير بالعربية لما سيُنفَّذ","title":"","type":"","priority":"عاجل|متوسط|عادي","date":"YYYY-MM-DD","time":"HH:MM","responsible":"","notes":"","fileId":"","planId":"","phaseTitle":"","planIdea":"","answer":""}',text,ctx,{json:true});
+  if(!r||!r.intent){ axFail(); return; }
+  const I=r.intent, p=r.planId?plnById(r.planId):null, f=r.fileId?fileOf(r.fileId):null;
+  const line=(l,v)=>v?`<li><b>${l}:</b> ${esc(v)}</li>`:'';
+  let acts=[], body='';
+  if(I==='answer'){ axTextResult(axStr(r.answer)||'لا إجابة.'); return; }
+  if(I==='urgent_task'&&axStr(r.title)){
+    body=`<ul>${line('المهمة',r.title)}${line('النوع',r.type)}${line('الأولوية',axPri(r.priority))}${line('الموعد',axIso(r.date)?fmtDate(axIso(r.date)):'')}${line('المسؤول',r.responsible)}${line('الملف',f&&f.title)}${line('ملاحظات',r.notes)}</ul>`;
+    acts=[{label:'✅ أضف إلى العاجلة',cls:'btn-filled',fn:async()=>{ await axMakeUrgent(r); axClose(); goToUrgent(); _showToast('أُضيفت المهمة العاجلة','success'); }}];
+  } else if(I==='task'&&axStr(r.title)){
+    body=`<ul>${line('الموعد/المهمة',r.title)}${line('التاريخ',axIso(r.date)?fmtDate(axIso(r.date)):'')}${line('الوقت',r.time)}${line('الأولوية',axPri(r.priority))}${line('الملف',f&&f.title)}</ul>`;
+    acts=[{label:'✅ أضف إلى التقويم',cls:'btn-filled',fn:()=>{ const id=uid(); TASKS.push({id,done:false,title:axStr(r.title),type:['موعد','اجتماع','مهمة','تذكير'].includes(r.type)?r.type:'مهمة',date:axIso(r.date)||today(),time:/^\d{2}:\d{2}$/.test(axStr(r.time))?axStr(r.time):'',priority:axPri(r.priority),fileId:f?f.id:'',notes:axStr(r.notes)}); logActivity('add','task',`إضافة مهمة/موعد (ذكاء اصطناعي): ${r.title}`); persistTasks(id).then(()=>{ renderNotif(); updateTasksTabBadge(); renderTasksPage(); }); axClose(); _showToast('أُضيف إلى التقويم','success'); }}];
+  } else if(I==='plan_task'&&p&&axStr(r.title)){
+    body=`<ul>${line('الخطة',p.title)}${line('المرحلة',r.phaseTitle)}${line('المهمة',r.title)}${line('الموعد',axIso(r.date)?fmtDate(axIso(r.date)):'')}${line('الأولوية',axPri(r.priority))}</ul>`;
+    acts=[{label:'✅ أضف إلى الخطة',cls:'btn-filled',fn:()=>{ let ph=(p.phases||[]).find(x=>x.title===r.phaseTitle)||(p.phases||[]).find(x=>r.phaseTitle&&(x.title.includes(r.phaseTitle)||r.phaseTitle.includes(x.title)))||p.phases[0]; if(!ph){ ph={id:uid(),title:'مهام إضافية',desc:'',start:'',end:''}; p.phases.push(ph); } p.tasks.push({id:uid(),phaseId:ph.id,title:axStr(r.title),status:'لم يبدأ',priority:axPri(r.priority),due:axIso(r.date),start:'',responsible:axStr(r.responsible),notes:axStr(r.notes),checklist:[],order:plnNextOrder(p),doneAt:'',urgentId:''}); plnLog(p,`أُضيفت مهمة: ${r.title}`,true); logActivity('edit','plan',`إضافة مهمة إلى ${p.title}`); plnSave(p,false); axClose(); plnOpen(p.id,'tasks'); goToPlans(p.id); _showToast('أُضيفت المهمة','success'); }}];
+  } else if(I==='plan_note'&&p&&axStr(r.notes||r.title)){
+    body=`<ul>${line('الخطة',p.title)}${line('الملاحظة',r.notes||r.title)}</ul>`;
+    acts=[{label:'✅ سجّل الملاحظة',cls:'btn-filled',fn:()=>{ plnLog(p,axStr(r.notes||r.title),false); plnSave(p,false); axClose(); _showToast('سُجّلت الملاحظة','success'); }}];
+  } else if(I==='new_plan'){
+    body=`<ul>${line('خطة جديدة',r.title||r.planIdea)}</ul>`;
+    acts=[{label:'✨ ابنِ الخطة',cls:'btn-filled',fn:()=>axPlanGen({idea:axStr(r.planIdea||r.title||r.summary),days:90,depth:'متوسط'},r.fileId||'')}];
+  } else if(I==='open_file'&&f){ axClose(); goToFile(f.id); return; }
+  else if(I==='open_plan'&&p){ axClose(); goToPlans(p.id); return; }
+  else { axShow(`<div class="ax-text"><p>لم أفهم المطلوب بالتحديد. جرّب صياغة أوضح.</p><p>${esc(r.summary||'')}</p></div>`,[{label:'↺ جرّب مرة أخرى',fn:axCommandOpen}]); return; }
+  axShow(`<div class="ax-text"><p>${esc(r.summary||'سأنفّذ التالي:')}</p>${body}</div><div class="ax-priv">${AX_PRIV}</div>`,acts.concat([{label:'↺ عدّل الطلب',fn:axCommandOpen}]));
+}
+
+/* ====================== SMART SEARCH (files + plans + tasks) ====================== */
+async function axSearch(){
+  const q=document.getElementById('aiSearchInput').value.trim(); if(!q) return;
+  const resEl=document.getElementById('aiSearchResults'); resEl.innerHTML='<div class="today-card-empty">جارٍ البحث...</div>';
+  const sc=axScope(); const ctx={files:buildAIFilesContext()};
+  if(sc.plans) ctx.plans=PLANS.map(p=>({id:p.id,title:p.title,goal:p.goal,status:p.status,tasks:(p.tasks||[]).slice(0,40).map(t=>t.title)}));
+  if(sc.urgent) ctx.urgent=quickTasks().slice(0,60).map(t=>({id:t.id,title:t.title,done:t.done,notes:(t.notes||'').slice(0,80)}));
+  if(sc.tasks) ctx.tasks=CTASKS().slice(0,80).map(t=>({id:t.id,title:t.title,date:t.date}));
+  const r=await axAsk('search','أنت محرك بحث ذكي داخل بيانات المنصة. أعد أفضل النتائج المطابقة لسؤال المستخدم (حتى 8) مع سبب موجز لكل نتيجة. type واحد من: file، plan، urgent، task. المخطط: {"matches":[{"type":"","id":"","reason":""}]}',q,ctx,{json:true});
+  if(!r){ resEl.innerHTML=''; return; }
+  const ms=axArr(r.matches).map(m=>{ let o=null; if(m.type==='plan') o=plnById(m.id); else if(m.type==='file') o=fileOf(m.id); else o=TASKS.find(t=>t.id===m.id); return o?{...m,o}:null; }).filter(Boolean);
+  if(!ms.length){ resEl.innerHTML='<div class="today-card-empty">لا توجد نتائج مطابقة.</div>'; return; }
+  const ic={file:'📁',plan:'🧭',urgent:'⚡',task:'📅'};
+  resEl.innerHTML=ms.map((m,i)=>`<div class="ai-search-hit" onclick="axSearchGo(${i})"><b>${ic[m.type]||''} ${esc(m.o.title)}</b><span>${esc(m.reason||'')}</span></div>`).join('');
+  window.__axHits=ms;
+}
+function axSearchGo(i){
+  const m=(window.__axHits||[])[i]; if(!m) return; document.getElementById('aiSearchOverlay').classList.remove('open');
+  if(m.type==='file') goToFile(m.o.id); else if(m.type==='plan'){ goToPlans(m.o.id); }
+  else if(m.o.quick) goToUrgent(); else openTaskModal(m.o.id);
+}
+
+/* ====================== SETTINGS ====================== */
+function axRenderScope(){
+  const el=document.getElementById('axScopeBox'); if(!el) return; const s=axScope();
+  el.innerHTML=[['plans','الخطط'],['urgent','المهام العاجلة'],['tasks','المهام والمواعيد']].map(([k,l])=>`<label class="ax-scope"><input type="checkbox" ${s[k]?'checked':''} onchange="axSetScope('${k}',this.checked)"> ${l}</label>`).join('');
+}
+function axSetScope(k,v){ APP_SETTINGS.aiScope=Object.assign({},APP_SETTINGS.aiScope||{}); APP_SETTINGS.aiScope[k]=!!v; persistAppSettings(); }
+async function axTestConn(btn){
+  const old=btn.textContent; btn.disabled=true; btn.textContent='…';
+  const r=await axAsk('ping','أجب بكلمة واحدة فقط: تم','اختبار',null,{temp:0});
+  btn.disabled=false; btn.textContent=old;
+  if(r!=null) _showToast('✅ الاتصال سليم — المساعد يعمل','success');
+}
 
 /* ---------- toast / confirm ---------- */
 function _showToast(msg, type='info', duration=3000){
@@ -6425,7 +6986,7 @@ async function sendAIChatFull(){
 
   // Build the OpenAI request: system + persisted history (text-only, last 16) + this turn (with images as vision content if any)
   const sys = { role:'system', content:_aiBuildSystemPrompt(conv) };
-  const fileCtx = { role:'system', content:'بيانات ملفات المستخدم وقضاياه (JSON):\n' + JSON.stringify({files:buildAIFilesContext(), today:today()}).slice(0,60000) };
+  const fileCtx = { role:'system', content:'بيانات ملفات المستخدم وقضاياه (JSON):\n' + JSON.stringify(axChatContext()).slice(0,60000) };
   const history = conv.messages.filter(m=>m.id!=='__loading__').slice(-17,-1).map(m=>({
     role:m.role, content: (m.quoted?('اقتباس سابق: "'+String(m.quoted).slice(0,300)+'"\n\n'):'') + (m.content||'') + (m.attachments&&m.attachments.length?('\n[مرفقات: '+m.attachments.map(a=>a.name).join(', ')+']'):'') ,
   }));
@@ -6489,13 +7050,14 @@ async function aiSuggestRoundAction(){
 }
 
 /* ---- smart search ---- */
+function runAISearch(){ return axSearch(); }
 function openAISearch(){
   document.getElementById('aiSearchResults').innerHTML = '';
   document.getElementById('aiSearchInput').value = '';
   document.getElementById('aiSearchOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('aiSearchInput').focus(), 150);
 }
-async function runAISearch(){
+async function runAISearchLegacy(){
   const q = document.getElementById('aiSearchInput').value.trim();
   if(!q) return;
   const resEl = document.getElementById('aiSearchResults');
