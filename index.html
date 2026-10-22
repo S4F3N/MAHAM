@@ -138,6 +138,8 @@
   @media(prefers-reduced-motion:reduce){.page.active{animation:none;}}
 
 
+  .nf-wrap{margin:2px 0 12px;} .nf-check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;}
+  .nf-box{margin-top:10px;padding:12px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);}
   /* ===== AI layer ===== */
   #axOverlay{z-index:800;}
   .ax-loading{display:flex;align-items:center;gap:10px;justify-content:center;padding:34px 10px;color:var(--text-2);font-size:14px;}
@@ -1516,6 +1518,17 @@
       <div class="form-row"><label>الأولوية</label><select id="tPriority"><option value="عاجل">عاجل</option><option value="متوسط" selected>متوسط</option><option value="عادي">عادي</option></select></div>
       <div class="form-row"><label>مرتبطة بملف (اختياري)</label><select id="tFile"><option value="">— بدون ربط —</option></select></div>
     </div>
+    <div class="nf-wrap">
+      <label class="nf-check"><input type="checkbox" id="tNewFile" onchange="nfToggle('t')"> 📁 إنشاء ملف جديد بهذه المهمة (وتُربط به مهامّ أخرى لاحقًا)</label>
+      <div class="nf-box" id="tNfBox" style="display:none">
+        <div class="form-row"><label>اسم الملف</label><input type="text" id="tNfTitle" placeholder="اسم الملف الجديد"></div>
+        <div class="form-2col">
+          <div class="form-row"><label>المجموعة</label><select id="tNfGroup" onchange="nfGroupChanged('t')"></select></div>
+          <div class="form-row"><label>التصنيف</label><select id="tNfCat"></select></div>
+        </div>
+        <div class="settings-desc" style="margin:0">سيُنشأ الملف بحالة «نشط» ثم تُربط به هذه المهمة، وتجده في صفحة الملفات داخل المجموعة المختارة.</div>
+      </div>
+    </div>
     <div class="form-row"><label>ملاحظات</label><textarea id="tNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-danger" id="tDeleteBtn" onclick="deleteTask()" style="display:none">حذف</button>
@@ -1562,7 +1575,18 @@
       <div class="form-row"><label>المجموعة</label><select id="uGroup" onchange="urgLinkChanged('group')"></select></div>
       <div class="form-row"><label>التصنيف</label><select id="uCat" onchange="urgLinkChanged('cat')"></select></div>
       <div class="form-row" style="margin-bottom:4px;"><label>الملف</label><select id="uFile" onchange="urgLinkChanged('file')"></select></div>
-      <div class="settings-desc" id="uLinkNote" style="margin:6px 0 0;"></div>
+      <div class="settings-desc" id="uLinkNote" style="margin:6px 0 8px;"></div>
+      <div class="nf-wrap">
+      <label class="nf-check"><input type="checkbox" id="uNewFile" onchange="nfToggle('u')"> 📁 إنشاء ملف جديد بهذه المهمة (وتُربط به مهامّ أخرى لاحقًا)</label>
+      <div class="nf-box" id="uNfBox" style="display:none">
+        <div class="form-row"><label>اسم الملف</label><input type="text" id="uNfTitle" placeholder="اسم الملف الجديد"></div>
+        <div class="form-2col">
+          <div class="form-row"><label>المجموعة</label><select id="uNfGroup" onchange="nfGroupChanged('u')"></select></div>
+          <div class="form-row"><label>التصنيف</label><select id="uNfCat"></select></div>
+        </div>
+        <div class="settings-desc" style="margin:0">سيُنشأ الملف بحالة «نشط» ثم تُربط به هذه المهمة، وتجده في صفحة الملفات داخل المجموعة المختارة.</div>
+      </div>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-danger" id="uDeleteBtn" onclick="deleteUrgent()" style="display:none">حذف</button>
@@ -3159,7 +3183,7 @@ function populateTaskFileSelect(){
   document.getElementById('tFile').innerHTML = '<option value="">— بدون ربط —</option>' + FILES.map(f=>`<option value="${f.id}">${esc(f.title)}</option>`).join('');
 }
 function openTaskModal(id, prefillDate){
-  populateTaskFileSelect();
+  populateTaskFileSelect(); nfInit('t');
   document.getElementById('tId').value = id||'';
   if(id){
     const x = TASKS.find(t=>t.id===id);
@@ -3196,11 +3220,13 @@ function saveTask(){
     priority: document.getElementById('tPriority').value, fileId: document.getElementById('tFile').value,
     notes: document.getElementById('tNotes').value.trim(),
   };
+  const nf=nfBuild('t'); if(nf===null) return;
+  if(nf.file) data.fileId=nf.file.id;
   let savedId = id;
   if(id){ const idx=TASKS.findIndex(t=>t.id===id); TASKS[idx]={...TASKS[idx],...data}; logActivity('edit','task', `تعديل مهمة/موعد: ${data.title}`, taskDetailText(data)); }
   else { savedId = uid(); TASKS.push({id:savedId, done:false, ...data}); logActivity('add','task', `إضافة مهمة/موعد جديد: ${data.title}`, taskDetailText(data)); }
-  persistTasks(savedId).then(()=>{
-    closeTaskModal(); _showToast('تم الحفظ','success');
+  (nf.file?persistFiles(nf.file.id):Promise.resolve()).then(()=>persistTasks(savedId)).then(()=>{
+    closeTaskModal(); _showToast(nf.file?'تم الحفظ وإنشاء الملف وربط المهمة به':'تم الحفظ','success');
     if(document.getElementById('page-calendar').classList.contains('active')){ selectedDay=data.date; renderCalendarPage(); }
     if(document.getElementById('page-tasks').classList.contains('active')) renderTasksPage();
     renderNotif(); updateTasksTabBadge();
@@ -4830,6 +4856,7 @@ function urgParentChanged(){
 function openUrgentModal(id, parentId){
   const x = id ? TASKS.find(t=>t.id===id) : null;
   const par = (!x && parentId) ? TASKS.find(t=>t.id===parentId) : null;
+  nfInit('u');
   document.getElementById('uId').value = id||'';
   document.getElementById('urgentModalTitle').textContent = x ? 'تعديل المهمة العاجلة' : (par?'مهمة فرعية جديدة':'مهمة عاجلة جديدة');
   document.getElementById('uTitle').value = x?x.title:'';
@@ -4858,6 +4885,8 @@ function saveUrgent(){
     notes:document.getElementById('uNotes').value.trim(),
     groupId:document.getElementById('uGroup').value, category:document.getElementById('uCat').value, fileId:document.getElementById('uFile').value,
   };
+  const nf=nfBuild('u',{priority:data.priority,responsible:data.responsible}); if(nf===null) return;
+  if(nf.file){ data.fileId=nf.file.id; data.groupId=nf.file.groupId; data.category=nf.file.category; }
   let x;
   if(id){
     x=TASKS.find(t=>t.id===id);
@@ -4869,7 +4898,7 @@ function saveUrgent(){
     logActivity('add','task', `${x.parentId?'إضافة مهمة فرعية':'إضافة مهمة عاجلة'}: ${title}`);
   }
   const sync=urgSyncToFile(x);
-  urgPersist(x.id,sync).then(()=>{ closeUrgentModal(); _showToast(x.fileId?'تم الحفظ وتسجيلها في الملف':'تم الحفظ','success'); });
+  (nf.file?persistFiles(nf.file.id):Promise.resolve()).then(()=>urgPersist(x.id,sync)).then(()=>{ closeUrgentModal(); _showToast(nf.file?'تم إنشاء الملف وربط المهمة به':(x.fileId?'تم الحفظ وتسجيلها في الملف':'تم الحفظ'),'success'); });
 }
 function deleteUrgent(){
   const id=document.getElementById('uId').value; const x=TASKS.find(t=>t.id===id); if(!x) return;
@@ -6289,6 +6318,36 @@ function axMic(btn,targetId){
   try{ rec.start(); haptic(8); }catch(e){ AX_REC=null; AX_REC_BTN=null; btn.classList.remove('rec'); btn.textContent='🎤'; }
 }
 const axMicBtn=id=>`<button type="button" class="btn btn-glass btn-sm ax-mic" onclick="axMic(this,'${id}')" title="إملاء صوتي — اضغط وتكلّم، واضغط مرة أخرى للإيقاف">🎤</button>`;
+
+
+/* ---------- create a new file from a task (task modal + urgent modal) ---------- */
+const NF_IDS={t:{title:'tTitle',file:'tFile'},u:{title:'uTitle',file:'uFile'}};
+function nfInit(p){
+  document.getElementById(p+'NewFile').checked=false; document.getElementById(p+'NfBox').style.display='none';
+  const f=document.getElementById(NF_IDS[p].file); if(f) f.disabled=false;
+  document.getElementById(p+'NfGroup').innerHTML='<option value="">بدون مجموعة</option>'+CATEGORY_GROUPS.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  nfGroupChanged(p);
+}
+function nfGroupChanged(p){
+  const g=document.getElementById(p+'NfGroup').value; const grp=g?CATEGORY_GROUPS.find(q=>q.id===g):null;
+  const names=grp?(grp.catIds||[]).map(id=>(CATEGORIES.find(k=>k.id===id)||{}).name).filter(Boolean):null;
+  const cats=names&&names.length?CATEGORIES.filter(k=>names.includes(k.name)):CATEGORIES;
+  document.getElementById(p+'NfCat').innerHTML=cats.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+}
+function nfToggle(p){
+  const on=document.getElementById(p+'NewFile').checked; document.getElementById(p+'NfBox').style.display=on?'block':'none';
+  const f=document.getElementById(NF_IDS[p].file); if(f){ f.disabled=on; if(on) f.value=''; }
+  if(on){ const t=document.getElementById(p+'NfTitle'); if(!t.value.trim()) t.value=document.getElementById(NF_IDS[p].title).value.trim(); setTimeout(()=>t.focus(),50); }
+}
+/* returns {file} (already pushed to FILES, not yet persisted), {} when not requested, or null on validation error */
+function nfBuild(p,extra){
+  if(!document.getElementById(p+'NewFile').checked) return {};
+  const title=document.getElementById(p+'NfTitle').value.trim();
+  if(!title){ _showToast('اكتب اسم الملف الجديد','error'); document.getElementById(p+'NfTitle').focus(); return null; }
+  const f={id:uid(),pinned:false,title,category:document.getElementById(p+'NfCat').value||(CATEGORIES[0]||{}).name||'',groupId:document.getElementById(p+'NfGroup').value,status:'نشط',priority:(extra&&extra.priority)||'متوسط',party:'',responsible:(extra&&extra.responsible)||'',opened:today(),target:'',tags:[],contactIds:[],notes:''};
+  FILES.push(f); logActivity('add','file',`إضافة ملف جديد من مهمة: ${title}`);
+  return {file:f};
+}
 
 /* ---------- toast / confirm ---------- */
 function _showToast(msg, type='info', duration=3000){
