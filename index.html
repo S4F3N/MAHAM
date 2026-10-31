@@ -767,7 +767,7 @@
   .pay-chips{display:flex;gap:6px;flex-wrap:wrap;} .pay-nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
   .pay-plabel{font-size:15px;min-width:120px;text-align:center;} .pay-dl{font-size:12.5px;display:flex;align-items:center;gap:6px;color:var(--text-2);}
   .pay-kpis .pln-stat .n small{font-size:12px;font-weight:600;color:var(--text-2);} .pay-kpis .d{font-size:11.5px;margin-top:4px;color:var(--text-2);} .pay-kpis .d.up{color:var(--orange);} .pay-kpis .d.dn{color:var(--green);}
-  .pay-quick{margin-bottom:14px;} .pay-qrow{display:grid;grid-template-columns:2fr 1fr 1.3fr auto auto;gap:8px;}
+  .pay-quick{margin-bottom:14px;} .pay-qrow{display:grid;grid-template-columns:2fr 1fr 1.3fr 1.2fr auto auto;gap:8px;}
   @media(max-width:720px){.pay-qrow{grid-template-columns:1fr 1fr;} .pay-qrow input:first-child{grid-column:1/-1;}}
   .pay-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;} .pay-fsel{display:flex;gap:8px;flex-wrap:wrap;} .pay-fsel input{min-width:130px;}
   .pay-sumline{font-size:12.5px;color:var(--text-2);margin:2px 0 10px;} .pay-sumline b{color:var(--text-1);}
@@ -789,6 +789,7 @@
   .pay-tablewrap{overflow-x:auto;} .pay-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px;}
   .pay-table th,.pay-table td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--border);vertical-align:top;} .pay-table th{font-size:11px;color:var(--text-2);background:var(--surface-2);position:sticky;top:0;}
   .pay-table td.num{text-align:left;font-weight:700;white-space:nowrap;} .pay-table .cl{font-size:11px;color:var(--text-3);} .pay-table tr.gh td{background:var(--surface-2);font-weight:700;} .pay-table tr.tot td{background:var(--accent-glow);font-weight:800;}
+  .pay-split{margin-bottom:14px;} .pay-sp2{display:grid;grid-template-columns:1fr 1fr;gap:10px;} .pay-sp2>div{background:var(--surface-2);border-radius:var(--radius-md);padding:12px 14px;display:flex;flex-direction:column;gap:3px;} .pay-sp2 span{font-size:12px;color:var(--text-2);} .pay-sp2 b{font-size:22px;font-family:var(--font-body);} .pay-sp2 b small{font-size:11px;color:var(--text-2);} .pay-sp2 i{font-style:normal;font-size:11px;color:var(--text-3);} .pay-sp2 .mine{border:1px solid color-mix(in srgb,var(--orange) 45%,transparent);} .pay-sp2 .mine b{color:var(--orange);}
   .pay-grp{font-size:12px;font-weight:600;color:var(--text-2);} .pay-grp select{margin-right:6px;}
   /* ================= PLANS ================= */
   .pln-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
@@ -6438,8 +6439,11 @@ const PAY_STATUS = ['مطلوب','تم السداد','مؤكد','ملغي'];
 const PAY_PAID = ['تم السداد','مؤكد'];
 const PAY_METHODS = ['تحويل بنكي','سداد','مدى / بطاقة','نقدًا','أبشر / مقيم','محفظة إلكترونية','أخرى'];
 const PAY_REIMB = ['لا يُسترد','مستحق الاسترداد','مُسترد'];
+const PAY_SRC = ['سدّده صاحب الشأن','سُحب من جهتي'];
+function paySrc(x){ return x.src==='سُحب من جهتي'?'سُحب من جهتي':'سدّده صاحب الشأن'; }
+const payMine=x=>paySrc(x)==='سُحب من جهتي';
 const PAY_COLORS = ['#0a84ff','#30d158','#ff9f0a','#bf5af2','#64d2ff','#ffd60a','#5e5ce6','#40c8e0','#ac8e68','#66d4cf','#ff9f68','#8e8ef5'];
-let PAY_UI = {view:'log', range:'month', month:'', year:0, from:'', to:'', q:'', st:'all', cat:'', who:'', ent:'', grp:'none'};
+let PAY_UI = {src:'',view:'log', range:'month', month:'', year:0, from:'', to:'', q:'', st:'all', cat:'', who:'', ent:'', grp:'none'};
 try{ const s=JSON.parse(localStorage.getItem('maham_pay_ui')||'null'); if(s){ ['view','range','month','year','from','to','grp'].forEach(k=>{ if(s[k]!=null) PAY_UI[k]=s[k]; }); } }catch(e){}
 if(!PAY_UI.month) PAY_UI.month=today().slice(0,7);
 if(!PAY_UI.year) PAY_UI.year=+today().slice(0,4);
@@ -6502,7 +6506,7 @@ function renderPayPage(){
   const root=document.getElementById('payRoot'); if(!root) return;
   payUpdateBadge(); payRefreshLists();
   const b=payBounds(), arr=payList(b);
-  const tabs=[['log','📒 السجل'],['report','📊 التقرير'],['people','👥 حسب المسدِّد']];
+  const tabs=[['log','📒 السجل'],['report','📊 التقرير'],['people','👥 حسب صاحب الشأن']];
   const pend=PAYMENTS.filter(x=>x.status==='مطلوب');
   let h=`<div class="section-head"><h2>💸 المدفوعات والسداد <span class="settings-fold-count">${PAYMENTS.length?'('+PAYMENTS.length+')':''}</span></h2>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="axPayParse()">✨ من نص / رسالة</button><button class="btn btn-filled btn-sm" onclick="payEdit()">+ سداد جديد</button></div></div>
@@ -6529,9 +6533,9 @@ function payKpiHtml(b,arr){
   const k=(n,l,cls,extra)=>`<div class="pln-stat ${cls||''}"><div class="n">${n}</div><div class="l">${l}</div>${extra||''}</div>`;
   return `<div class="pln-stats pay-kpis">
     ${k(payFmt(paySum(paid))+'<small> ر.س</small>','إجمالي المسدَّد في الفترة','good',delta)}
-    ${k(paid.length,'عملية مسدَّدة','')}
+    ${k(payFmt(paySum(paid.filter(x=>!payMine(x))))+'<small> ر.س</small>','سدّده أصحاب الشأن من حساباتهم','')}
+    ${k(payFmt(paySum(paid.filter(payMine)))+'<small> ر.س</small>','سُحب من جهتي ('+paid.filter(payMine).length+' عملية)',paid.some(payMine)?'warn':'')}
     ${k(pend.length,'مطلوب سدادها (الكل)'+(pend.length?` — ${payFmt(paySum(pend))} ر.س`:''),pend.length?'warn':'')}
-    ${k(reimb.length,'مستحقة الاسترداد'+(reimb.length?` — ${payFmt(paySum(reimb))} ر.س`:''),reimb.length?'warn':'')}
     ${k(top?esc(top.k):'—','أكبر فئة'+(top?` — ${payFmt(top.sum)} ر.س`:''),'')}
   </div>`;
 }
@@ -6545,6 +6549,7 @@ function payFilterItems(arr){
     if(PAY_UI.cat && x.category!==PAY_UI.cat) return false;
     if(PAY_UI.who && (x.payer||'بدون مسدِّد')!==PAY_UI.who) return false;
     if(PAY_UI.ent && x.entity!==PAY_UI.ent) return false;
+    if(PAY_UI.src && paySrc(x)!==PAY_UI.src) return false;
     if(q && !([x.title,x.category,x.payer,x.entity,x.beneficiary,x.ref,x.notes,payFileTitle(x.fileId)].join(' ').toLowerCase().includes(q))) return false;
     return true;
   });
@@ -6560,15 +6565,17 @@ function payLogHtml(b,arrPeriod){
   h+=`<div class="pln-box pay-quick"><h4><span>⚡ تسجيل سريع</span></h4><div class="pay-qrow">
       <input type="text" id="payQT" placeholder="وصف العملية (مثال: رسوم تأشيرة)" list="payCatList" onkeydown="if(event.key==='Enter')payQuickAdd()">
       <input type="number" id="payQA" placeholder="المبلغ" step="any" onkeydown="if(event.key==='Enter')payQuickAdd()">
-      <input type="text" id="payQW" placeholder="المسدِّد" list="payWhoList" onkeydown="if(event.key==='Enter')payQuickAdd()">
+      <input type="text" id="payQW" placeholder="صاحب الشأن" list="payWhoList" onkeydown="if(event.key==='Enter')payQuickAdd()">
+      <select id="payQM" title="من أين خرج المبلغ؟"><option>سدّده صاحب الشأن</option><option>سُحب من جهتي</option></select>
       <select id="payQS"><option>مطلوب</option><option>تم السداد</option></select>
       <button class="btn btn-filled btn-sm" onclick="payQuickAdd()">+ أضف</button></div></div>`;
   h+=`<div class="pay-filters"><div class="pay-chips">${stChips}</div><div class="pay-fsel">
       <input type="text" id="payQ" placeholder="بحث…" value="${esc(PAY_UI.q)}" oninput="PAY_UI.q=this.value;payRerenderList()">
-      ${paySel('payFC','كل الفئات',cats,PAY_UI.cat,'payFilterCat')}${paySel('payFW','كل المسدِّدين',who,PAY_UI.who,'payFilterWho')}${paySel('payFE','كل الكيانات',ents,PAY_UI.ent,'payFilterEnt')}</div></div>`;
+      ${paySel('payFC','كل الفئات',cats,PAY_UI.cat,'payFilterCat')}${paySel('payFW','كل أصحاب الشأن',who,PAY_UI.who,'payFilterWho')}${paySel('payFE','كل الكيانات',ents,PAY_UI.ent,'payFilterEnt')}${paySel('payFS','كل المصادر',PAY_SRC,PAY_UI.src,'payFilterSrc')}</div></div>`;
   h+=`<div id="payListBox">${payListHtml(items)}</div>`;
   return h;
 }
+function payFilterSrc(v){ PAY_UI.src=v; payRerenderList(); }
 function payFilterCat(v){ PAY_UI.cat=v; payRerenderList(); } function payFilterWho(v){ PAY_UI.who=v; payRerenderList(); } function payFilterEnt(v){ PAY_UI.ent=v; payRerenderList(); }
 function payRerenderList(){
   const b=payBounds(); const base=PAY_UI.range==='all'?PAYMENTS.slice():PAYMENTS.filter(x=>payInRange(x,b)||x.status==='مطلوب');
@@ -6598,7 +6605,7 @@ function payRowHtml(x){
   return `<div class="pay-row ${x.status==='ملغي'?'cancel':''}" style="--pc:${col}" onclick="payEdit('${x.id}')">
     <div class="pln-ico pay-ico">${payCatIcon(x.category)}</div>
     <div class="pay-main"><div class="pay-t">${esc(x.title)}</div>
-      <div class="pln-tmeta">${payStatusPill(x)}${x.category?`<span class="badge">${esc(x.category)}</span>`:''}${x.payer?`<span class="badge">👤 ${esc(x.payer)}</span>`:''}${x.entity?`<span class="badge">🏢 ${esc(x.entity)}</span>`:''}${x.beneficiary?`<span class="badge">← ${esc(x.beneficiary)}</span>`:''}${x.method?`<span class="badge">${esc(x.method)}</span>`:''}${x.ref?`<span class="badge" dir="ltr">#${esc(x.ref)}</span>`:''}${f?`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${x.fileId}')">📁 ${esc(f)}</span>`:''}${x.reimb&&x.reimb!=='لا يُسترد'?`<span class="badge">${x.reimb==='مُسترد'?'↩ مُسترد':'⏳ يُسترد'}</span>`:''}</div>
+      <div class="pln-tmeta">${payStatusPill(x)}${x.category?`<span class="badge">${esc(x.category)}</span>`:''}${x.payer?`<span class="badge">👤 ${esc(x.payer)}</span>`:''}${payMine(x)?`<span class="pln-pill orange">💳 سُحب من جهتي</span>`:''}${x.entity?`<span class="badge">🏢 ${esc(x.entity)}</span>`:''}${x.beneficiary?`<span class="badge">← ${esc(x.beneficiary)}</span>`:''}${x.method?`<span class="badge">${esc(x.method)}</span>`:''}${x.ref?`<span class="badge" dir="ltr">#${esc(x.ref)}</span>`:''}${f?`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${x.fileId}')">📁 ${esc(f)}</span>`:''}${x.reimb&&x.reimb!=='لا يُسترد'?`<span class="badge">${x.reimb==='مُسترد'?'↩ مُسترد':'⏳ يُسترد'}</span>`:''}</div>
       ${x.notes?`<div class="pay-notes">${esc(x.notes)}</div>`:''}${acts.length?`<div class="pay-acts">${acts.join('')}</div>`:''}</div>
     <div class="pay-amt">${payMoney(payTotal(x))}${payNum(x.fee)?`<small>منها رسوم ${payFmt(x.fee)}</small>`:''}</div></div>`;
 }
@@ -6611,7 +6618,8 @@ function payFields(){
     {k:'status',label:'الحالة',type:'select',opts:PAY_STATUS},
     {k:'amount',label:'المبلغ (ر.س)',type:'number'},
     {k:'fee',label:'رسوم / عمولة إضافية (ر.س)',type:'number'},
-    {k:'payer',label:'المسدِّد (صاحب الشأن)',type:'text',list:'payWhoList',ph:'من سدّد أو سيسدّد'},
+    {k:'payer',label:'صاحب الشأن (المسدِّد)',type:'text',list:'payWhoList',ph:'من سدّد أو سيسدّد'},
+    {k:'src',label:'من أين خرج المبلغ؟',type:'select',opts:PAY_SRC},
     {k:'entity',label:'الكيان / الشركة المستفيدة',type:'text',list:'payEntList',ph:'مثال: أوشن، نقاط الأداء'},
     {k:'beneficiary',label:'الجهة المسدَّد لها',type:'text',list:'payBenList',ph:'مثال: قوى، وزارة الداخلية'},
     {k:'method',label:'طريقة السداد',type:'select',opts:[['','— غير محدد —'],...PAY_METHODS]},
@@ -6625,7 +6633,7 @@ function payFields(){
 }
 function payEdit(id,prefill){
   const x=id?payById(id):null;
-  const vals=x?x:Object.assign({status:'مطلوب',reqDate:today(),reimb:'لا يُسترد',category:'',method:''},prefill||{});
+  const vals=x?Object.assign({src:paySrc(x)},x):Object.assign({status:'مطلوب',reqDate:today(),reimb:'لا يُسترد',category:'',method:'',src:'سدّده صاحب الشأن'},prefill||{});
   plnForm({title:x?'تعديل عملية سداد':'سداد جديد',wide:true,values:vals,fields:payFields(),
     onSave:v=>{
       v.amount=v.amount===''?0:+v.amount; v.fee=v.fee===''?0:+v.fee;
@@ -6641,7 +6649,7 @@ function payQuickAdd(){
   const t=document.getElementById('payQT'), a=document.getElementById('payQA'), w=document.getElementById('payQW'), s=document.getElementById('payQS');
   const title=t.value.trim(); if(!title){ _showToast('اكتب وصف العملية','error'); t.focus(); return; }
   const cat=Object.keys(PAY_CATS).flatMap(c=>c.split(' / ').map(p=>[p,c])).filter(([p])=>p!=='أخرى'&&title.includes(p)).sort((a,b)=>b[0].length-a[0].length).map(a=>a[1])[0]||'';
-  const n={id:uid(),createdAt:new Date().toISOString(),updatedAt:'',title,category:cat,amount:payNum(a.value),fee:0,payer:w.value.trim(),entity:'',beneficiary:'',method:'',ref:'',fileId:'',reimb:'لا يُسترد',notes:'',status:s.value,reqDate:today(),paidDate:s.value==='تم السداد'?today():''};
+  const n={id:uid(),createdAt:new Date().toISOString(),updatedAt:'',title,category:cat,amount:payNum(a.value),fee:0,payer:w.value.trim(),entity:'',beneficiary:'',method:'',ref:'',fileId:'',reimb:'لا يُسترد',src:(document.getElementById('payQM')||{}).value||'سدّده صاحب الشأن',notes:'',status:s.value,reqDate:today(),paidDate:s.value==='تم السداد'?today():''};
   PAYMENTS.push(n); logActivity('add','payment',`تسجيل سداد: ${n.title} — ${payFmt(payTotal(n))} ر.س`); haptic(6);
   paySave(n).then(()=>{ const q=document.getElementById('payQT'); if(q) q.focus(); });
 }
@@ -6672,7 +6680,7 @@ function payPeopleHtml(b,arr){
     const cats=payGroup(paid,x=>x.category).slice(0,3).map(c=>`<span class="badge">${payCatIcon(c.k)} ${esc(c.k)}</span>`).join('');
     return `<div class="pln-card" style="--pc:var(--accent)" onclick="payPickWho(${gi})">
       <div class="pln-card-h"><div class="pln-ico">👤</div><div class="pln-card-t">${esc(g.k)}</div></div>
-      <div class="pay-big">${payMoney(paySum(paid))}</div><div class="pln-card-g" style="margin:2px 0 6px">${paid.length} عملية مسدَّدة${pend.length?` · ${pend.length} مطلوبة (${payFmt(paySum(pend))} ر.س)`:''}</div>
+      <div class="pay-big">${payMoney(paySum(paid))}</div><div class="pln-card-g" style="margin:2px 0 6px">${paid.length} عملية مسدَّدة${paid.some(payMine)?` · سُحب من جهتي ${payFmt(paySum(paid.filter(payMine)))} ر.س`:''}${pend.length?` · ${pend.length} مطلوبة (${payFmt(paySum(pend))} ر.س)`:''}</div>
       <div class="pln-card-f">${cats}${re.length?`<span class="pln-pill orange">يُسترد ${payFmt(paySum(re))} ر.س</span>`:''}</div></div>`; }).join('')}</div>`;
   return h;
 }
@@ -6702,24 +6710,27 @@ function payTrend(arr,b){
 }
 function payGroupKey(){ return {none:x=>'',category:x=>x.category||'بدون فئة',payer:x=>x.payer||'بدون مسدِّد',entity:x=>x.entity||'بدون كيان',file:x=>payFileTitle(x.fileId)||'بدون ملف'}[PAY_UI.grp]; }
 function payTableRows(items){
-  return items.map((x,i)=>`<tr><td>${i+1}</td><td>${payDate(x)?fmtDate(payDate(x)):''}</td><td>${esc(x.title)}${x.notes?`<div class="cl">${esc(x.notes)}</div>`:''}</td><td>${esc(x.category||'')}</td><td>${esc(x.payer||'')}</td><td>${esc(x.entity||'')}</td><td>${esc(x.beneficiary||'')}</td><td>${esc(x.method||'')}</td><td dir="ltr">${esc(x.ref||'')}</td><td class="num">${payFmt(payTotal(x))}</td><td>${esc(x.status)}</td></tr>`).join('');
+  return items.map((x,i)=>`<tr><td>${i+1}</td><td>${payDate(x)?fmtDate(payDate(x)):''}</td><td>${esc(x.title)}${payMine(x)?' <b>💳</b>':''}${x.notes?`<div class="cl">${esc(x.notes)}</div>`:''}</td><td>${esc(x.category||'')}</td><td>${esc(x.payer||'')}</td><td>${esc(x.entity||'')}</td><td>${esc(x.beneficiary||'')}</td><td>${esc(x.method||'')}</td><td dir="ltr">${esc(x.ref||'')}</td><td class="num">${payFmt(payTotal(x))}</td><td>${esc(x.status)}</td></tr>`).join('');
 }
 function payReportData(){
   const b=payBounds(), arr=payList(b), paid=arr.filter(payIsPaid).sort((a,c)=>payDate(a).localeCompare(payDate(c)));
   const pend=PAYMENTS.filter(x=>x.status==='مطلوب'&&(PAY_UI.range==='all'||payInRange(x,b)||payDate(x)<b.from)), reimb=PAYMENTS.filter(x=>x.reimb==='مستحق الاسترداد'&&x.status!=='ملغي');
-  return {b,arr,paid,pend,reimb,total:paySum(paid),byCat:payGroup(paid,x=>x.category||'بدون فئة'),byWho:payGroup(paid,x=>x.payer||'بدون مسدِّد'),byEnt:payGroup(paid,x=>x.entity||'بدون كيان'),byBen:payGroup(paid,x=>x.beneficiary||'بدون جهة')};
+  const mine=paid.filter(payMine), theirs=paid.filter(x=>!payMine(x));
+  return {b,arr,paid,pend,reimb,mine,theirs,totalMine:paySum(mine),totalTheirs:paySum(theirs),byMineCat:payGroup(mine,x=>x.category||'بدون فئة'),byMineWho:payGroup(mine,x=>x.payer||'بدون صاحب شأن'),total:paySum(paid),byCat:payGroup(paid,x=>x.category||'بدون فئة'),byWho:payGroup(paid,x=>x.payer||'بدون مسدِّد'),byEnt:payGroup(paid,x=>x.entity||'بدون كيان'),byBen:payGroup(paid,x=>x.beneficiary||'بدون جهة')};
 }
 function payReportHtml(b,arr){
   const R=payReportData(); let h=payKpiHtml(b,arr);
   h+=`<div class="pay-actions pln-noprint"><button class="btn btn-filled btn-sm" onclick="payPrint()">🖨️ طباعة / PDF</button><button class="btn btn-glass btn-sm" onclick="payExportCsv()">📥 تصدير Excel</button><button class="btn btn-glass btn-sm" onclick="payCopyReport()">📋 نسخ ملخص</button><button class="btn btn-glass btn-sm" onclick="axPayReport()">✨ ملخص إداري</button></div>`;
   if(!R.paid.length) return h+`<div class="pln-box pln-empty"><div style="font-size:38px">📊</div><h3>لا عمليات مسدَّدة في هذه الفترة</h3><div class="settings-desc">يُحسب التقرير من العمليات بحالة «تم السداد» أو «مؤكد» حسب تاريخ السداد.</div></div>`+payPendingBox(R);
-  h+=`<div class="pay-rgrid"><div class="pln-box"><h4><span>توزيع المسدَّد حسب الفئة</span></h4><div class="pay-dwrap">${payDonut(R.byCat,R.total)}<div style="flex:1;min-width:200px">${payBars(R.byCat,R.total)}</div></div></div>
+  h+=`<div class="pln-box pay-split"><h4><span>💰 من أين خرجت المبالغ؟</span></h4><div class="pay-sp2"><div><span>سدّدها أصحاب الشأن من حساباتهم</span><b>${payFmt(R.totalTheirs)} <small>ر.س</small></b><i>${R.theirs.length} عملية</i></div><div class="mine"><span>سُحبت من جهتي</span><b>${payFmt(R.totalMine)} <small>ر.س</small></b><i>${R.mine.length} عملية</i></div></div>
+    ${R.mine.length?`<h4 style="margin:14px 0 6px"><span>المسحوب من جهتي — حسب الغرض</span></h4>${payBars(R.byMineCat,R.totalMine)}<h4 style="margin:14px 0 6px"><span>المسحوب من جهتي — لصالح من</span></h4>${payBars(R.byMineWho,R.totalMine)}`:'<div class="pln-note">لا مبالغ مسحوبة من جهتك في هذه الفترة.</div>'}</div>
+  <div class="pay-rgrid"><div class="pln-box"><h4><span>توزيع المسدَّد حسب الفئة</span></h4><div class="pay-dwrap">${payDonut(R.byCat,R.total)}<div style="flex:1;min-width:200px">${payBars(R.byCat,R.total)}</div></div></div>
     <div class="pln-box"><h4><span>${PAY_UI.range==='month'?'المسدَّد يوميًا':'المسدَّد شهريًا'}</span></h4>${payTrend(R.arr,R.b)}
-      <h4 style="margin-top:14px"><span>حسب المسدِّد</span></h4>${payBars(R.byWho.slice(0,8),R.total)}</div>
+      <h4 style="margin-top:14px"><span>حسب صاحب الشأن</span></h4>${payBars(R.byWho.slice(0,8),R.total)}</div>
     <div class="pln-box"><h4><span>حسب الكيان</span></h4>${payBars(R.byEnt,R.total)}<h4 style="margin-top:14px"><span>حسب الجهة المسدَّد لها</span></h4>${payBars(R.byBen.slice(0,8),R.total)}</div></div>`;
   h+=payPendingBox(R);
   const gk=payGroupKey();
-  h+=`<div class="pln-box"><h4><span>📑 تفاصيل العمليات (${R.paid.length})</span><span class="pay-grp pln-noprint">تجميع: <select onchange="PAY_UI.grp=this.value;paySaveUi();renderPayPage()">${[['none','بدون'],['category','الفئة'],['payer','المسدِّد'],['entity','الكيان'],['file','الملف']].map(([k,l])=>`<option value="${k}"${PAY_UI.grp===k?' selected':''}>${l}</option>`).join('')}</select></span></h4><div class="pay-tablewrap"><table class="pay-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المسدِّد</th><th>الكيان</th><th>الجهة</th><th>الطريقة</th><th>المرجع</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody>`;
+  h+=`<div class="pln-box"><h4><span>📑 تفاصيل العمليات (${R.paid.length})</span><span class="pay-grp pln-noprint">تجميع: <select onchange="PAY_UI.grp=this.value;paySaveUi();renderPayPage()">${[['none','بدون'],['category','الفئة'],['payer','المسدِّد'],['entity','الكيان'],['file','الملف']].map(([k,l])=>`<option value="${k}"${PAY_UI.grp===k?' selected':''}>${l}</option>`).join('')}</select></span></h4><div class="pay-tablewrap"><table class="pay-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>صاحب الشأن</th><th>الكيان</th><th>الجهة</th><th>الطريقة</th><th>المرجع</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody>`;
   if(PAY_UI.grp==='none') h+=payTableRows(R.paid);
   else payGroup(R.paid,gk).forEach(g=>{ h+=`<tr class="gh"><td colspan="9">${esc(g.k)} <small>(${g.items.length})</small></td><td class="num">${payFmt(g.sum)}</td><td></td></tr>`+payTableRows(g.items); });
   h+=`<tr class="tot"><td colspan="9">الإجمالي</td><td class="num">${payFmt(R.total)}</td><td></td></tr></tbody></table></div></div>`;
@@ -6734,6 +6745,8 @@ function payPendingBox(R){
 function payReportText(){
   const R=payReportData(); const L=[];
   L.push(`📊 تقرير المدفوعات — ${R.b.label}`); L.push(`إجمالي المسدَّد: ${payFmt(R.total)} ر.س (${R.paid.length} عملية)`);
+  L.push(`• سدّده أصحاب الشأن من حساباتهم: ${payFmt(R.totalTheirs)} ر.س (${R.theirs.length})`); L.push(`• سُحب من جهتي: ${payFmt(R.totalMine)} ر.س (${R.mine.length})`);
+  if(R.byMineCat.length){ L.push('\nالمسحوب من جهتي حسب الغرض:'); R.byMineCat.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س (${g.items.length})`)); }
   if(R.byCat.length){ L.push('\nحسب الفئة:'); R.byCat.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س (${g.items.length})`)); }
   if(R.byWho.length){ L.push('\nحسب المسدِّد:'); R.byWho.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س`)); }
   if(R.byEnt.length>1||(R.byEnt[0]&&R.byEnt[0].k!=='بدون كيان')){ L.push('\nحسب الكيان:'); R.byEnt.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س`)); }
@@ -6744,9 +6757,10 @@ function payReportText(){
 function payCopyReport(){ axCopy(payReportText()); }
 function payExportCsv(){
   const R=payReportData(); const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const head=['التاريخ','الوصف','الفئة','المسدِّد','الكيان','الجهة المسدَّد لها','الطريقة','المرجع','المبلغ','الرسوم','الإجمالي','الحالة','الملف','الاسترداد','ملاحظات'];
-  const rows=R.paid.map(x=>[payDate(x),x.title,x.category,x.payer,x.entity,x.beneficiary,x.method,x.ref,payNum(x.amount),payNum(x.fee),payTotal(x),x.status,payFileTitle(x.fileId),x.reimb,x.notes].map(q).join(','));
-  rows.push(['','الإجمالي','','','','','','','','',R.total].map(q).join(','));
+  const head=['التاريخ','الوصف','الفئة','صاحب الشأن','مصدر المبلغ','الكيان','الجهة المسدَّد لها','الطريقة','المرجع','المبلغ','الرسوم','الإجمالي','الحالة','الملف','الاسترداد','ملاحظات'];
+  const rows=R.paid.map(x=>[payDate(x),x.title,x.category,x.payer,paySrc(x),x.entity,x.beneficiary,x.method,x.ref,payNum(x.amount),payNum(x.fee),payTotal(x),x.status,payFileTitle(x.fileId),x.reimb,x.notes].map(q).join(','));
+  rows.push(['','الإجمالي','','','','','','','','','',R.total].map(q).join(','));
+  rows.push(['','منها سُحب من جهتي','','','','','','','','','',R.totalMine].map(q).join(','));
   const blob=new Blob(['﻿'+head.map(q).join(',')+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='تقرير-المدفوعات-'+(R.b.short||'').replace(/\s+/g,'-')+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
 }
@@ -6765,11 +6779,12 @@ function payPrint(){
   .foot{margin-top:22px;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:8px} @media print{body{margin:10mm} table,h3{page-break-inside:auto} tr{page-break-inside:avoid}}
   </style></head><body><h1>💸 تقرير المدفوعات والسداد</h1>
   <div class="meta">${E(R.b.label)} — أُعدّ بتاريخ ${fmtDate(today())}</div>
-  <div class="kp"><div><b>${payFmt(R.total)}</b>إجمالي المسدَّد (ر.س)</div><div><b>${R.paid.length}</b>عدد العمليات</div><div><b>${R.pend.length}</b>مطلوب لم يُسدَّد</div><div><b>${payFmt(paySum(R.reimb))}</b>مستحق الاسترداد (ر.س)</div></div>
+  <div class="kp"><div><b>${payFmt(R.total)}</b>إجمالي المسدَّد (ر.س)</div><div><b>${payFmt(R.totalTheirs)}</b>سدّده أصحاب الشأن</div><div><b>${payFmt(R.totalMine)}</b>سُحب من جهتي</div><div><b>${R.paid.length}</b>عدد العمليات</div><div><b>${R.pend.length}</b>مطلوب لم يُسدَّد</div><div><b>${payFmt(paySum(R.reimb))}</b>مستحق الاسترداد (ر.س)</div></div>
+  ${R.mine.length?`<div class="two"><div>${tbl('المسحوب من جهتي — حسب الغرض',R.byMineCat)}</div><div>${tbl('المسحوب من جهتي — لصالح من',R.byMineWho)}</div></div>`:''}
   <div class="two"><div>${tbl('حسب الفئة',R.byCat)}</div><div>${tbl('حسب المسدِّد',R.byWho)}</div></div><div class="two"><div>${tbl('حسب الكيان',R.byEnt)}</div><div>${tbl('حسب الجهة المسدَّد لها',R.byBen)}</div></div>
-  <h2>تفاصيل العمليات</h2><table><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المسدِّد</th><th>الكيان</th><th>الجهة</th><th>الطريقة</th><th>المرجع</th><th>المبلغ</th><th>الحالة</th></tr>${detail}<tr class="tot"><td colspan="9">الإجمالي</td><td class="num">${payFmt(R.total)}</td><td></td></tr></table>
-  ${R.pend.length?`<h2>مطلوب سدادها ولم تُسدَّد</h2><table><tr><th>الوصف</th><th>المسدِّد</th><th>تاريخ الطلب</th><th>المبلغ</th></tr>${R.pend.map(x=>`<tr><td>${E(x.title)}</td><td>${E(x.payer||'')}</td><td>${x.reqDate?fmtDate(x.reqDate):''}</td><td class="num">${payFmt(payTotal(x))}</td></tr>`).join('')}</table>`:''}
-  ${R.reimb.length?`<h2>مستحقة الاسترداد</h2><table><tr><th>الوصف</th><th>المسدِّد</th><th>المبلغ</th></tr>${R.reimb.map(x=>`<tr><td>${E(x.title)}</td><td>${E(x.payer||'')}</td><td class="num">${payFmt(payTotal(x))}</td></tr>`).join('')}</table>`:''}
+  <h2>تفاصيل العمليات</h2><table><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>صاحب الشأن</th><th>الكيان</th><th>الجهة</th><th>الطريقة</th><th>المرجع</th><th>المبلغ</th><th>الحالة</th></tr>${detail}<tr class="tot"><td colspan="9">الإجمالي</td><td class="num">${payFmt(R.total)}</td><td></td></tr></table>
+  ${R.pend.length?`<h2>مطلوب سدادها ولم تُسدَّد</h2><table><tr><th>الوصف</th><th>صاحب الشأن</th><th>تاريخ الطلب</th><th>المبلغ</th></tr>${R.pend.map(x=>`<tr><td>${E(x.title)}</td><td>${E(x.payer||'')}</td><td>${x.reqDate?fmtDate(x.reqDate):''}</td><td class="num">${payFmt(payTotal(x))}</td></tr>`).join('')}</table>`:''}
+  ${R.reimb.length?`<h2>مستحقة الاسترداد</h2><table><tr><th>الوصف</th><th>صاحب الشأن</th><th>المبلغ</th></tr>${R.reimb.map(x=>`<tr><td>${E(x.title)}</td><td>${E(x.payer||'')}</td><td class="num">${payFmt(payTotal(x))}</td></tr>`).join('')}</table>`:''}
   <div class="sign"><div>أعدّه</div><div>راجعه</div><div>اعتمده</div></div>
   <div class="foot">مهام صَفوان — تقرير المدفوعات</div>
   <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`;
@@ -6782,10 +6797,10 @@ async function axPayReport(){
   const R=payReportData(); if(!R.paid.length){ _showToast('لا عمليات مسدَّدة في هذه الفترة','error'); return; }
   axOpen('✨ ملخص إداري للمدفوعات'); axLoading('أحلل المدفوعات…');
   const pb=payPrevBounds(); const prev=pb?paySum(payList(pb).filter(payIsPaid)):null;
-  const ctx={period:R.b.label,total:R.total,count:R.paid.length,previousPeriodTotal:prev,byCategory:R.byCat.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),byPayer:R.byWho.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),byEntity:R.byEnt.map(g=>({name:g.k,sum:g.sum})),
+  const ctx={period:R.b.label,paidByConcernedPartiesThemselves:R.totalTheirs,withdrawnFromUserSide:R.totalMine,withdrawnByPurpose:R.byMineCat.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),withdrawnForWhom:R.byMineWho.map(g=>({name:g.k,sum:g.sum})),total:R.total,count:R.paid.length,previousPeriodTotal:prev,byCategory:R.byCat.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),byPayer:R.byWho.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),byEntity:R.byEnt.map(g=>({name:g.k,sum:g.sum})),
     pending:R.pend.slice(0,30).map(x=>({title:x.title,payer:x.payer,amount:payTotal(x),requested:x.reqDate})),reimbursable:R.reimb.slice(0,30).map(x=>({title:x.title,payer:x.payer,amount:payTotal(x)})),
     largest:R.paid.slice().sort((a,b)=>payTotal(b)-payTotal(a)).slice(0,5).map(x=>({title:x.title,amount:payTotal(x),category:x.category}))};
-  const t=await axAsk('pay_report','اكتب ملخصًا إداريًا موجزًا لتقرير المدفوعات (مبالغ سُدِّدت نيابة عن الشركة عن طريق أصحاب الشأن) بالأقسام: الموجز (3 أسطر)، أبرز البنود والفئات، مقارنة بالفترة السابقة إن توفرت، ملاحظات تستحق الانتباه (تركّز غير معتاد، عمليات كبيرة، متأخرات)، والمطلوب متابعته (المعلّق والمستحق الاسترداد). اعتمد على الأرقام في السياق فقط.','اكتب الملخص الإداري.',ctx);
+  const t=await axAsk('pay_report','اكتب ملخصًا إداريًا موجزًا لتقرير المدفوعات. السياق: أصحاب الشأن يسددون فواتيرهم ورسومهم بأنفسهم دون أن يقيّدوها، والمستخدم يوثّقها ويرفع تقريرًا بما سدّدوه وما سُحب من جهته (حسابه/الشركة) ولأي غرض ولصالح من. الأقسام: الموجز (3 أسطر)، ما سدّده أصحاب الشأن مقابل ما سُحب من جهة المستخدم، أبرز البنود والفئات، مقارنة بالفترة السابقة إن توفرت، ملاحظات تستحق الانتباه (تركّز غير معتاد، عمليات كبيرة، متأخرات)، والمطلوب متابعته (المعلّق والمستحق الاسترداد). اعتمد على الأرقام في السياق فقط.','اكتب الملخص الإداري.',ctx);
   if(t==null){ axFail(); return; } axTextResult(t);
 }
 function axPayParse(){
@@ -6793,11 +6808,11 @@ function axPayParse(){
     fields:[{k:'text',label:'الصق رسالة السداد أو اكتب وصفها',type:'textarea',full:true,rows:5,req:true,mic:true,ph:'مثال: تم سداد رسوم تأشيرة عمل لعدد 3 بمبلغ 6000 ريال عن طريق سداد، رقم الإيصال 88123 — من أحمد'}],
     onSave:async v=>{
       axOpen('✨ تسجيل سداد'); axLoading('أستخرج بيانات السداد…');
-      const r=await axAsk('pay_parse','استخرج من النص بيانات عملية سداد مالية. category اختر الأقرب من: '+Object.keys(PAY_CATS).join('، ')+' أو اتركه كما يظهر في النص. status: «تم السداد» إن أفاد النص أن السداد تم وإلا «مطلوب». التواريخ YYYY-MM-DD بالنسبة لتاريخ اليوم. لا تختلق مبالغ أو أرقامًا غير مذكورة. المخطط: {"title":"","category":"","amount":رقم,"fee":رقم,"payer":"","entity":"","beneficiary":"","method":"","ref":"","status":"","reqDate":"","paidDate":"","notes":""}',v.text,{people:payPeople().slice(0,60),files:axFilesBrief(40)},{json:true});
+      const r=await axAsk('pay_parse','استخرج من النص بيانات عملية سداد مالية. category اختر الأقرب من: '+Object.keys(PAY_CATS).join('، ')+' أو اتركه كما يظهر في النص. src: «سُحب من جهتي» إن أفاد النص أن المبلغ خُصم/سُحب من حساب المستخدم أو الشركة، وإلا «سدّده صاحب الشأن». status: «تم السداد» إن أفاد النص أن السداد تم وإلا «مطلوب». التواريخ YYYY-MM-DD بالنسبة لتاريخ اليوم. لا تختلق مبالغ أو أرقامًا غير مذكورة. المخطط: {"title":"","category":"","amount":رقم,"fee":رقم,"payer":"","src":"سدّده صاحب الشأن أو سُحب من جهتي","entity":"","beneficiary":"","method":"","ref":"","status":"","reqDate":"","paidDate":"","notes":""}',v.text,{people:payPeople().slice(0,60),files:axFilesBrief(40)},{json:true});
       if(!r||!axStr(r.title)){ axFail(); return; }
       axClose();
       const st=PAY_STATUS.includes(r.status)?r.status:'مطلوب';
-      payEdit(null,{title:axStr(r.title),category:axStr(r.category),amount:payNum(r.amount)||'',fee:payNum(r.fee)||'',payer:axStr(r.payer),entity:axStr(r.entity),beneficiary:axStr(r.beneficiary),method:PAY_METHODS.includes(r.method)?r.method:'',ref:axStr(r.ref),status:st,reqDate:axIso(r.reqDate)||today(),paidDate:axIso(r.paidDate)||(PAY_PAID.includes(st)?today():''),notes:axStr(r.notes),reimb:'لا يُسترد'});
+      payEdit(null,{title:axStr(r.title),category:axStr(r.category),amount:payNum(r.amount)||'',fee:payNum(r.fee)||'',payer:axStr(r.payer),src:PAY_SRC.includes(r.src)?r.src:'سدّده صاحب الشأن',entity:axStr(r.entity),beneficiary:axStr(r.beneficiary),method:PAY_METHODS.includes(r.method)?r.method:'',ref:axStr(r.ref),status:st,reqDate:axIso(r.reqDate)||today(),paidDate:axIso(r.paidDate)||(PAY_PAID.includes(st)?today():''),notes:axStr(r.notes),reimb:'لا يُسترد'});
       _showToast('عبّأ المساعد الحقول — راجعها واحفظ','success');
     }});
 }
