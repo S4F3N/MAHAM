@@ -761,6 +761,35 @@
   .setup-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
 
 
+
+  /* ================= PAYMENTS ================= */
+  .pay-period{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .pay-chips{display:flex;gap:6px;flex-wrap:wrap;} .pay-nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .pay-plabel{font-size:15px;min-width:120px;text-align:center;} .pay-dl{font-size:12.5px;display:flex;align-items:center;gap:6px;color:var(--text-2);}
+  .pay-kpis .pln-stat .n small{font-size:12px;font-weight:600;color:var(--text-2);} .pay-kpis .d{font-size:11.5px;margin-top:4px;color:var(--text-2);} .pay-kpis .d.up{color:var(--orange);} .pay-kpis .d.dn{color:var(--green);}
+  .pay-quick{margin-bottom:14px;} .pay-qrow{display:grid;grid-template-columns:2fr 1fr 1.3fr auto auto;gap:8px;}
+  @media(max-width:720px){.pay-qrow{grid-template-columns:1fr 1fr;} .pay-qrow input:first-child{grid-column:1/-1;}}
+  .pay-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;} .pay-fsel{display:flex;gap:8px;flex-wrap:wrap;} .pay-fsel input{min-width:130px;}
+  .pay-sumline{font-size:12.5px;color:var(--text-2);margin:2px 0 10px;} .pay-sumline b{color:var(--text-1);}
+  .pay-day{margin-bottom:14px;} .pay-dayh{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-2);padding:0 4px 6px;}
+  .pay-row{display:flex;gap:12px;align-items:flex-start;background:var(--surface-1);border:1px solid var(--border);border-inline-start:3px solid var(--pc,var(--accent));border-radius:var(--radius-md);padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:transform .12s,border-color .15s,background .15s;}
+  .pay-row:hover{background:var(--surface-2);transform:translateY(-1px);} .pay-row.cancel{opacity:.5;} .pay-row.cancel .pay-t{text-decoration:line-through;}
+  .pay-ico{background:color-mix(in srgb,var(--pc,var(--accent)) 20%,transparent)!important;} .pay-main{flex:1;min-width:0;} .pay-t{font-weight:700;font-size:14px;line-height:1.5;}
+  .pay-notes{font-size:12px;color:var(--text-2);margin-top:5px;white-space:pre-wrap;} .pay-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .pay-amt{text-align:left;flex:none;} .pay-amt>small{display:block;font-size:10.5px;color:var(--text-3);margin-top:2px;}
+  .pay-money{font-weight:800;font-size:16px;font-family:var(--font-body);white-space:nowrap;} .pay-money small{font-size:10.5px;font-weight:600;color:var(--text-2);}
+  .pay-big .pay-money{font-size:24px;} .pay-big{margin:10px 0 2px;}
+  .pay-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .pay-rgrid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px;} @media(min-width:900px){.pay-rgrid{grid-template-columns:1fr 1fr;} .pay-rgrid>:first-child{grid-column:1/-1;}}
+  .pay-dwrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+  .pay-donutw{position:relative;width:150px;height:150px;flex:none;margin:0 auto;}
+  .pay-donut{width:100%;height:100%;border-radius:50%;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 26px),#000 calc(100% - 25px));mask:radial-gradient(farthest-side,transparent calc(100% - 26px),#000 calc(100% - 25px));}
+  .pay-donutw .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;} .pay-donutw b{font-size:15px;font-family:var(--font-body);} .pay-donutw span{font-size:10.5px;color:var(--text-2);}
+  .pay-bar{margin:9px 0;} .pay-bar .r{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px;} .pay-bar small{color:var(--text-3);}
+  .pay-tablewrap{overflow-x:auto;} .pay-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px;}
+  .pay-table th,.pay-table td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--border);vertical-align:top;} .pay-table th{font-size:11px;color:var(--text-2);background:var(--surface-2);position:sticky;top:0;}
+  .pay-table td.num{text-align:left;font-weight:700;white-space:nowrap;} .pay-table .cl{font-size:11px;color:var(--text-3);} .pay-table tr.gh td{background:var(--surface-2);font-weight:700;} .pay-table tr.tot td{background:var(--accent-glow);font-weight:800;}
+  .pay-grp{font-size:12px;font-weight:600;color:var(--text-2);} .pay-grp select{margin-right:6px;}
   /* ================= PLANS ================= */
   .pln-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
   .pln-top .grow{flex:1 1 180px;min-width:0;}
@@ -971,6 +1000,7 @@
   <button data-tab="home" class="active">الرئيسية</button>
   <button data-tab="urgent">⚡ المهام العاجلة<span class="notif-badge tab-badge" id="urgentTabBadge" style="display:none"></span></button>
   <button data-tab="plans">🧭 الخطط<span class="notif-badge tab-badge" id="plnTabBadge" style="display:none"></span></button>
+  <button data-tab="pay">💸 المدفوعات<span class="notif-badge tab-badge" id="payTabBadge" style="display:none"></span></button>
   <button data-tab="files">الملفات</button>
   <button data-tab="tasks">المهام<span class="notif-badge tab-badge" id="tasksTabBadge" style="display:none"></span></button>
   <button data-tab="calendar">التقويم</button>
@@ -1135,6 +1165,12 @@
 
   <!-- PLANS -->
   <section class="page" id="page-plans"><div id="plansRoot"></div></section>
+
+
+  <!-- PAYMENTS -->
+  <section class="page" id="page-pay"><div id="payRoot"></div>
+    <datalist id="payCatList"></datalist><datalist id="payWhoList"></datalist><datalist id="payEntList"></datalist><datalist id="payBenList"></datalist>
+  </section>
 
   <!-- TASKS -->
   <section class="page" id="page-tasks">
@@ -2160,7 +2196,7 @@ function renderTopbarDate(){
 
 /* ---------- TOPBAR QUOTE ---------- */
 let QUOTES = [];
-let PLANS = [];
+let PLANS = [], PAYMENTS = [];
 const SEED_QUOTES = ['وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ', 'لكل مجتهد نصيب'];
 let _quoteIdx = 0;
 function renderTopbarQuote(){
@@ -2265,8 +2301,8 @@ function loadIfEmpty(){
     window.storage.get('rd2:tasks').catch(()=>null), window.storage.get('rd2:theme').catch(()=>null),
     window.storage.get(APP_SETTINGS_KEY).catch(()=>null), window.storage.get('rd2:categorygroups').catch(()=>null),
     window.storage.get('rd2:activitylog').catch(()=>null), window.storage.get('rd2:subfiles').catch(()=>null),
-    window.storage.get('rd2:quotes').catch(()=>null), window.storage.get('rd2:plans').catch(()=>null),
-  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf,qt,pl])=>{
+    window.storage.get('rd2:quotes').catch(()=>null), window.storage.get('rd2:plans').catch(()=>null), window.storage.get('rd2:payments').catch(()=>null),
+  ]).then(([f,r,c,cat,tk,th,aset,cgrp,alog,sf,qt,pl,pay])=>{
     if(f&&f.value){try{FILES=JSON.parse(f.value);}catch(e){FILES=[];}}
     if(r&&r.value){try{ROUNDS=JSON.parse(r.value);}catch(e){ROUNDS=[];}}
     if(c&&c.value){try{CONTACTS=JSON.parse(c.value);}catch(e){CONTACTS=[];}}
@@ -2276,6 +2312,7 @@ function loadIfEmpty(){
     if(sf&&sf.value){try{SUBFILES=JSON.parse(sf.value);}catch(e){SUBFILES=[];}}
     if(qt&&qt.value){try{QUOTES=JSON.parse(qt.value);}catch(e){QUOTES=[];}}
     if(pl&&pl.value){try{PLANS=JSON.parse(pl.value);}catch(e){PLANS=[];}}
+    if(pay&&pay.value){try{PAYMENTS=JSON.parse(pay.value);}catch(e){PAYMENTS=[];}}
     if(tk&&tk.value){try{TASKS=JSON.parse(tk.value);}catch(e){TASKS=[];}}
     if(aset&&aset.value){ try{ APP_SETTINGS = Object.assign({}, DEFAULT_APP_SETTINGS, JSON.parse(aset.value)); }catch(e){} }
     if(th&&th.value){setTheme(th.value,false);} else { applyAppSettings(); }
@@ -2356,8 +2393,8 @@ async function _smartPersist(key, getLocal, setLocal, changedIds, deletedIds){
    intended behavior. */
 function _hardPersist(key, arr){ return window.storage.set(key, JSON.stringify(arr)); }
 
-const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set(), plans:new Set()};
-const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set(), plans:new Set()};
+const _chgIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set(), plans:new Set(), payments:new Set()};
+const _delIds = {files:new Set(), rounds:new Set(), contacts:new Set(), tasks:new Set(), categories:new Set(), groups:new Set(), subfiles:new Set(), quotes:new Set(), plans:new Set(), payments:new Set()};
 
 function persistFiles(changed, deleted){
   _addIds(_chgIds.files, changed); _addIds(_delIds.files, deleted);
@@ -2386,6 +2423,10 @@ function persistSubfiles(changed, deleted){
 function persistPlans(changed, deleted){
   _addIds(_chgIds.plans, changed); _addIds(_delIds.plans, deleted);
   return _smartPersist('rd2:plans', ()=>PLANS, (arr)=>{PLANS=arr;}, _chgIds.plans, _delIds.plans).catch(()=>_showToast('تعذر الحفظ','error'));
+}
+function persistPayments(changed, deleted){
+  _addIds(_chgIds.payments, changed); _addIds(_delIds.payments, deleted);
+  return _smartPersist('rd2:payments', ()=>PAYMENTS, (arr)=>{PAYMENTS=arr;}, _chgIds.payments, _delIds.payments).catch(()=>_showToast('تعذر الحفظ','error'));
 }
 function persistActivityLog(){ return window.storage.set('rd2:activitylog', JSON.stringify(ACTIVITY_LOG)).catch(()=>{}); }
 function logActivity(action, entity, summary, detail){
@@ -2422,6 +2463,7 @@ const _remoteKeyMap = {
   'rd2:subfiles': (v)=>{SUBFILES=v;},
   'rd2:quotes': (v)=>{QUOTES=v;},
   'rd2:plans': (v)=>{PLANS=v;},
+  'rd2:payments': (v)=>{PAYMENTS=v;},
   'rd2:activitylog': (v)=>{ACTIVITY_LOG=v;},
 };
 let _fbUnsub = null;
@@ -2607,11 +2649,12 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentFileId=null;
-    ['home','urgent','plans','files','tasks','calendar','contacts','activity','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
+    ['home','urgent','plans','pay','files','tasks','calendar','contacts','activity','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
     document.getElementById('page-file').classList.remove('active');
     if(btn.dataset.tab==='home') renderHome();
     if(btn.dataset.tab==='urgent') renderUrgentPage();
     if(btn.dataset.tab==='plans') renderPlansPage();
+    if(btn.dataset.tab==='pay') renderPayPage();
     if(btn.dataset.tab==='files') renderFilesPage();
     if(btn.dataset.tab==='tasks') renderTasksPage();
     if(btn.dataset.tab==='calendar') renderCalendarPage();
@@ -2629,7 +2672,7 @@ function goHome(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-home').classList.add('active');
   currentFileId=null;
@@ -2644,7 +2687,7 @@ function goToFilesPage(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-files').classList.add('active');
   currentFileId=null;
@@ -2660,7 +2703,7 @@ function goToActivity(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
   document.getElementById('page-activity').classList.add('active');
   currentFileId=null;
   renderActivityPage();
@@ -2674,7 +2717,7 @@ function goToTasks(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-tasks').classList.add('active');
   currentFileId=null;
@@ -2689,7 +2732,7 @@ function goToFile(id){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-file').classList.add('active');
   currentFileId=id; roundFilterExec=''; roundFilterType=''; roundFilterTrack='';
@@ -2704,7 +2747,7 @@ function goToCalendarDay(dateStr){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-calendar').classList.add('active');
   currentFileId=null;
@@ -2719,13 +2762,14 @@ function renderHome(){ renderStats(); renderChart(); renderTodayCard(); renderMi
 function emptyActiveFiles(){ const withR=new Set(ROUNDS.map(r=>r.fileId)); return FILES.filter(f=>f.status==='نشط' && !withR.has(f.id)); }
 function fileBriefLine(f){
   const rs=ROUNDS.filter(r=>r.fileId===f.id), pend=rs.filter(r=>r.exec!=='تم'), od=pend.filter(r=>r.due&&daysUntil(r.due)<0);
-  const lt=TASKS.filter(t=>t.fileId===f.id&&!t.done).length;
+  const lt=TASKS.filter(t=>t.fileId===f.id&&!t.done).length; const pays=PAYMENTS.filter(x=>x.fileId===f.id&&x.status!=='ملغي');
   const last=rs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
   const p=[];
   p.push(rs.length?`🔄 ${rs.length} جولة`:'🔄 بلا جولات');
   if(last&&last.date) p.push(`آخر جولة ${fmtDate(last.date)}`);
   if(pend.length) p.push(`⏳ ${pend.length} إجراء معلّق${od.length?` (${od.length} متأخر)`:''}`);
   if(lt) p.push(`⚡ ${lt} مهمة مرتبطة`);
+  if(pays.length) p.push(`💸 ${pays.length} سداد (${payFmt(paySum(pays.filter(payIsPaid)))} ر.س)`);
   if(f.target) p.push(`🎯 ${fmtDate(f.target)}`);
   return `<div class="fh-brief">${p.join(' · ')}</div>`;
 }
@@ -4148,7 +4192,7 @@ function clearActivityLog(){
 
 /* ---------- BACKUP / RESET ---------- */
 function exportBackup(){
-  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,PLANS,exportedAt:new Date().toISOString()};
+  const data = {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,PLANS,PAYMENTS,exportedAt:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download='نسخة-احتياطية-المتابعة.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -4157,10 +4201,10 @@ function exportBackup(){
   _showToast('تم تصدير النسخة الاحتياطية','success');
 }
 function _applyBackupData(data){
-  FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[]; PLANS = data.PLANS||[];
+  FILES = data.FILES||[]; ROUNDS = data.ROUNDS||[]; CONTACTS = data.CONTACTS||[]; CATEGORIES = data.CATEGORIES||CATEGORIES; CATEGORY_GROUPS = data.CATEGORY_GROUPS||CATEGORY_GROUPS; TASKS = data.TASKS||[]; SUBFILES = data.SUBFILES||[]; PLANS = data.PLANS||[]; PAYMENTS = data.PAYMENTS||[];
   // Explicit full replace — bypass the merge-safe persist path and write
   // these arrays as-is.
-  return Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES),_hardPersist('rd2:plans',PLANS)]);
+  return Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES),_hardPersist('rd2:plans',PLANS),_hardPersist('rd2:payments',PAYMENTS)]);
 }
 function importBackup(ev){
   const file = ev.target.files[0]; if(!file) return;
@@ -4181,9 +4225,9 @@ function importBackup(ev){
 function resetAllData(){
   _showPasswordConfirm('سيتم حذف كل البيانات الحالية والعودة للبيانات التجريبية الافتراضية. هذا الإجراء لا يمكن التراجع عنه. متابعة؟', {destructive:true, confirmLabel:'إعادة التعيين'}).then(ok=>{
     if(!ok) return;
-    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[]; SUBFILES=[]; PLANS=[];
+    FILES=[]; ROUNDS=[]; CONTACTS=[]; CATEGORIES=[]; CATEGORY_GROUPS=[]; TASKS=[]; SUBFILES=[]; PLANS=[]; PAYMENTS=[];
     logActivity('reset','data', 'إعادة تعيين جميع بيانات البرنامج بالكامل');
-    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES),_hardPersist('rd2:plans',PLANS)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
+    Promise.all([_hardPersist('rd2:files',FILES),_hardPersist('rd2:rounds',ROUNDS),_hardPersist('rd2:contacts',CONTACTS),_hardPersist('rd2:categories',CATEGORIES),_hardPersist('rd2:categorygroups',CATEGORY_GROUPS),_hardPersist('rd2:tasks',TASKS),_hardPersist('rd2:subfiles',SUBFILES),_hardPersist('rd2:plans',PLANS),_hardPersist('rd2:payments',PAYMENTS)]).then(()=> loadIfEmpty().then(()=>{ goHome(); _showToast('تمت إعادة التعيين','success'); }));
   });
 }
 
@@ -4196,7 +4240,7 @@ function _todayLocalStr(){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function _backupSnapshot(){
-  return {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,PLANS,backedUpAt:new Date().toISOString()};
+  return {FILES,ROUNDS,CONTACTS,CATEGORIES,CATEGORY_GROUPS,TASKS,SUBFILES,PLANS,PAYMENTS,backedUpAt:new Date().toISOString()};
 }
 function runDailyBackupIfDue(){
   let lastDate = ''; try{ lastDate = localStorage.getItem(DAILY_BACKUP_DATE_KEY) || ''; }catch(e){}
@@ -5163,7 +5207,7 @@ function plnUpdateBadge(){
 /* ---------- navigation ---------- */
 function goToPlans(id){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='plans'));
-  ['home','urgent','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
+  ['home','urgent','files','file','calendar','contacts','settings','activity','tasks','pay'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
   document.getElementById('page-plans').classList.add('active');
   currentFileId=null;
   if(id!==undefined) { PLN_UI.id=id||''; }
@@ -5920,6 +5964,7 @@ function axChatContext(){
   if(sc.plans) c.plans=axPlansBrief();
   if(sc.urgent) c.urgentTasks=axUrgentBrief();
   if(sc.tasks) c.tasksAndAppointments=axTasksBrief();
+  c.payments={pendingRequests:PAYMENTS.filter(x=>x.status==='مطلوب').slice(0,30).map(x=>({title:x.title,payer:x.payer,amount:payTotal(x),requested:x.reqDate})),thisMonthPaid:paySum(payList(payBounds({range:'month',month:today().slice(0,7)})).filter(payIsPaid)),recent:PAYMENTS.slice(-15).map(x=>({title:x.title,category:x.category,payer:x.payer,amount:payTotal(x),status:x.status,date:payDate(x)}))};
   return c;
 }
 function axFileCtx(f){
@@ -6378,6 +6423,383 @@ function nfBuild(p,extra){
   const f={id:uid(),pinned:false,title,category:document.getElementById(p+'NfCat').value||(CATEGORIES[0]||{}).name||'',groupId:document.getElementById(p+'NfGroup').value,status:'نشط',priority:(extra&&extra.priority)||'متوسط',party:'',responsible:(extra&&extra.responsible)||'',opened:today(),target:'',tags:[],contactIds:[],notes:''};
   FILES.push(f); logActivity('add','file',`إضافة ملف جديد من مهمة: ${title}`);
   return {file:f};
+}
+
+/* ================= PAYMENTS (المدفوعات والسداد) =================
+   Records payments made on the company's behalf (visas, Qiwa, bills, quick fees…) usually settled by the
+   concerned party after a request. Each record lives in PAYMENTS (rd2:payments, merged by id like other collections).
+   Views: log · monthly report · by-payer. Report: print/PDF, Excel (CSV), copy, AI executive summary. */
+const PAY_CATS = {
+  'تأشيرة':'🛂','إقامة / جوازات':'🪪','رخصة عمل / مكتب عمل':'👷','قوى':'🧾','التأمينات الاجتماعية':'🏛️','رسوم حكومية':'🏢',
+  'مرور / مخالفات':'🚦','جمارك / ميناء':'🚢','كهرباء / ماء':'💡','اتصالات / إنترنت':'📡','بلدية / رخص':'📄',
+  'رسوم قضائية / محاكم':'⚖️','غرامات':'⚠️','رسوم سريعة':'⚡','سداد فواتير':'🧮','أخرى':'💠'
+};
+const PAY_STATUS = ['مطلوب','تم السداد','مؤكد','ملغي'];
+const PAY_PAID = ['تم السداد','مؤكد'];
+const PAY_METHODS = ['تحويل بنكي','سداد','مدى / بطاقة','نقدًا','أبشر / مقيم','محفظة إلكترونية','أخرى'];
+const PAY_REIMB = ['لا يُسترد','مستحق الاسترداد','مُسترد'];
+const PAY_COLORS = ['#0a84ff','#30d158','#ff9f0a','#bf5af2','#64d2ff','#ffd60a','#5e5ce6','#40c8e0','#ac8e68','#66d4cf','#ff9f68','#8e8ef5'];
+let PAY_UI = {view:'log', range:'month', month:'', year:0, from:'', to:'', q:'', st:'all', cat:'', who:'', ent:'', grp:'none'};
+try{ const s=JSON.parse(localStorage.getItem('maham_pay_ui')||'null'); if(s){ ['view','range','month','year','from','to','grp'].forEach(k=>{ if(s[k]!=null) PAY_UI[k]=s[k]; }); } }catch(e){}
+if(!PAY_UI.month) PAY_UI.month=today().slice(0,7);
+if(!PAY_UI.year) PAY_UI.year=+today().slice(0,4);
+function paySaveUi(){ try{ localStorage.setItem('maham_pay_ui',JSON.stringify({view:PAY_UI.view,range:PAY_UI.range,month:PAY_UI.month,year:PAY_UI.year,from:PAY_UI.from,to:PAY_UI.to,grp:PAY_UI.grp})); }catch(e){} }
+
+/* ---------- helpers ---------- */
+const payNum=x=>{ x=+x; return isNaN(x)?0:x; };
+function payTotal(x){ return payNum(x.amount)+payNum(x.fee); }
+function payFmt(n){ n=Math.round(payNum(n)*100)/100; return n.toLocaleString('en-US',{maximumFractionDigits:2}); }
+function payMoney(n){ return `<span class="pay-money">${payFmt(n)}<small> ر.س</small></span>`; }
+function payDate(x){ return x.paidDate||x.reqDate||(x.createdAt?x.createdAt.slice(0,10):'')||''; }
+function payIsPaid(x){ return PAY_PAID.includes(x.status); }
+function payCatIcon(c){ return PAY_CATS[c]||'💠'; }
+function payCatColor(c){ let h=0; for(const ch of String(c||'')) h=(h*31+ch.charCodeAt(0))>>>0; const keys=Object.keys(PAY_CATS); const i=keys.indexOf(c); return PAY_COLORS[(i>=0?i:h)%PAY_COLORS.length]; }
+function payById(id){ return PAYMENTS.find(p=>p.id===id); }
+function payMonthLabel(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m-1,15).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{month:'long',year:'numeric'}); }
+function payMonthAdd(ym,n){ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+n,1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function payBounds(rg){
+  rg=rg||PAY_UI;
+  if(rg.range==='month'){ const [y,m]=rg.month.split('-').map(Number); const last=new Date(y,m,0).getDate(); return {from:rg.month+'-01',to:rg.month+'-'+String(last).padStart(2,'0'),label:'شهر '+payMonthLabel(rg.month),short:payMonthLabel(rg.month)}; }
+  if(rg.range==='year') return {from:rg.year+'-01-01',to:rg.year+'-12-31',label:'سنة '+rg.year,short:'سنة '+rg.year};
+  if(rg.range==='custom'){ const f=rg.from||'0000-01-01', t=rg.to||'9999-12-31'; return {from:f,to:t,label:'من '+(rg.from?fmtDate(rg.from):'البداية')+' إلى '+(rg.to?fmtDate(rg.to):'اليوم'),short:'فترة مخصصة'}; }
+  return {from:'0000-01-01',to:'9999-12-31',label:'كل الفترات',short:'الكل'};
+}
+function payPrevBounds(){
+  if(PAY_UI.range==='month') return payBounds({range:'month',month:payMonthAdd(PAY_UI.month,-1)});
+  if(PAY_UI.range==='year') return payBounds({range:'year',year:PAY_UI.year-1});
+  return null;
+}
+function payInRange(x,b){ const d=payDate(x); return d>=b.from && d<=b.to; }
+function payList(b){ return PAYMENTS.filter(x=>x.status!=='ملغي' && payInRange(x,b)); }
+function paySum(arr){ return arr.reduce((s,x)=>s+payTotal(x),0); }
+function payGroup(arr,keyFn){ const m=new Map(); arr.forEach(x=>{ const k=keyFn(x)||'—'; if(!m.has(k)) m.set(k,{k,items:[],sum:0}); const g=m.get(k); g.items.push(x); g.sum+=payTotal(x); }); return [...m.values()].sort((a,b)=>b.sum-a.sum); }
+function payUpdateBadge(){ const b=document.getElementById('payTabBadge'); if(!b) return; const n=PAYMENTS.filter(x=>x.status==='مطلوب').length; if(n){ b.style.display='inline-flex'; b.textContent=n>9?'9+':n; } else b.style.display='none'; }
+function payPersist(id,del){ return persistPayments(id,del); }
+function paySave(x,rerender=true){ x.updatedAt=new Date().toISOString(); return payPersist(x.id).then(()=>{ payUpdateBadge(); if(rerender) renderPayPage(); }); }
+function payPeople(){ const s=new Set(); CONTACTS.forEach(c=>c.name&&s.add(c.name)); PAYMENTS.forEach(x=>x.payer&&s.add(x.payer)); return [...s]; }
+function payFileTitle(id){ const f=id?fileOf(id):null; return f?f.title:''; }
+function payRefreshLists(){
+  const cats=new Set(Object.keys(PAY_CATS)); PAYMENTS.forEach(x=>x.category&&cats.add(x.category));
+  const ents=new Set(), bens=new Set(); PAYMENTS.forEach(x=>{ x.entity&&ents.add(x.entity); x.beneficiary&&bens.add(x.beneficiary); });
+  const set=(id,arr)=>{ const e=document.getElementById(id); if(e) e.innerHTML=[...arr].map(v=>`<option value="${esc(v)}">`).join(''); };
+  set('payCatList',cats); set('payWhoList',payPeople()); set('payEntList',ents); set('payBenList',bens);
+}
+
+/* ---------- navigation ---------- */
+function goToPay(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='pay'));
+  ['home','urgent','plans','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
+  document.getElementById('page-pay').classList.add('active'); currentFileId=null; renderPayPage();
+}
+function payView(v){ PAY_UI.view=v; paySaveUi(); renderPayPage(); }
+function payRange(r){ PAY_UI.range=r; paySaveUi(); renderPayPage(); }
+function payShift(n){ if(PAY_UI.range==='month') PAY_UI.month=payMonthAdd(PAY_UI.month,n); else if(PAY_UI.range==='year') PAY_UI.year+=n; paySaveUi(); renderPayPage(); }
+function payCustom(k,v){ PAY_UI[k]=v; paySaveUi(); renderPayPage(); }
+function payFilter(k,v){ PAY_UI[k]=v; renderPayPage(); }
+
+/* ---------- render ---------- */
+function renderPayPage(){
+  const root=document.getElementById('payRoot'); if(!root) return;
+  payUpdateBadge(); payRefreshLists();
+  const b=payBounds(), arr=payList(b);
+  const tabs=[['log','📒 السجل'],['report','📊 التقرير'],['people','👥 حسب المسدِّد']];
+  const pend=PAYMENTS.filter(x=>x.status==='مطلوب');
+  let h=`<div class="section-head"><h2>💸 المدفوعات والسداد <span class="settings-fold-count">${PAYMENTS.length?'('+PAYMENTS.length+')':''}</span></h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-glass btn-sm" onclick="axPayParse()">✨ من نص / رسالة</button><button class="btn btn-filled btn-sm" onclick="payEdit()">+ سداد جديد</button></div></div>
+    <div class="pln-tabs pay-tabs" style="--pc:var(--accent)">${tabs.map(([k,l])=>`<button class="${PAY_UI.view===k?'on':''}" onclick="payView('${k}')">${l}${k==='log'&&pend.length?`<span class="c">${pend.length} مطلوب</span>`:''}</button>`).join('')}</div>`;
+  h+=payPeriodBar(b);
+  if(PAY_UI.view==='report') h+=payReportHtml(b,arr);
+  else if(PAY_UI.view==='people') h+=payPeopleHtml(b,arr);
+  else h+=payLogHtml(b,arr);
+  root.innerHTML=h;
+}
+function payPeriodBar(b){
+  const rs=[['month','شهر'],['year','سنة'],['custom','مخصص'],['all','الكل']];
+  let nav='';
+  if(PAY_UI.range==='month') nav=`<button class="btn btn-glass btn-sm" onclick="payShift(1)">‹</button><b class="pay-plabel">${esc(payMonthLabel(PAY_UI.month))}</b><button class="btn btn-glass btn-sm" onclick="payShift(-1)">›</button><button class="btn btn-glass btn-sm" onclick="PAY_UI.month=today().slice(0,7);paySaveUi();renderPayPage()">هذا الشهر</button>`;
+  else if(PAY_UI.range==='year') nav=`<button class="btn btn-glass btn-sm" onclick="payShift(1)">‹</button><b class="pay-plabel">${PAY_UI.year}</b><button class="btn btn-glass btn-sm" onclick="payShift(-1)">›</button>`;
+  else if(PAY_UI.range==='custom') nav=`<label class="pay-dl">من <input type="date" value="${esc(PAY_UI.from)}" onchange="payCustom('from',this.value)"></label><label class="pay-dl">إلى <input type="date" value="${esc(PAY_UI.to)}" onchange="payCustom('to',this.value)"></label>`;
+  else nav=`<b class="pay-plabel">كل العمليات المسجّلة</b>`;
+  return `<div class="pay-period"><div class="pay-chips">${rs.map(([k,l])=>`<button class="chip${PAY_UI.range===k?' active':''}" onclick="payRange('${k}')">${l}</button>`).join('')}</div><div class="pay-nav">${nav}</div></div>`;
+}
+function payKpiHtml(b,arr){
+  const paid=arr.filter(payIsPaid), pend=PAYMENTS.filter(x=>x.status==='مطلوب'), reimb=PAYMENTS.filter(x=>x.reimb==='مستحق الاسترداد'&&x.status!=='ملغي');
+  const top=payGroup(paid,x=>x.category)[0]; const pb=payPrevBounds(); let delta='';
+  if(pb){ const prev=paySum(payList(pb).filter(payIsPaid)); const cur=paySum(paid); if(prev>0){ const d=Math.round((cur-prev)/prev*100); delta=`<div class="d ${d>0?'up':'dn'}">${d>0?'▲':'▼'} ${Math.abs(d)}% عن ${esc(pb.short)}</div>`; } else if(cur>0) delta=`<div class="d">لا بيانات في ${esc(pb.short)}</div>`; }
+  const k=(n,l,cls,extra)=>`<div class="pln-stat ${cls||''}"><div class="n">${n}</div><div class="l">${l}</div>${extra||''}</div>`;
+  return `<div class="pln-stats pay-kpis">
+    ${k(payFmt(paySum(paid))+'<small> ر.س</small>','إجمالي المسدَّد في الفترة','good',delta)}
+    ${k(paid.length,'عملية مسدَّدة','')}
+    ${k(pend.length,'مطلوب سدادها (الكل)'+(pend.length?` — ${payFmt(paySum(pend))} ر.س`:''),pend.length?'warn':'')}
+    ${k(reimb.length,'مستحقة الاسترداد'+(reimb.length?` — ${payFmt(paySum(reimb))} ر.س`:''),reimb.length?'warn':'')}
+    ${k(top?esc(top.k):'—','أكبر فئة'+(top?` — ${payFmt(top.sum)} ر.س`:''),'')}
+  </div>`;
+}
+
+/* ----- log ----- */
+function payFilterItems(arr){
+  const q=(PAY_UI.q||'').trim().toLowerCase();
+  return arr.filter(x=>{
+    if(PAY_UI.st==='open' && !(x.status==='مطلوب')) return false;
+    if(PAY_UI.st!=='all' && PAY_UI.st!=='open' && x.status!==PAY_UI.st) return false;
+    if(PAY_UI.cat && x.category!==PAY_UI.cat) return false;
+    if(PAY_UI.who && (x.payer||'بدون مسدِّد')!==PAY_UI.who) return false;
+    if(PAY_UI.ent && x.entity!==PAY_UI.ent) return false;
+    if(q && !([x.title,x.category,x.payer,x.entity,x.beneficiary,x.ref,x.notes,payFileTitle(x.fileId)].join(' ').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+function paySel(id,label,vals,cur,fn){ return `<select id="${id}" onchange="${fn}(this.value)"><option value="">${label}</option>${vals.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('')}</select>`; }
+function payLogHtml(b,arrPeriod){
+  /* pending requests always show (even outside the period) so nothing is forgotten */
+  const base=PAY_UI.range==='all'?PAYMENTS.slice():PAYMENTS.filter(x=>payInRange(x,b)||x.status==='مطلوب');
+  const items=payFilterItems(base).sort((a,b2)=>payDate(b2).localeCompare(payDate(a))||(b2.createdAt||'').localeCompare(a.createdAt||''));
+  const cats=[...new Set(PAYMENTS.map(x=>x.category).filter(Boolean))], who=[...new Set(PAYMENTS.map(x=>x.payer).filter(Boolean))], ents=[...new Set(PAYMENTS.map(x=>x.entity).filter(Boolean))];
+  const stChips=[['all','الكل'],['open','مطلوب'],['تم السداد','تم السداد'],['مؤكد','مؤكد'],['ملغي','ملغي']].map(([k,l])=>`<button class="chip${PAY_UI.st===k?' active':''}" onclick="payFilter('st','${k}')">${l}</button>`).join('');
+  let h=payKpiHtml(b,arrPeriod);
+  h+=`<div class="pln-box pay-quick"><h4><span>⚡ تسجيل سريع</span></h4><div class="pay-qrow">
+      <input type="text" id="payQT" placeholder="وصف العملية (مثال: رسوم تأشيرة)" list="payCatList" onkeydown="if(event.key==='Enter')payQuickAdd()">
+      <input type="number" id="payQA" placeholder="المبلغ" step="any" onkeydown="if(event.key==='Enter')payQuickAdd()">
+      <input type="text" id="payQW" placeholder="المسدِّد" list="payWhoList" onkeydown="if(event.key==='Enter')payQuickAdd()">
+      <select id="payQS"><option>مطلوب</option><option>تم السداد</option></select>
+      <button class="btn btn-filled btn-sm" onclick="payQuickAdd()">+ أضف</button></div></div>`;
+  h+=`<div class="pay-filters"><div class="pay-chips">${stChips}</div><div class="pay-fsel">
+      <input type="text" id="payQ" placeholder="بحث…" value="${esc(PAY_UI.q)}" oninput="PAY_UI.q=this.value;payRerenderList()">
+      ${paySel('payFC','كل الفئات',cats,PAY_UI.cat,'payFilterCat')}${paySel('payFW','كل المسدِّدين',who,PAY_UI.who,'payFilterWho')}${paySel('payFE','كل الكيانات',ents,PAY_UI.ent,'payFilterEnt')}</div></div>`;
+  h+=`<div id="payListBox">${payListHtml(items)}</div>`;
+  return h;
+}
+function payFilterCat(v){ PAY_UI.cat=v; payRerenderList(); } function payFilterWho(v){ PAY_UI.who=v; payRerenderList(); } function payFilterEnt(v){ PAY_UI.ent=v; payRerenderList(); }
+function payRerenderList(){
+  const b=payBounds(); const base=PAY_UI.range==='all'?PAYMENTS.slice():PAYMENTS.filter(x=>payInRange(x,b)||x.status==='مطلوب');
+  const items=payFilterItems(base).sort((a,c)=>payDate(c).localeCompare(payDate(a))||(c.createdAt||'').localeCompare(a.createdAt||''));
+  const box=document.getElementById('payListBox'); if(box) box.innerHTML=payListHtml(items);
+  document.querySelectorAll('.pay-filters .chip').forEach(c=>c.classList.toggle('active', c.getAttribute('onclick')==`payFilter('st','${PAY_UI.st}')`));
+}
+function payListHtml(items){
+  if(!items.length) return `<div class="pln-box pln-empty"><div style="font-size:38px">💸</div><h3>لا توجد عمليات في هذه الفترة</h3><div class="settings-desc">سجّل أول عملية سداد من زر «+ سداد جديد» أو من التسجيل السريع بالأعلى، أو الصق رسالة واتساب وسيستخرج المساعد بياناتها.</div></div>`;
+  const tot=paySum(items.filter(payIsPaid));
+  const days=new Map(); items.forEach(x=>{ const d=payDate(x)||'—'; if(!days.has(d)) days.set(d,[]); days.get(d).push(x); });
+  let h=`<div class="pay-sumline">${items.length} عملية — المسدَّد منها: <b>${payFmt(tot)}</b> ر.س</div>`;
+  days.forEach((arr,d)=>{
+    const ds=arr.filter(payIsPaid);
+    h+=`<div class="pay-day"><div class="pay-dayh"><span${dTitle(d)}>${d==='—'?'بلا تاريخ':fmtDate(d)}${d===today()?' · اليوم':''}</span><span>${ds.length?payFmt(paySum(ds))+' ر.س':''}</span></div>${arr.map(payRowHtml).join('')}</div>`;
+  });
+  return h;
+}
+function payStatusPill(x){ const c={'مطلوب':'orange','تم السداد':'blue','مؤكد':'green','ملغي':''}[x.status]||''; return `<span class="pln-pill ${c}">${esc(x.status)}</span>`; }
+function payPhoneOf(name){ const c=CONTACTS.find(q=>q.name===name); return c&&c.phone?String(c.phone).replace(/[^\d]/g,''):''; }
+function payRowHtml(x){
+  const col=payCatColor(x.category), f=payFileTitle(x.fileId);
+  const acts=[];
+  if(x.status==='مطلوب'){ acts.push(`<button class="urg-act" onclick="event.stopPropagation();payMarkPaid('${x.id}')">✓ تم السداد</button>`); acts.push(`<button class="urg-act" onclick="event.stopPropagation();payRemind('${x.id}')">📲 تذكير</button>`); }
+  else if(x.status==='تم السداد') acts.push(`<button class="urg-act" onclick="event.stopPropagation();payConfirm('${x.id}')">✔ تأكيد الاستلام</button>`);
+  if(x.reimb==='مستحق الاسترداد') acts.push(`<button class="urg-act" onclick="event.stopPropagation();payReimbDone('${x.id}')">↩ تم الاسترداد</button>`);
+  return `<div class="pay-row ${x.status==='ملغي'?'cancel':''}" style="--pc:${col}" onclick="payEdit('${x.id}')">
+    <div class="pln-ico pay-ico">${payCatIcon(x.category)}</div>
+    <div class="pay-main"><div class="pay-t">${esc(x.title)}</div>
+      <div class="pln-tmeta">${payStatusPill(x)}${x.category?`<span class="badge">${esc(x.category)}</span>`:''}${x.payer?`<span class="badge">👤 ${esc(x.payer)}</span>`:''}${x.entity?`<span class="badge">🏢 ${esc(x.entity)}</span>`:''}${x.beneficiary?`<span class="badge">← ${esc(x.beneficiary)}</span>`:''}${x.method?`<span class="badge">${esc(x.method)}</span>`:''}${x.ref?`<span class="badge" dir="ltr">#${esc(x.ref)}</span>`:''}${f?`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${x.fileId}')">📁 ${esc(f)}</span>`:''}${x.reimb&&x.reimb!=='لا يُسترد'?`<span class="badge">${x.reimb==='مُسترد'?'↩ مُسترد':'⏳ يُسترد'}</span>`:''}</div>
+      ${x.notes?`<div class="pay-notes">${esc(x.notes)}</div>`:''}${acts.length?`<div class="pay-acts">${acts.join('')}</div>`:''}</div>
+    <div class="pay-amt">${payMoney(payTotal(x))}${payNum(x.fee)?`<small>منها رسوم ${payFmt(x.fee)}</small>`:''}</div></div>`;
+}
+
+/* ----- edit flows ----- */
+function payFields(){
+  return [
+    {k:'title',label:'وصف العملية',type:'text',full:true,req:true,ph:'مثال: رسوم تأشيرة عمل — 3 عمال'},
+    {k:'category',label:'الفئة',type:'text',list:'payCatList',ph:'اختر أو اكتب فئة جديدة'},
+    {k:'status',label:'الحالة',type:'select',opts:PAY_STATUS},
+    {k:'amount',label:'المبلغ (ر.س)',type:'number'},
+    {k:'fee',label:'رسوم / عمولة إضافية (ر.س)',type:'number'},
+    {k:'payer',label:'المسدِّد (صاحب الشأن)',type:'text',list:'payWhoList',ph:'من سدّد أو سيسدّد'},
+    {k:'entity',label:'الكيان / الشركة المستفيدة',type:'text',list:'payEntList',ph:'مثال: أوشن، نقاط الأداء'},
+    {k:'beneficiary',label:'الجهة المسدَّد لها',type:'text',list:'payBenList',ph:'مثال: قوى، وزارة الداخلية'},
+    {k:'method',label:'طريقة السداد',type:'select',opts:[['','— غير محدد —'],...PAY_METHODS]},
+    {k:'reqDate',label:'تاريخ الطلب',type:'date'},
+    {k:'paidDate',label:'تاريخ السداد',type:'date'},
+    {k:'ref',label:'رقم الإيصال / المرجع / رقم السداد',type:'text'},
+    {k:'fileId',label:'ملف مرتبط (اختياري)',type:'select',opts:[['','— بدون —'],...FILES.map(f=>[f.id,f.title])]},
+    {k:'reimb',label:'الاسترداد',type:'select',opts:PAY_REIMB},
+    {k:'notes',label:'ملاحظات',type:'textarea',full:true,rows:3,mic:true}
+  ];
+}
+function payEdit(id,prefill){
+  const x=id?payById(id):null;
+  const vals=x?x:Object.assign({status:'مطلوب',reqDate:today(),reimb:'لا يُسترد',category:'',method:''},prefill||{});
+  plnForm({title:x?'تعديل عملية سداد':'سداد جديد',wide:true,values:vals,fields:payFields(),
+    onSave:v=>{
+      v.amount=v.amount===''?0:+v.amount; v.fee=v.fee===''?0:+v.fee;
+      if(PAY_PAID.includes(v.status) && !v.paidDate) v.paidDate=today();
+      if(v.status==='مطلوب') { /* keep paidDate only if the user set it */ }
+      if(v.category && !PAY_CATS[v.category]) { /* custom category: fine */ }
+      if(x){ const was=x.status; Object.assign(x,v); logActivity('edit','payment',`تعديل سداد: ${x.title} — ${payFmt(payTotal(x))} ر.س`); if(was!==x.status) logActivity('edit','payment',`حالة السداد «${x.title}»: ${x.status}`); paySave(x); }
+      else { const n=Object.assign({id:uid(),createdAt:new Date().toISOString(),updatedAt:''},v); PAYMENTS.push(n); logActivity('add','payment',`تسجيل سداد: ${n.title} — ${payFmt(payTotal(n))} ر.س`); paySave(n); _showToast('سُجّلت العملية','success'); }
+    },
+    onDelete:x?()=>_showConfirm(`حذف عملية «${x.title}» نهائيًا؟`,{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(!ok) return; PAYMENTS=PAYMENTS.filter(q=>q.id!==x.id); logActivity('delete','payment',`حذف سداد: ${x.title}`); payPersist(null,x.id).then(()=>{ payUpdateBadge(); renderPayPage(); _showToast('تم الحذف'); }); }):null});
+}
+function payQuickAdd(){
+  const t=document.getElementById('payQT'), a=document.getElementById('payQA'), w=document.getElementById('payQW'), s=document.getElementById('payQS');
+  const title=t.value.trim(); if(!title){ _showToast('اكتب وصف العملية','error'); t.focus(); return; }
+  const cat=Object.keys(PAY_CATS).flatMap(c=>c.split(' / ').map(p=>[p,c])).filter(([p])=>p!=='أخرى'&&title.includes(p)).sort((a,b)=>b[0].length-a[0].length).map(a=>a[1])[0]||'';
+  const n={id:uid(),createdAt:new Date().toISOString(),updatedAt:'',title,category:cat,amount:payNum(a.value),fee:0,payer:w.value.trim(),entity:'',beneficiary:'',method:'',ref:'',fileId:'',reimb:'لا يُسترد',notes:'',status:s.value,reqDate:today(),paidDate:s.value==='تم السداد'?today():''};
+  PAYMENTS.push(n); logActivity('add','payment',`تسجيل سداد: ${n.title} — ${payFmt(payTotal(n))} ر.س`); haptic(6);
+  paySave(n).then(()=>{ const q=document.getElementById('payQT'); if(q) q.focus(); });
+}
+function payMarkPaid(id){
+  const x=payById(id); if(!x) return;
+  plnForm({title:'تأكيد السداد — '+x.title,saveLabel:'✓ تم السداد',values:{paidDate:today(),amount:x.amount||'',ref:x.ref||'',method:x.method||''},
+    fields:[{k:'paidDate',label:'تاريخ السداد',type:'date'},{k:'amount',label:'المبلغ الفعلي (ر.س)',type:'number'},{k:'method',label:'طريقة السداد',type:'select',opts:[['','— غير محدد —'],...PAY_METHODS]},{k:'ref',label:'رقم الإيصال / المرجع',type:'text'}],
+    onSave:v=>{ x.status='تم السداد'; x.paidDate=v.paidDate||today(); if(v.amount!=='') x.amount=+v.amount; if(v.method) x.method=v.method; if(v.ref) x.ref=v.ref; logActivity('edit','payment',`تم سداد: ${x.title} — ${payFmt(payTotal(x))} ر.س`); haptic(8); paySave(x); }});
+}
+function payConfirm(id){ const x=payById(id); if(!x) return; x.status='مؤكد'; logActivity('edit','payment',`تأكيد استلام سداد: ${x.title}`); paySave(x); }
+function payReimbDone(id){ const x=payById(id); if(!x) return; x.reimb='مُسترد'; x.reimbDate=today(); logActivity('edit','payment',`استرداد مبلغ: ${x.title}`); paySave(x); }
+function payRemind(id){
+  const x=payById(id); if(!x) return;
+  const msg=`السلام عليكم ${x.payer||''}،\nنرجو التكرم بسداد: ${x.title}${payNum(x.amount)?`\nالمبلغ: ${payFmt(payTotal(x))} ريال`:''}${x.beneficiary?`\nالجهة: ${x.beneficiary}`:''}${x.entity?`\nالكيان: ${x.entity}`:''}\nوموافاتنا بإيصال السداد فور إتمامه.\nشاكرين تعاونكم.`;
+  const ph=payPhoneOf(x.payer);
+  plnForm({title:'📲 تذكير بالسداد',noSave:true,bodyHtml:`<textarea id="payRemMsg" rows="8" style="width:100%">${esc(msg)}</textarea><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-glass" onclick="axCopy(document.getElementById('payRemMsg').value)">📋 نسخ</button>${ph?`<button class="btn btn-filled" onclick="window.open('https://wa.me/'+'${ph}'+'?text='+encodeURIComponent(document.getElementById('payRemMsg').value),'_blank','noopener')">↗ واتساب إلى ${esc(x.payer)}</button>`:`<span class="settings-desc" style="margin:0">لا يوجد رقم لـ«${esc(x.payer||'المسدِّد')}» في جهات الاتصال — انسخ الرسالة وأرسلها.</span>`}</div>`});
+}
+
+/* ----- by payer ----- */
+function payPickWho(i){ PAY_UI.who=(window.__payGroups||[])[i]||''; PAY_UI.view='log'; PAY_UI.st='all'; paySaveUi(); renderPayPage(); }
+function payPeopleHtml(b,arr){
+  const groups=payGroup(PAYMENTS.filter(x=>x.status!=='ملغي'&&(PAY_UI.range==='all'||payInRange(x,b)||x.status==='مطلوب')),x=>x.payer||'بدون مسدِّد');
+  let h=payKpiHtml(b,arr);
+  if(!groups.length) return h+`<div class="pln-box pln-empty"><h3>لا بيانات</h3></div>`;
+  window.__payGroups=groups.map(g=>g.k);
+  h+=`<div class="pln-grid">${groups.map((g,gi)=>{
+    const paid=g.items.filter(payIsPaid), pend=g.items.filter(x=>x.status==='مطلوب'), re=g.items.filter(x=>x.reimb==='مستحق الاسترداد');
+    const cats=payGroup(paid,x=>x.category).slice(0,3).map(c=>`<span class="badge">${payCatIcon(c.k)} ${esc(c.k)}</span>`).join('');
+    return `<div class="pln-card" style="--pc:var(--accent)" onclick="payPickWho(${gi})">
+      <div class="pln-card-h"><div class="pln-ico">👤</div><div class="pln-card-t">${esc(g.k)}</div></div>
+      <div class="pay-big">${payMoney(paySum(paid))}</div><div class="pln-card-g" style="margin:2px 0 6px">${paid.length} عملية مسدَّدة${pend.length?` · ${pend.length} مطلوبة (${payFmt(paySum(pend))} ر.س)`:''}</div>
+      <div class="pln-card-f">${cats}${re.length?`<span class="pln-pill orange">يُسترد ${payFmt(paySum(re))} ر.س</span>`:''}</div></div>`; }).join('')}</div>`;
+  return h;
+}
+
+/* ----- report ----- */
+function payBars(groups,total){
+  return groups.map(g=>{ const pc=total?Math.round(g.sum/total*100):0, col=payCatColor(g.k); return `<div class="pay-bar"><div class="r"><span>${g.items&&PAY_CATS[g.k]?PAY_CATS[g.k]+' ':''}${esc(g.k)} <small>(${g.items.length})</small></span><span>${payFmt(g.sum)} ر.س · ${pc}%</span></div><div class="pln-bar" style="--pc:${col}"><i style="width:${pc}%"></i></div></div>`; }).join('');
+}
+function payDonut(groups,total){
+  if(!total) return '';
+  let acc=0; const parts=groups.slice(0,10).map(g=>{ const s=acc, e=acc+g.sum/total*100; acc=e; return `${payCatColor(g.k)} ${s}% ${e}%`; });
+  if(acc<99.9) parts.push(`var(--surface-3) ${acc}% 100%`);
+  return `<div class="pay-donutw"><div class="pay-donut" style="background:conic-gradient(${parts.join(',')})"></div><div class="lbl"><b>${payFmt(total)}</b><span>ر.س</span></div></div>`;
+}
+function payTrend(arr,b){
+  const paid=arr.filter(payIsPaid); if(!paid.length) return '';
+  const monthly=PAY_UI.range==='year'||PAY_UI.range==='all'||PAY_UI.range==='custom'&&(_isoToDate(b.to)-_isoToDate(b.from))/864e5>62;
+  const m=new Map();
+  paid.forEach(x=>{ const d=payDate(x); const k=monthly?d.slice(0,7):d; m.set(k,(m.get(k)||0)+payTotal(x)); });
+  let keys;
+  if(PAY_UI.range==='month'){ const [y,mm]=PAY_UI.month.split('-').map(Number); const n=new Date(y,mm,0).getDate(); keys=Array.from({length:n},(_,i)=>PAY_UI.month+'-'+String(i+1).padStart(2,'0')); }
+  else if(PAY_UI.range==='year') keys=Array.from({length:12},(_,i)=>PAY_UI.year+'-'+String(i+1).padStart(2,'0'));
+  else keys=[...m.keys()].sort();
+  const max=Math.max(...keys.map(k=>m.get(k)||0),1), W=Math.max(keys.length*22,300), H=110, bw=Math.min(18,(W/keys.length)-4);
+  const bars=keys.map((k,i)=>{ const v=m.get(k)||0, hh=Math.round(v/max*(H-18)); const x=i*(W/keys.length)+(W/keys.length-bw)/2; return `<g><title>${k}: ${payFmt(v)} ر.س</title><rect x="${x}" y="${H-hh-14}" width="${bw}" height="${Math.max(hh,v?2:0)}" rx="3" fill="var(--accent)" opacity="${v?1:.15}"/><text x="${x+bw/2}" y="${H-3}" text-anchor="middle">${monthly?k.slice(5):k.slice(8)}</text></g>`; }).join('');
+  return `<div class="pln-chart"><svg viewBox="0 0 ${W} ${H}">${bars}</svg></div>`;
+}
+function payGroupKey(){ return {none:x=>'',category:x=>x.category||'بدون فئة',payer:x=>x.payer||'بدون مسدِّد',entity:x=>x.entity||'بدون كيان',file:x=>payFileTitle(x.fileId)||'بدون ملف'}[PAY_UI.grp]; }
+function payTableRows(items){
+  return items.map((x,i)=>`<tr><td>${i+1}</td><td>${payDate(x)?fmtDate(payDate(x)):''}</td><td>${esc(x.title)}${x.notes?`<div class="cl">${esc(x.notes)}</div>`:''}</td><td>${esc(x.category||'')}</td><td>${esc(x.payer||'')}</td><td>${esc(x.entity||'')}</td><td>${esc(x.beneficiary||'')}</td><td>${esc(x.method||'')}</td><td dir="ltr">${esc(x.ref||'')}</td><td class="num">${payFmt(payTotal(x))}</td><td>${esc(x.status)}</td></tr>`).join('');
+}
+function payReportData(){
+  const b=payBounds(), arr=payList(b), paid=arr.filter(payIsPaid).sort((a,c)=>payDate(a).localeCompare(payDate(c)));
+  const pend=PAYMENTS.filter(x=>x.status==='مطلوب'&&(PAY_UI.range==='all'||payInRange(x,b)||payDate(x)<b.from)), reimb=PAYMENTS.filter(x=>x.reimb==='مستحق الاسترداد'&&x.status!=='ملغي');
+  return {b,arr,paid,pend,reimb,total:paySum(paid),byCat:payGroup(paid,x=>x.category||'بدون فئة'),byWho:payGroup(paid,x=>x.payer||'بدون مسدِّد'),byEnt:payGroup(paid,x=>x.entity||'بدون كيان'),byBen:payGroup(paid,x=>x.beneficiary||'بدون جهة')};
+}
+function payReportHtml(b,arr){
+  const R=payReportData(); let h=payKpiHtml(b,arr);
+  h+=`<div class="pay-actions pln-noprint"><button class="btn btn-filled btn-sm" onclick="payPrint()">🖨️ طباعة / PDF</button><button class="btn btn-glass btn-sm" onclick="payExportCsv()">📥 تصدير Excel</button><button class="btn btn-glass btn-sm" onclick="payCopyReport()">📋 نسخ ملخص</button><button class="btn btn-glass btn-sm" onclick="axPayReport()">✨ ملخص إداري</button></div>`;
+  if(!R.paid.length) return h+`<div class="pln-box pln-empty"><div style="font-size:38px">📊</div><h3>لا عمليات مسدَّدة في هذه الفترة</h3><div class="settings-desc">يُحسب التقرير من العمليات بحالة «تم السداد» أو «مؤكد» حسب تاريخ السداد.</div></div>`+payPendingBox(R);
+  h+=`<div class="pay-rgrid"><div class="pln-box"><h4><span>توزيع المسدَّد حسب الفئة</span></h4><div class="pay-dwrap">${payDonut(R.byCat,R.total)}<div style="flex:1;min-width:200px">${payBars(R.byCat,R.total)}</div></div></div>
+    <div class="pln-box"><h4><span>${PAY_UI.range==='month'?'المسدَّد يوميًا':'المسدَّد شهريًا'}</span></h4>${payTrend(R.arr,R.b)}
+      <h4 style="margin-top:14px"><span>حسب المسدِّد</span></h4>${payBars(R.byWho.slice(0,8),R.total)}</div>
+    <div class="pln-box"><h4><span>حسب الكيان</span></h4>${payBars(R.byEnt,R.total)}<h4 style="margin-top:14px"><span>حسب الجهة المسدَّد لها</span></h4>${payBars(R.byBen.slice(0,8),R.total)}</div></div>`;
+  h+=payPendingBox(R);
+  const gk=payGroupKey();
+  h+=`<div class="pln-box"><h4><span>📑 تفاصيل العمليات (${R.paid.length})</span><span class="pay-grp pln-noprint">تجميع: <select onchange="PAY_UI.grp=this.value;paySaveUi();renderPayPage()">${[['none','بدون'],['category','الفئة'],['payer','المسدِّد'],['entity','الكيان'],['file','الملف']].map(([k,l])=>`<option value="${k}"${PAY_UI.grp===k?' selected':''}>${l}</option>`).join('')}</select></span></h4><div class="pay-tablewrap"><table class="pay-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المسدِّد</th><th>الكيان</th><th>الجهة</th><th>الطريقة</th><th>المرجع</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody>`;
+  if(PAY_UI.grp==='none') h+=payTableRows(R.paid);
+  else payGroup(R.paid,gk).forEach(g=>{ h+=`<tr class="gh"><td colspan="9">${esc(g.k)} <small>(${g.items.length})</small></td><td class="num">${payFmt(g.sum)}</td><td></td></tr>`+payTableRows(g.items); });
+  h+=`<tr class="tot"><td colspan="9">الإجمالي</td><td class="num">${payFmt(R.total)}</td><td></td></tr></tbody></table></div></div>`;
+  return h;
+}
+function payPendingBox(R){
+  let h='';
+  if(R.pend.length) h+=`<div class="pln-box"><h4><span>⏳ مطلوب سدادها ولم تُسدَّد (${R.pend.length}) — ${payFmt(paySum(R.pend))} ر.س</span></h4>${R.pend.map(x=>`<div class="pln-frow" onclick="payEdit('${x.id}')"><span class="t">${esc(x.title)}<div class="s">${esc(x.payer||'')}${x.reqDate?' · طُلب '+fmtDate(x.reqDate):''}</div></span><b>${payFmt(payTotal(x))}</b></div>`).join('')}</div>`;
+  if(R.reimb.length) h+=`<div class="pln-box"><h4><span>↩ مستحقة الاسترداد (${R.reimb.length}) — ${payFmt(paySum(R.reimb))} ر.س</span></h4>${R.reimb.map(x=>`<div class="pln-frow" onclick="payEdit('${x.id}')"><span class="t">${esc(x.title)}<div class="s">${esc(x.payer||'')}</div></span><b>${payFmt(payTotal(x))}</b></div>`).join('')}</div>`;
+  return h;
+}
+function payReportText(){
+  const R=payReportData(); const L=[];
+  L.push(`📊 تقرير المدفوعات — ${R.b.label}`); L.push(`إجمالي المسدَّد: ${payFmt(R.total)} ر.س (${R.paid.length} عملية)`);
+  if(R.byCat.length){ L.push('\nحسب الفئة:'); R.byCat.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س (${g.items.length})`)); }
+  if(R.byWho.length){ L.push('\nحسب المسدِّد:'); R.byWho.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س`)); }
+  if(R.byEnt.length>1||(R.byEnt[0]&&R.byEnt[0].k!=='بدون كيان')){ L.push('\nحسب الكيان:'); R.byEnt.forEach(g=>L.push(`• ${g.k}: ${payFmt(g.sum)} ر.س`)); }
+  if(R.pend.length) L.push(`\n⏳ مطلوب لم يُسدَّد: ${R.pend.length} — ${payFmt(paySum(R.pend))} ر.س`);
+  if(R.reimb.length) L.push(`↩ مستحق الاسترداد: ${R.reimb.length} — ${payFmt(paySum(R.reimb))} ر.س`);
+  return L.join('\n');
+}
+function payCopyReport(){ axCopy(payReportText()); }
+function payExportCsv(){
+  const R=payReportData(); const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const head=['التاريخ','الوصف','الفئة','المسدِّد','الكيان','الجهة المسدَّد لها','الطريقة','المرجع','المبلغ','الرسوم','الإجمالي','الحالة','الملف','الاسترداد','ملاحظات'];
+  const rows=R.paid.map(x=>[payDate(x),x.title,x.category,x.payer,x.entity,x.beneficiary,x.method,x.ref,payNum(x.amount),payNum(x.fee),payTotal(x),x.status,payFileTitle(x.fileId),x.reimb,x.notes].map(q).join(','));
+  rows.push(['','الإجمالي','','','','','','','','',R.total].map(q).join(','));
+  const blob=new Blob(['﻿'+head.map(q).join(',')+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='تقرير-المدفوعات-'+(R.b.short||'').replace(/\s+/g,'-')+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
+}
+function payPrint(){
+  const R=payReportData(), E=esc;
+  const bars=g=>g.map(x=>`<tr><td>${E(x.k)}</td><td>${x.items.length}</td><td class="num">${payFmt(x.sum)}</td><td class="num">${R.total?Math.round(x.sum/R.total*100):0}%</td></tr>`).join('');
+  const tbl=(t,g)=>g.length?`<h3>${t}</h3><table><tr><th>البند</th><th>العدد</th><th>المبلغ (ر.س)</th><th>%</th></tr>${bars(g)}</table>`:'';
+  const detail=PAY_UI.grp==='none'?payTableRows(R.paid):payGroup(R.paid,payGroupKey()).map(g=>`<tr class="gh"><td colspan="9">${E(g.k)} (${g.items.length})</td><td class="num">${payFmt(g.sum)}</td><td></td></tr>`+payTableRows(g.items)).join('');
+  const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير المدفوعات — ${E(R.b.short)}</title><style>
+  body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;color:#1c1c1e;margin:26px;line-height:1.7;font-size:12.5px}
+  h1{margin:0 0 4px;font-size:23px;border-bottom:3px solid #0a84ff;padding-bottom:8px} h2{margin:22px 0 8px;font-size:16px;color:#0a5fc0} h3{margin:16px 0 6px;font-size:13.5px}
+  .meta{color:#555;margin:6px 0 14px} .kp{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0} .kp div{border:1px solid #ddd;border-radius:8px;padding:8px 14px;min-width:120px} .kp b{display:block;font-size:19px}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px} th,td{border:1px solid #ccc;padding:4px 7px;text-align:right;vertical-align:top} th{background:#eef2f9} td.num{text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}
+  tr.gh td{background:#f4f6fb;font-weight:700} tr.tot td{background:#e6eefc;font-weight:800} .cl{color:#666;font-size:11px} .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sign{display:flex;justify-content:space-between;margin-top:46px;gap:30px} .sign div{flex:1;border-top:1px solid #888;padding-top:6px;text-align:center;color:#555}
+  .foot{margin-top:22px;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:8px} @media print{body{margin:10mm} table,h3{page-break-inside:auto} tr{page-break-inside:avoid}}
+  </style></head><body><h1>💸 تقرير المدفوعات والسداد</h1>
+  <div class="meta">${E(R.b.label)} — أُعدّ بتاريخ ${fmtDate(today())}</div>
+  <div class="kp"><div><b>${payFmt(R.total)}</b>إجمالي المسدَّد (ر.س)</div><div><b>${R.paid.length}</b>عدد العمليات</div><div><b>${R.pend.length}</b>مطلوب لم يُسدَّد</div><div><b>${payFmt(paySum(R.reimb))}</b>مستحق الاسترداد (ر.س)</div></div>
+  <div class="two"><div>${tbl('حسب الفئة',R.byCat)}</div><div>${tbl('حسب المسدِّد',R.byWho)}</div></div><div class="two"><div>${tbl('حسب الكيان',R.byEnt)}</div><div>${tbl('حسب الجهة المسدَّد لها',R.byBen)}</div></div>
+  <h2>تفاصيل العمليات</h2><table><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المسدِّد</th><th>الكيان</th><th>الجهة</th><th>الطريقة</th><th>المرجع</th><th>المبلغ</th><th>الحالة</th></tr>${detail}<tr class="tot"><td colspan="9">الإجمالي</td><td class="num">${payFmt(R.total)}</td><td></td></tr></table>
+  ${R.pend.length?`<h2>مطلوب سدادها ولم تُسدَّد</h2><table><tr><th>الوصف</th><th>المسدِّد</th><th>تاريخ الطلب</th><th>المبلغ</th></tr>${R.pend.map(x=>`<tr><td>${E(x.title)}</td><td>${E(x.payer||'')}</td><td>${x.reqDate?fmtDate(x.reqDate):''}</td><td class="num">${payFmt(payTotal(x))}</td></tr>`).join('')}</table>`:''}
+  ${R.reimb.length?`<h2>مستحقة الاسترداد</h2><table><tr><th>الوصف</th><th>المسدِّد</th><th>المبلغ</th></tr>${R.reimb.map(x=>`<tr><td>${E(x.title)}</td><td>${E(x.payer||'')}</td><td class="num">${payFmt(payTotal(x))}</td></tr>`).join('')}</table>`:''}
+  <div class="sign"><div>أعدّه</div><div>راجعه</div><div>اعتمده</div></div>
+  <div class="foot">مهام صَفوان — تقرير المدفوعات</div>
+  <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`;
+  const w=window.open('','_blank'); if(!w){ _showToast('اسمح بالنوافذ المنبثقة للطباعة','error'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+/* ----- AI ----- */
+async function axPayReport(){
+  const R=payReportData(); if(!R.paid.length){ _showToast('لا عمليات مسدَّدة في هذه الفترة','error'); return; }
+  axOpen('✨ ملخص إداري للمدفوعات'); axLoading('أحلل المدفوعات…');
+  const pb=payPrevBounds(); const prev=pb?paySum(payList(pb).filter(payIsPaid)):null;
+  const ctx={period:R.b.label,total:R.total,count:R.paid.length,previousPeriodTotal:prev,byCategory:R.byCat.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),byPayer:R.byWho.map(g=>({name:g.k,sum:g.sum,count:g.items.length})),byEntity:R.byEnt.map(g=>({name:g.k,sum:g.sum})),
+    pending:R.pend.slice(0,30).map(x=>({title:x.title,payer:x.payer,amount:payTotal(x),requested:x.reqDate})),reimbursable:R.reimb.slice(0,30).map(x=>({title:x.title,payer:x.payer,amount:payTotal(x)})),
+    largest:R.paid.slice().sort((a,b)=>payTotal(b)-payTotal(a)).slice(0,5).map(x=>({title:x.title,amount:payTotal(x),category:x.category}))};
+  const t=await axAsk('pay_report','اكتب ملخصًا إداريًا موجزًا لتقرير المدفوعات (مبالغ سُدِّدت نيابة عن الشركة عن طريق أصحاب الشأن) بالأقسام: الموجز (3 أسطر)، أبرز البنود والفئات، مقارنة بالفترة السابقة إن توفرت، ملاحظات تستحق الانتباه (تركّز غير معتاد، عمليات كبيرة، متأخرات)، والمطلوب متابعته (المعلّق والمستحق الاسترداد). اعتمد على الأرقام في السياق فقط.','اكتب الملخص الإداري.',ctx);
+  if(t==null){ axFail(); return; } axTextResult(t);
+}
+function axPayParse(){
+  plnForm({title:'✨ تسجيل سداد من نص',saveLabel:'✨ حلّل وعبّئ',values:{text:''},
+    fields:[{k:'text',label:'الصق رسالة السداد أو اكتب وصفها',type:'textarea',full:true,rows:5,req:true,mic:true,ph:'مثال: تم سداد رسوم تأشيرة عمل لعدد 3 بمبلغ 6000 ريال عن طريق سداد، رقم الإيصال 88123 — من أحمد'}],
+    onSave:async v=>{
+      axOpen('✨ تسجيل سداد'); axLoading('أستخرج بيانات السداد…');
+      const r=await axAsk('pay_parse','استخرج من النص بيانات عملية سداد مالية. category اختر الأقرب من: '+Object.keys(PAY_CATS).join('، ')+' أو اتركه كما يظهر في النص. status: «تم السداد» إن أفاد النص أن السداد تم وإلا «مطلوب». التواريخ YYYY-MM-DD بالنسبة لتاريخ اليوم. لا تختلق مبالغ أو أرقامًا غير مذكورة. المخطط: {"title":"","category":"","amount":رقم,"fee":رقم,"payer":"","entity":"","beneficiary":"","method":"","ref":"","status":"","reqDate":"","paidDate":"","notes":""}',v.text,{people:payPeople().slice(0,60),files:axFilesBrief(40)},{json:true});
+      if(!r||!axStr(r.title)){ axFail(); return; }
+      axClose();
+      const st=PAY_STATUS.includes(r.status)?r.status:'مطلوب';
+      payEdit(null,{title:axStr(r.title),category:axStr(r.category),amount:payNum(r.amount)||'',fee:payNum(r.fee)||'',payer:axStr(r.payer),entity:axStr(r.entity),beneficiary:axStr(r.beneficiary),method:PAY_METHODS.includes(r.method)?r.method:'',ref:axStr(r.ref),status:st,reqDate:axIso(r.reqDate)||today(),paidDate:axIso(r.paidDate)||(PAY_PAID.includes(st)?today():''),notes:axStr(r.notes),reimb:'لا يُسترد'});
+      _showToast('عبّأ المساعد الحقول — راجعها واحفظ','success');
+    }});
 }
 
 /* ---------- toast / confirm ---------- */
