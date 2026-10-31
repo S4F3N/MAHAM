@@ -412,6 +412,7 @@
   .file-header .fh-notes{margin-top:12px;font-size:13.5px;background:var(--surface-2);padding:10px 12px;border-radius:var(--radius-sm);}
   .file-header .fh-tags{margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;}
   .fh-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .fh-brief{margin-top:8px;font-size:12.5px;color:var(--text-2);line-height:1.6;}
 
   .round-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .subfile-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
@@ -2714,17 +2715,32 @@ function goToCalendarDay(dateStr){
 
 /* ---------- HOME ---------- */
 function renderHome(){ renderStats(); renderChart(); renderTodayCard(); renderMiniCal(); renderOpenList(); renderNotif(); }
+/* active files that have no rounds at all — they need a first action, so they show in today's list */
+function emptyActiveFiles(){ const withR=new Set(ROUNDS.map(r=>r.fileId)); return FILES.filter(f=>f.status==='نشط' && !withR.has(f.id)); }
+function fileBriefLine(f){
+  const rs=ROUNDS.filter(r=>r.fileId===f.id), pend=rs.filter(r=>r.exec!=='تم'), od=pend.filter(r=>r.due&&daysUntil(r.due)<0);
+  const lt=TASKS.filter(t=>t.fileId===f.id&&!t.done).length;
+  const last=rs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const p=[];
+  p.push(rs.length?`🔄 ${rs.length} جولة`:'🔄 بلا جولات');
+  if(last&&last.date) p.push(`آخر جولة ${fmtDate(last.date)}`);
+  if(pend.length) p.push(`⏳ ${pend.length} إجراء معلّق${od.length?` (${od.length} متأخر)`:''}`);
+  if(lt) p.push(`⚡ ${lt} مهمة مرتبطة`);
+  if(f.target) p.push(`🎯 ${fmtDate(f.target)}`);
+  return `<div class="fh-brief">${p.join(' · ')}</div>`;
+}
 function renderTodayCard(){
   const t = today();
   const tTasks = CTASKS().filter(x=>x.date===t).map(x=>Object.assign({_kind:'task'}, x));
   const tRounds = pendingRounds().filter(r=>roundIsDueOn(r,t)).map(r=>Object.assign({_kind:'round'}, r));
+  const tFiles = emptyActiveFiles().map(f=>({_kind:'file',id:f.id,fileId:f.id,title:f.title}));
   const items = tTasks.concat(tRounds).sort((a,b)=>{
     const aDone = a._kind==='task' && !!a.done, bDone = b._kind==='task' && !!b.done;
     if(aDone!==bDone) return aDone?1:-1;
     const at = a._kind==='task' ? (a.time||'99:99') : '99:99';
     const bt = b._kind==='task' ? (b.time||'99:99') : '99:99';
     return at.localeCompare(bt);
-  });
+  }).concat(tFiles);
   const el = document.getElementById('todayCard');
   if(!el) return;
   let html = `<div class="today-card-title"${dTitle(t)}>🗓️ مهام اليوم — ${fmtDate(t)}</div>`;
@@ -2733,6 +2749,13 @@ function renderTodayCard(){
   } else {
     html += `<div class="today-card-list">` + items.map((x,i)=>{
       const f = fileOf(x.fileId);
+      if(x._kind==='file'){
+        return `<div class="today-card-row" onclick="goToFile('${x.id}')">
+          <span class="today-card-num">${i+1}</span>
+          <span class="today-card-txt">📁 ${esc(x.title)} — ملف نشط بلا جولات</span>
+          <span class="today-card-time">ملف</span>
+        </div>`;
+      }
       if(x._kind==='task'){
         return `<div class="today-card-row ${x.done?'done':''}" onclick="openTaskModal('${x.id}')">
           <span class="today-card-num">${i+1}</span>
@@ -3055,7 +3078,8 @@ function renderTodayAgenda(){
   const t = today();
   const tTasks = CTASKS().filter(x=>x.date===t && !x.done).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const tRounds = pendingRounds().filter(r=>roundIsDueOn(r,t));
-  const total = tTasks.length + tRounds.length;
+  const tFiles = emptyActiveFiles();
+  const total = tTasks.length + tRounds.length + tFiles.length;
   const badge = document.getElementById('todayBadge');
   if(total){ badge.style.display='flex'; badge.textContent = total>9?'9+':total; } else { badge.style.display='none'; }
   let html = `<div class="agenda-drop-title"${dTitle(t)}>مهام اليوم — ${fmtDate(t)}</div>`;
@@ -3078,6 +3102,12 @@ function renderTodayAgenda(){
     html += `<div class="open-item" style="margin-bottom:6px;" onclick="goToFile('${r.fileId}'); toggleTodayDrop(false);">
       <span class="ic">${ROUND_TYPES[r.type]||'📌'}</span>
       <div><div class="ttl">${esc((r.actionNeeded||'').slice(0,60))}</div><div class="sub">${f?esc(f.title):''} — إجراء مستحق اليوم</div></div>
+    </div>`;
+  });
+  tFiles.forEach(f=>{
+    html += `<div class="open-item" style="margin-bottom:6px;" onclick="goToFile('${f.id}'); toggleTodayDrop(false);">
+      <span class="ic">📁</span>
+      <div><div class="ttl">${esc(f.title)}</div><div class="sub">ملف نشط بلا جولات — يحتاج أول إجراء</div></div>
     </div>`;
   });
   html += `<div class="agenda-drop-footer" onclick="goToTasks(); toggleTodayDrop(false);">عرض كل المهام والمواعيد ↩</div>`;
@@ -3484,6 +3514,7 @@ function renderFilePage(){
           if(!na) return '';
           return `<div class="fh-next-action"><b>الإجراء القادم:</b> ${esc((na.actionNeeded||'').slice(0,110))} ${na.due?dueBadgeHtml(na.due):''} <span class="exec-pill ${na.exec}">${na.exec==='جارٍ'?'جارٍ التنفيذ':'لم يُنفذ بعد'}</span></div>`;
         })()}
+        ${fileBriefLine(f)}
       </div>
       <div class="fh-actions">
         <button class="btn btn-glass btn-sm" onclick="aiSummarizeFile('${f.id}')">✨ تلخيص بالذكاء الاصطناعي</button>
