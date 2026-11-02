@@ -1001,6 +1001,7 @@
   <button data-tab="urgent">⚡ المهام العاجلة<span class="notif-badge tab-badge" id="urgentTabBadge" style="display:none"></span></button>
   <button data-tab="plans">🧭 الخطط<span class="notif-badge tab-badge" id="plnTabBadge" style="display:none"></span></button>
   <button data-tab="pay">💸 المدفوعات<span class="notif-badge tab-badge" id="payTabBadge" style="display:none"></span></button>
+  <button data-tab="rep">📑 التقارير</button>
   <button data-tab="files">الملفات</button>
   <button data-tab="tasks">المهام<span class="notif-badge tab-badge" id="tasksTabBadge" style="display:none"></span></button>
   <button data-tab="calendar">التقويم</button>
@@ -1168,6 +1169,7 @@
 
 
   <!-- PAYMENTS -->
+  <section class="page" id="page-rep"><div id="repRoot"></div></section>
   <section class="page" id="page-pay"><div id="payRoot"></div>
     <datalist id="payCatList"></datalist><datalist id="payWhoList"></datalist><datalist id="payEntList"></datalist><datalist id="payBenList"></datalist>
   </section>
@@ -2675,12 +2677,13 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentFileId=null;
-    ['home','urgent','plans','pay','files','tasks','calendar','contacts','activity','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
+    ['home','urgent','plans','pay','rep','files','tasks','calendar','contacts','activity','settings'].forEach(t=>document.getElementById('page-'+t).classList.toggle('active', t===btn.dataset.tab));
     document.getElementById('page-file').classList.remove('active');
     if(btn.dataset.tab==='home') renderHome();
     if(btn.dataset.tab==='urgent') renderUrgentPage();
     if(btn.dataset.tab==='plans') renderPlansPage();
     if(btn.dataset.tab==='pay') renderPayPage();
+    if(btn.dataset.tab==='rep') renderRepPage();
     if(btn.dataset.tab==='files') renderFilesPage();
     if(btn.dataset.tab==='tasks') renderTasksPage();
     if(btn.dataset.tab==='calendar') renderCalendarPage();
@@ -2698,7 +2701,7 @@ function goHome(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active'); document.getElementById('page-rep').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-home').classList.add('active');
   currentFileId=null;
@@ -2713,7 +2716,7 @@ function goToFilesPage(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active'); document.getElementById('page-rep').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-files').classList.add('active');
   currentFileId=null;
@@ -2729,7 +2732,7 @@ function goToActivity(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active'); document.getElementById('page-rep').classList.remove('active');
   document.getElementById('page-activity').classList.add('active');
   currentFileId=null;
   renderActivityPage();
@@ -2743,7 +2746,7 @@ function goToTasks(){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active'); document.getElementById('page-rep').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-tasks').classList.add('active');
   currentFileId=null;
@@ -2758,7 +2761,7 @@ function goToFile(id){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active'); document.getElementById('page-rep').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-file').classList.add('active');
   currentFileId=id; roundFilterExec=''; roundFilterType=''; roundFilterTrack='';
@@ -2773,7 +2776,7 @@ function goToCalendarDay(dateStr){
   document.getElementById('page-contacts').classList.remove('active');
   document.getElementById('page-settings').classList.remove('active');
   document.getElementById('page-urgent').classList.remove('active');
-  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active');
+  document.getElementById('page-plans').classList.remove('active'); document.getElementById('page-pay').classList.remove('active'); document.getElementById('page-rep').classList.remove('active');
   document.getElementById('page-activity').classList.remove('active');
   document.getElementById('page-calendar').classList.add('active');
   currentFileId=null;
@@ -4659,7 +4662,7 @@ function updateUrgentBadge(){
 }
 function goToUrgent(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='urgent'));
-  ['home','files','file','calendar','contacts','settings','activity','tasks','plans'].forEach(t=>document.getElementById('page-'+t).classList.remove('active'));
+  ['rep','home','files','file','calendar','contacts','settings','activity','tasks','plans'].forEach(t=>document.getElementById('page-'+t).classList.remove('active'));
   document.getElementById('page-urgent').classList.add('active');
   currentFileId=null;
   renderUrgentPage();
@@ -5283,7 +5286,7 @@ function plnUpdateBadge(){
 /* ---------- navigation ---------- */
 function goToPlans(id){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='plans'));
-  ['home','urgent','files','file','calendar','contacts','settings','activity','tasks','pay'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
+  ['rep','home','urgent','files','file','calendar','contacts','settings','activity','tasks','pay'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
   document.getElementById('page-plans').classList.add('active');
   currentFileId=null;
   if(id!==undefined) { PLN_UI.id=id||''; }
@@ -6564,7 +6567,7 @@ function payRefreshLists(){
 /* ---------- navigation ---------- */
 function goToPay(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='pay'));
-  ['home','urgent','plans','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
+  ['rep','home','urgent','plans','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
   document.getElementById('page-pay').classList.add('active'); currentFileId=null; renderPayPage();
 }
 function payView(v){ PAY_UI.view=v; paySaveUi(); renderPayPage(); }
@@ -6877,6 +6880,437 @@ function axPayParse(){
       _showToast('عبّأ المساعد الحقول — راجعها واحفظ','success');
     }});
 }
+
+/* ================= REPORTS (التقارير) =================
+   Builds management reports from every part of the app (files/rounds, pending actions, tasks, urgent tasks,
+   plans, payments). Everything is flattened into "items" so any grouping works (file / group / category /
+   responsible / priority / status / month / kind). Output: live preview, print/PDF, Word, Excel (CSV), text, share. */
+const RP_KEY='maham_rp_ui', RP_PKEY='maham_rp_presets';
+const RP_KINDS={round:['🔄','الجولات'],action:['⏭️','الإجراءات المطلوبة'],task:['✅','المهام'],urgent:['⚡','المهام العاجلة'],plan:['🧭','الخطط'],pay:['💸','المدفوعات']};
+const RP_STATE={done:'منجز',open:'مفتوح',late:'متأخر'};
+const RP_BY=[['group','المجموعات'],['cat','التصنيفات'],['file','الملفات'],['kind','نوع العمل'],['resp','المسؤول'],['priority','الأولوية'],['state','الحالة'],['month','الشهر']];
+const RP_LEVELS=[['brief','موجز','صفحة واحدة: مؤشرات + أبرز النقاط + ما يحتاج انتباهًا'],['summary','ملخص','+ جدول حسب التجميع ومقتطفات لكل قسم'],['detailed','مفصّل','كل العناصر بتفاصيلها + سجل الملفات']];
+let RP={level:'summary',by:'group',range:'month',anchor:'',from:'',to:'',scope:'all',gIds:[],cIds:[],fIds:[],tIds:[],state:'all',priority:'',resp:'',fstatus:'',emptyFiles:false,register:true,sign:true,
+  sec:{rounds:true,actions:true,tasks:true,urgent:true,plans:false,pay:false},
+  h:{title:'',recipient:'الإدارة العليا',org:'',dept:'الشؤون القانونية',author:'صفوان'},narr:'',notes:''};
+try{ const s=JSON.parse(localStorage.getItem(RP_KEY)||'null'); if(s) RP=Object.assign(RP,s,{sec:Object.assign(RP.sec,s.sec||{}),h:Object.assign(RP.h,s.h||{})}); }catch(e){}
+if(!RP.anchor) RP.anchor=today();
+function rpSave(){ try{ localStorage.setItem(RP_KEY,JSON.stringify(RP)); }catch(e){} }
+const rpA=s=>esc(String(s==null?'':s)).replace(/"/g,'&quot;');
+const rpT=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ---------- period ---------- */
+function rpBounds(){
+  const a=RP.anchor||today(), d=plnD(a)||new Date(), y=d.getFullYear(), m=d.getMonth();
+  if(RP.range==='all') return {all:true,from:'',to:'',label:'كل الفترات'};
+  if(RP.range==='custom'){ const f=RP.from||a, t=RP.to||f; return {from:f,to:t<f?f:t,label:`من ${fmtDate(f)} إلى ${fmtDate(t<f?f:t)}`}; }
+  if(RP.range==='week'){ const s=new Date(y,m,d.getDate()-d.getDay(),12), e=new Date(y,m,d.getDate()-d.getDay()+6,12); return {from:_dateToIso(s),to:_dateToIso(e),label:`أسبوع ${fmtDate(_dateToIso(s))} – ${fmtDate(_dateToIso(e))}`}; }
+  if(RP.range==='quarter'){ const q=Math.floor(m/3); return {from:_dateToIso(new Date(y,q*3,1,12)),to:_dateToIso(new Date(y,q*3+3,0,12)),label:['الربع الأول','الربع الثاني','الربع الثالث','الربع الرابع'][q]+' '+y}; }
+  if(RP.range==='year') return {from:y+'-01-01',to:y+'-12-31',label:'سنة '+y};
+  return {from:_dateToIso(new Date(y,m,1,12)),to:_dateToIso(new Date(y,m+1,0,12)),label:payMonthLabel(a.slice(0,7))};
+}
+function rpShift(n){
+  const d=plnD(RP.anchor||today())||new Date(), y=d.getFullYear(), m=d.getMonth();
+  let nd;
+  if(RP.range==='week') nd=new Date(y,m,d.getDate()+7*n,12);
+  else if(RP.range==='quarter') nd=new Date(y,m+3*n,15,12);
+  else if(RP.range==='year') nd=new Date(y+n,m,15,12);
+  else nd=new Date(y,m+n,15,12);
+  RP.anchor=_dateToIso(nd); rpSave(); renderRepPage();
+}
+
+/* ---------- scope & collection ---------- */
+function rpGroupOfFile(f){ if(!f) return null; return groupOf(f.groupId)||_urgGroupOfCat(f.category)[0]||null; }
+function rpFileOk(f){
+  if(!f) return false;
+  if(RP.scope==='groups'&&RP.gIds.length){ const g=rpGroupOfFile(f); if(!g||!RP.gIds.includes(g.id)) return false; }
+  if(RP.scope==='cats'&&RP.cIds.length&&!RP.cIds.includes(f.category)) return false;
+  if(RP.scope==='files'&&RP.fIds.length&&!RP.fIds.includes(f.id)) return false;
+  if(RP.fstatus&&f.status!==RP.fstatus) return false;
+  return true;
+}
+function rpCollect(){
+  const b=rpBounds(), td=today(), S=RP.sec; let items=[];
+  const inP=d=>!!d&&(b.all||(d>=b.from&&d<=b.to));
+  const mk=o=>{ const f=o.fileId?fileOf(o.fileId):null; const g=f?rpGroupOfFile(f):(o.groupId?groupOf(o.groupId):null);
+    return Object.assign({resp:'',priority:'',state:'open',date:'',title:'',x:{}},o,{file:f||null,fileTitle:f?f.title:'',group:g?g.name:'',groupId:g?g.id:'',cat:f?(f.category||''):(o.cat||'')}); };
+  ROUNDS.forEach(r=>{
+    if(r.quickTaskId) return; const f=fileOf(r.fileId); if(!f) return;
+    const pend=r.exec!=='تم', late=!!(r.due&&r.due<td);
+    if(pend&&f.status==='مكتملة') return;
+    if(pend&&r.actionNeeded){ if(S.actions) items.push(mk({kind:'action',id:r.id,fileId:r.fileId,date:r.due||r.date,title:r.actionNeeded,priority:r.priority,resp:r.responsible,state:late?'late':'open',x:{due:r.due,finding:r.finding,type:r.type,rdate:r.date}})); }
+    else if(inP(r.date)||(!pend&&inP(r.execDate))){ if(S.rounds) items.push(mk({kind:'round',id:r.id,fileId:r.fileId,date:r.date,title:r.finding||r.actionTaken||r.type||'جولة',priority:r.priority,resp:r.responsible,state:pend?(late?'late':'open'):'done',x:{type:r.type,finding:r.finding,actionTaken:r.actionTaken,actionNeeded:r.actionNeeded,amount:r.amount,due:r.due}})); }
+  });
+  if(S.tasks) CTASKS().forEach(t=>{ const ok=t.done?inP(t.date):(b.all||!t.date||t.date<=b.to); if(!ok) return;
+    items.push(mk({kind:'task',id:t.id,fileId:t.fileId||'',date:t.date,title:t.title,priority:t.priority,state:t.done?'done':((t.date&&t.date<td)?'late':'open'),x:{type:t.type,notes:t.notes,time:t.time}})); });
+  if(S.urgent) quickTasks().forEach(t=>{ const dd=t.done?((t.doneAt||t.date||'').slice(0,10)):(t.date||''); const ok=t.done?inP(dd):(b.all||!t.date||t.date<=b.to); if(!ok) return;
+    items.push(mk({kind:'urgent',id:t.id,fileId:t.fileId||'',groupId:t.groupId||'',cat:t.category||'',date:dd,title:t.title,priority:t.priority,resp:t.responsible,state:t.done?'done':((t.date&&t.date<td)?'late':'open'),x:{note:t.doneNote,notes:t.notes}})); });
+  if(S.plans) PLANS.forEach(p=>{ if(p.status==='مؤرشفة'||p.status==='مسودة') return;
+    if(!b.all && !((p.start||'')<=b.to && (p.end||'9999')>=b.from)) return;
+    const st=plnStats(p);
+    items.push(mk({kind:'plan',id:p.id,fileId:p.fileId||'',date:p.end||'',title:p.title,priority:p.priority,resp:p.owner,state:(p.status==='مكتملة'||(st.total&&st.pct>=100))?'done':(st.late?'late':'open'),x:{pct:st.pct,start:p.start,end:p.end,late:st.late,total:st.total,status:p.status}})); });
+  if(S.pay) PAYMENTS.forEach(x=>{ if(x.status==='ملغي') return; const d=payDate(x); if(!inP(d)&&x.status!=='مطلوب') return;
+    items.push(mk({kind:'pay',id:x.id,fileId:x.fileId||'',date:d,title:x.title,resp:x.payer||'',state:payIsPaid(x)?'done':'open',x:{amount:payTotal(x),cat:x.category,payer:x.payer,ent:x.entity,ben:x.beneficiary,status:x.status}})); });
+  items=items.filter(it=>{
+    if(RP.scope==='tasks'){ if(it.kind!=='task'&&it.kind!=='urgent') return false; if(RP.tIds.length&&!RP.tIds.includes(it.id)) return false; }
+    else if(it.fileId){ if(!rpFileOk(it.file)) return false; }
+    else { if(RP.scope==='groups'&&RP.gIds.length&&!RP.gIds.includes(it.groupId)) return false; if(RP.scope==='cats'&&RP.cIds.length&&!RP.cIds.includes(it.cat)) return false; if(RP.scope==='files'&&RP.fIds.length) return false; if(RP.fstatus) return false; }
+    if(RP.priority&&it.priority!==RP.priority) return false;
+    if(RP.resp&&!(it.resp||'').includes(RP.resp)) return false;
+    if(RP.state==='pending'&&it.state==='done') return false;
+    if(RP.state==='done'&&it.state!=='done') return false;
+    if(RP.state==='late'&&it.state!=='late') return false;
+    return true; });
+  const KO={action:0,round:1,urgent:2,task:3,plan:4,pay:5}, SO={late:0,open:1,done:2};
+  items.sort((a,c)=>(SO[a.state]-SO[c.state])||(KO[a.kind]-KO[c.kind])||((a.date||'9999')<(c.date||'9999')?-1:1));
+  /* files register */
+  let files=[];
+  if(RP.scope!=='tasks'){ const withItems=new Set(items.filter(i=>i.fileId).map(i=>i.fileId)); files=FILES.filter(f=>rpFileOk(f)&&(RP.emptyFiles||withItems.has(f.id))); }
+  else { const ids=new Set(items.filter(i=>i.fileId).map(i=>i.fileId)); files=FILES.filter(f=>ids.has(f.id)); }
+  const cnt=(k,s)=>items.filter(i=>i.kind===k&&(!s||i.state===s)).length;
+  const next7=items.filter(i=>(i.kind==='action'||i.kind==='task'||i.kind==='urgent')&&i.state==='open'&&i.date&&i.date>=td&&i.date<=_dateToIso(new Date(Date.now()+7*86400000))).length;
+  const pays=items.filter(i=>i.kind==='pay'), paid=pays.filter(i=>i.state==='done'), pend=pays.filter(i=>i.state!=='done'), sum=a=>a.reduce((s,i)=>s+(+i.x.amount||0),0);
+  const plans=items.filter(i=>i.kind==='plan');
+  const K={files:files.length,rounds:cnt('round'),roundsDone:cnt('round','done'),actions:cnt('action'),actionsLate:cnt('action','late'),next7,
+    tasks:cnt('task'),tasksDone:cnt('task','done'),tasksLate:cnt('task','late'),urgent:cnt('urgent'),urgentDone:cnt('urgent','done'),urgentLate:cnt('urgent','late'),
+    plans:plans.length,plansAvg:plans.length?Math.round(plans.reduce((s,i)=>s+(i.x.pct||0),0)/plans.length):0,
+    payPaid:paid.length,payPaidSum:sum(paid),payPend:pend.length,payPendSum:sum(pend),
+    total:items.length,done:items.filter(i=>i.state==='done').length,open:items.filter(i=>i.state==='open').length,late:items.filter(i=>i.state==='late').length};
+  return {b,td,items,files,K};
+}
+function rpGroupKey(it,by){
+  switch(by){
+    case 'file': return it.fileTitle||'— بدون ملف —';
+    case 'group': return it.group||'— بدون مجموعة —';
+    case 'cat': return it.cat||'— بدون تصنيف —';
+    case 'resp': return it.resp||'— غير محدد —';
+    case 'priority': return it.priority||'— غير محددة —';
+    case 'state': return RP_STATE[it.state];
+    case 'month': return (it.date||'').slice(0,7)||'— بدون تاريخ —';
+    case 'kind': return RP_KINDS[it.kind][1];
+  }
+  return '';
+}
+function rpGroupLabel(k,by){ return (by==='month'&&/^\d{4}-\d{2}$/.test(k))?payMonthLabel(k):k; }
+function rpGroups(items,by){
+  const m=new Map(); items.forEach(i=>{ const k=rpGroupKey(i,by); if(!m.has(k)) m.set(k,[]); m.get(k).push(i); });
+  const arr=[...m].map(([k,list])=>({k,items:list,n:list.length,done:list.filter(i=>i.state==='done').length,open:list.filter(i=>i.state==='open').length,late:list.filter(i=>i.state==='late').length}));
+  const PO={'عاجل':0,'متوسط':1,'عادي':2}, SO={'متأخر':0,'مفتوح':1,'منجز':2}, KO=Object.values(RP_KINDS).map(v=>v[1]);
+  if(by==='priority') arr.sort((a,c)=>(PO[a.k]??9)-(PO[c.k]??9));
+  else if(by==='state') arr.sort((a,c)=>(SO[a.k]??9)-(SO[c.k]??9));
+  else if(by==='kind') arr.sort((a,c)=>KO.indexOf(a.k)-KO.indexOf(c.k));
+  else if(by==='month') arr.sort((a,c)=>a.k<c.k?-1:1);
+  else arr.sort((a,c)=>(c.late-a.late)||(c.open-a.open)||(c.n-a.n)||a.k.localeCompare(c.k,'ar'));
+  return arr;
+}
+
+/* ---------- document builder ---------- */
+const RP_CSS=`
+.rp-doc{font-family:'Segoe UI',Tahoma,Arial,sans-serif;color:#1c1c1e;line-height:1.75;font-size:13px;direction:rtl;text-align:right}
+.rp-doc *{box-sizing:border-box}
+.rp-doc .rp-head{border-bottom:3px solid #1d4ed8;padding-bottom:10px;margin-bottom:12px}
+.rp-doc .rp-org{color:#555;font-size:12px;font-weight:600}
+.rp-doc h1{margin:2px 0 4px;font-size:24px;color:#10224a}
+.rp-doc .rp-meta{color:#555;font-size:12px;display:flex;gap:6px 18px;flex-wrap:wrap}
+.rp-doc .rp-meta b{color:#1c1c1e}
+.rp-doc h2{margin:22px 0 8px;font-size:16.5px;color:#1d4ed8;border-right:4px solid #1d4ed8;padding-right:8px}
+.rp-doc h3{margin:18px 0 6px;font-size:14.5px;color:#10224a;background:#eef2fb;padding:6px 10px;border-radius:6px}
+.rp-doc h4{margin:12px 0 4px;font-size:13px;color:#334155}
+.rp-doc .rp-sub{color:#64748b;font-size:11.5px;margin:-2px 0 6px}
+.rp-doc table{width:100%;border-collapse:collapse;margin:4px 0 10px}
+.rp-doc th,.rp-doc td{border:1px solid #cbd5e1;padding:4px 7px;text-align:right;vertical-align:top;font-size:12px}
+.rp-doc th{background:#e8eefb;color:#10224a;font-weight:700}
+.rp-doc td.n{text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rp-doc tr.tot td{background:#e8eefb;font-weight:800}
+.rp-doc table.kp{border:none;border-spacing:8px;border-collapse:separate;margin:6px -8px}
+.rp-doc table.kp td{border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;text-align:center;padding:8px 6px;width:25%}
+.rp-doc table.kp b{display:block;font-size:22px;color:#1d4ed8;line-height:1.2}
+.rp-doc table.kp span{font-size:11.5px;color:#475569}
+.rp-doc table.kp i{display:block;font-style:normal;font-size:11px;color:#64748b;margin-top:2px}
+.rp-doc ul{margin:4px 0 8px;padding-right:20px} .rp-doc li{margin:2px 0}
+.rp-doc .rp-narr{background:#f4f7ff;border:1px solid #c7d6fb;border-radius:8px;padding:10px 14px;margin:6px 0}
+.rp-doc .rp-narr p{margin:4px 0}
+.rp-doc .st{display:inline-block;padding:0 7px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
+.rp-doc .st-done{background:#dcfce7;color:#166534} .rp-doc .st-open{background:#dbeafe;color:#1e40af} .rp-doc .st-late{background:#ede9fe;color:#5b21b6}
+.rp-doc .bar{display:inline-block;width:70px;height:7px;background:#e2e8f0;border-radius:4px;vertical-align:middle;overflow:hidden;margin-left:4px;direction:ltr}
+.rp-doc .bar i{display:block;height:100%;background:#16a34a}
+.rp-doc .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;font-size:11px}
+.rp-doc .chips span{background:#f1f5f9;border-radius:10px;padding:0 8px}
+.rp-doc .more{color:#64748b;font-size:11.5px;margin:-6px 0 8px}
+.rp-doc .sign{width:100%;margin-top:40px;border:none} .rp-doc .sign td{border:none;border-top:1px solid #64748b;text-align:center;color:#475569;padding-top:6px;width:33%}
+.rp-doc .rp-foot{margin-top:20px;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;padding-top:6px}
+.rp-doc .empty{color:#64748b;text-align:center;padding:24px 0}
+`;
+const rpE=esc;
+function rpTitle(){ return RP.h.title||('تقرير '+({brief:'موجز',summary:'ملخص',detailed:'مفصّل'}[RP.level])+' للإدارة'); }
+function rpScopeText(){
+  const n=(arr,fn)=>arr.map(fn).filter(Boolean).join('، ');
+  let s='جميع الملفات والمجموعات';
+  if(RP.scope==='groups'&&RP.gIds.length) s='المجموعات: '+n(RP.gIds,id=>(groupOf(id)||{}).name);
+  else if(RP.scope==='cats'&&RP.cIds.length) s='التصنيفات: '+RP.cIds.join('، ');
+  else if(RP.scope==='files'&&RP.fIds.length) s='الملفات: '+n(RP.fIds,id=>(fileOf(id)||{}).title);
+  else if(RP.scope==='tasks') s=RP.tIds.length?`مهام محددة (${RP.tIds.length})`:'كل المهام';
+  const f=[]; if(RP.state==='pending') f.push('غير المنجزة فقط'); if(RP.state==='done') f.push('المنجزة فقط'); if(RP.state==='late') f.push('المتأخرة فقط');
+  if(RP.priority) f.push('أولوية '+RP.priority); if(RP.resp) f.push('المسؤول: '+RP.resp); if(RP.fstatus) f.push('حالة الملف: '+RP.fstatus);
+  return s+(f.length?' — '+f.join('، '):'');
+}
+function rpPill(it){
+  let t=RP_STATE[it.state];
+  const d=(it.kind==='action'||it.kind==='task'||it.kind==='urgent')?it.date:'';
+  if(it.state==='late'&&d){ const n=-daysUntil(d); if(n>0) t+=` ${n} يوم`; }
+  return `<span class="st st-${it.state}">${t}</span>`;
+}
+const rpTrunc=(s,n)=>{ s=(s||'').replace(/\s+/g,' ').trim(); return s.length>n?s.slice(0,n)+'…':s; };
+function rpHighlights(R){
+  const K=R.K, S=RP.sec, h=[], b=R.b;
+  if(S.rounds&&K.rounds) h.push(`سُجّلت ${K.rounds} جولة${b.all?'':' خلال الفترة'}، أُنجز منها ${K.roundsDone}.`);
+  if(S.actions&&K.actions) h.push(`يوجد ${K.actions} إجراء مطلوب لم يُنفَّذ بعد${K.actionsLate?`، منها ${K.actionsLate} متأخر عن موعده`:''}${K.next7?`، و${K.next7} عنصر مستحق خلال 7 أيام`:''}.`);
+  if(S.tasks&&K.tasks) h.push(`المهام: ${K.tasksDone} منجزة من ${K.tasks}${K.tasksLate?`، و${K.tasksLate} متأخرة`:''}.`);
+  if(S.urgent&&K.urgent) h.push(`المهام العاجلة: ${K.urgentDone} منجزة من ${K.urgent}${K.urgentLate?`، و${K.urgentLate} متأخرة`:''}.`);
+  if(S.plans&&K.plans) h.push(`الخطط: ${K.plans} خطة، متوسط الإنجاز ${K.plansAvg}%.`);
+  if(S.pay&&(K.payPaid||K.payPend)) h.push(`المدفوعات: سُدّد ${payFmt(K.payPaidSum)} ر.س في ${K.payPaid} عملية${K.payPend?`، ويُنتظر سداد ${payFmt(K.payPendSum)} ر.س (${K.payPend} طلب)`:''}.`);
+  const gs=rpGroups(R.items,RP.by==='state'||RP.by==='month'||RP.by==='kind'?'group':RP.by).filter(g=>!/^—/.test(g.k));
+  if(gs.length>1){ const top=gs.slice().sort((a,c)=>c.n-a.n)[0]; h.push(`أكثر ${({group:'المجموعات',cat:'التصنيفات',file:'الملفات',resp:'المسؤولين',priority:'الأولويات'}[RP.by==='state'||RP.by==='month'||RP.by==='kind'?'group':RP.by])} نشاطًا: «${top.k}» (${top.n} عنصر).`); }
+  const risk=R.files.filter(isFileAtRisk).length; if(risk) h.push(`ملفات معرّضة للتأخر (لها إجراءات فات موعدها): ${risk}.`);
+  if(!h.length) h.push('لا توجد عناصر ضمن النطاق والفترة المحددة.');
+  return h;
+}
+function rpAttention(R,max){
+  const lim=R.items.filter(i=>i.state==='late'||((i.kind==='action'||i.kind==='task'||i.kind==='urgent')&&i.state==='open'&&i.date&&i.date>=R.td&&daysUntil(i.date)<=7));
+  lim.sort((a,c)=>((a.state==='late'?0:1)-(c.state==='late'?0:1))||((a.date||'9999')<(c.date||'9999')?-1:1));
+  return {all:lim.length,list:lim.slice(0,max)};
+}
+function rpKpiHtml(R){
+  const K=R.K,S=RP.sec, t=[];
+  t.push([K.files,'ملفات في التقرير','']);
+  if(S.rounds) t.push([K.rounds,'جولات',`منجز ${K.roundsDone}`]);
+  if(S.actions) t.push([K.actions,'إجراءات مطلوبة',K.actionsLate?`متأخر ${K.actionsLate}`:'لا متأخرات']);
+  if(S.tasks) t.push([K.tasks,'مهام',`منجزة ${K.tasksDone}`]);
+  if(S.urgent) t.push([K.urgent,'مهام عاجلة',`منجزة ${K.urgentDone}`]);
+  if(S.plans) t.push([K.plans,'خطط',`متوسط الإنجاز ${K.plansAvg}%`]);
+  if(S.pay) t.push([payFmt(K.payPaidSum),'مدفوعات (ر.س)',K.payPend?`مطلوب ${payFmt(K.payPendSum)}`:`${K.payPaid} عملية`]);
+  t.push([K.total?Math.round(K.done/K.total*100)+'%':'—','نسبة الإنجاز',`${K.done} من ${K.total}`]);
+  let h='<table class="kp">'; for(let i=0;i<t.length;i+=4){ h+='<tr>'+t.slice(i,i+4).map(x=>`<td><b>${x[0]}</b><span>${x[1]}</span><i>${x[2]||'&nbsp;'}</i></td>`).join('')+'</tr>'; } return h+'</table>';
+}
+function rpSummaryTable(R,groups){
+  const dim=(RP_BY.find(x=>x[0]===RP.by)||[0,''])[1];
+  let h=`<table><tr><th>${dim}</th><th>الإجمالي</th><th>منجز</th><th>مفتوح</th><th>متأخر</th><th>الإنجاز</th></tr>`;
+  groups.forEach(g=>{ const p=g.n?Math.round(g.done/g.n*100):0; h+=`<tr><td>${rpE(rpGroupLabel(g.k,RP.by))}</td><td class="n">${g.n}</td><td class="n">${g.done}</td><td class="n">${g.open}</td><td class="n">${g.late}</td><td class="n"><span class="bar"><i style="width:${p}%"></i></span>${p}%</td></tr>`; });
+  const K=R.K; h+=`<tr class="tot"><td>الإجمالي</td><td class="n">${K.total}</td><td class="n">${K.done}</td><td class="n">${K.open}</td><td class="n">${K.late}</td><td class="n">${K.total?Math.round(K.done/K.total*100):0}%</td></tr></table>`;
+  return h;
+}
+function rpKindTable(kind,list,by,det,lim){
+  const showFile=by!=='file'; const rows=lim&&list.length>lim?list.slice(0,lim):list; const F=it=>showFile?`<td>${rpE(it.fileTitle||'—')}</td>`:'';
+  const FH=showFile?'<th>الملف</th>':''; let th='',tr='';
+  const wrap=(heads,fn)=>{ th='<tr>'+heads+'</tr>'; tr=rows.map(it=>'<tr>'+fn(it)+'</tr>').join(''); };
+  if(kind==='round') wrap('<th>التاريخ</th><th>النوع</th>'+FH+'<th>الوقائع / المستجدات</th>'+(det?'<th>الإجراء المتخذ</th>':'')+'<th>الحالة</th>',it=>`<td class="n">${fmtDate(it.date)}</td><td>${rpE(it.x.type||'')}</td>${F(it)}<td>${rpE(det?it.x.finding||it.title:rpTrunc(it.x.finding||it.title,90))}</td>${det?`<td>${rpE(it.x.actionTaken||'')}</td>`:''}<td class="n">${rpPill(it)}</td>`);
+  else if(kind==='action') wrap('<th>الإجراء المطلوب</th>'+FH+'<th>الموعد</th>'+(det?'<th>المسؤول</th><th>الأولوية</th>':'')+'<th>الحالة</th>',it=>`<td>${rpE(det?it.title:rpTrunc(it.title,100))}</td>${F(it)}<td class="n">${it.x.due?fmtDate(it.x.due):'—'}</td>${det?`<td>${rpE(it.resp||'')}</td><td class="n">${rpE(it.priority||'')}</td>`:''}<td class="n">${rpPill(it)}</td>`);
+  else if(kind==='task') wrap('<th>المهمة</th>'+FH+'<th>التاريخ</th>'+(det?'<th>النوع</th><th>الأولوية</th>':'')+'<th>الحالة</th>',it=>`<td>${rpE(it.title)}</td>${F(it)}<td class="n">${it.date?fmtDate(it.date):'—'}</td>${det?`<td class="n">${rpE(it.x.type||'')}</td><td class="n">${rpE(it.priority||'')}</td>`:''}<td class="n">${rpPill(it)}</td>`);
+  else if(kind==='urgent') wrap('<th>المهمة</th>'+FH+'<th>التاريخ</th>'+(det?'<th>الأولوية</th><th>ملاحظة الإنجاز</th>':'')+'<th>الحالة</th>',it=>`<td>${rpE(it.title)}</td>${F(it)}<td class="n">${it.date?fmtDate(it.date):'—'}</td>${det?`<td class="n">${rpE(it.priority||'')}</td><td>${rpE(it.x.note||'')}</td>`:''}<td class="n">${rpPill(it)}</td>`);
+  else if(kind==='plan') wrap('<th>الخطة</th>'+FH+'<th>الإنجاز</th><th>الفترة</th><th>مهام متأخرة</th><th>الحالة</th>',it=>`<td>${rpE(it.title)}</td>${F(it)}<td class="n"><span class="bar"><i style="width:${it.x.pct||0}%"></i></span>${it.x.pct||0}%</td><td class="n">${it.x.start?fmtDate(it.x.start):''} – ${it.x.end?fmtDate(it.x.end):''}</td><td class="n">${it.x.late||0}</td><td class="n">${rpPill(it)}</td>`);
+  else if(kind==='pay') wrap('<th>الوصف</th>'+FH+'<th>الفئة</th><th>المسدِّد</th><th>التاريخ</th><th>المبلغ (ر.س)</th><th>الحالة</th>',it=>`<td>${rpE(it.title)}</td>${F(it)}<td>${rpE(it.x.cat||'')}</td><td>${rpE(it.x.payer||'')}</td><td class="n">${it.date?fmtDate(it.date):''}</td><td class="n">${payFmt(it.x.amount)}</td><td class="n">${rpPill(it)}</td>`);
+  const more=lim&&list.length>lim?`<div class="more">… و${list.length-lim} عنصر آخر (متوفرة في التقرير المفصّل)</div>`:'';
+  return `<table>${th}${tr}</table>${more}`;
+}
+function rpGroupBlock(g,by,det){
+  const KO=['action','round','urgent','task','plan','pay']; const lim=det?0:6;
+  let sub='';
+  if(by==='file'){ const f=g.items[0]&&g.items[0].file; if(f) sub=`<div class="rp-sub">${[f.category,(rpGroupOfFile(f)||{}).name,'الحالة: '+f.status,f.priority?'الأولوية: '+f.priority:'',f.responsible?'المسؤول: '+f.responsible:''].filter(Boolean).map(rpE).join(' · ')}</div>`; }
+  let h=`<h3>${rpE(rpGroupLabel(g.k,by))}</h3>${sub}<div class="chips"><span>الإجمالي ${g.n}</span><span>منجز ${g.done}</span><span>مفتوح ${g.open}</span><span>متأخر ${g.late}</span></div>`;
+  KO.forEach(k=>{ const list=g.items.filter(i=>i.kind===k); if(!list.length) return; if(by!=='kind') h+=`<h4>${RP_KINDS[k][0]} ${RP_KINDS[k][1]} (${list.length})</h4>`; h+=rpKindTable(k,list,by,det,lim); });
+  return h;
+}
+function rpRegisterHtml(R){
+  if(!R.files.length) return '';
+  const td=R.td; let h='<h2>سجل الملفات</h2><table><tr><th>الملف</th><th>المجموعة</th><th>التصنيف</th><th>الحالة</th><th>الأولوية</th><th>المسؤول</th><th>آخر جولة</th><th>إجراءات مفتوحة</th><th>متأخرة</th><th>أقرب موعد</th></tr>';
+  R.files.slice().sort((a,c)=>a.title.localeCompare(c.title,'ar')).forEach(f=>{
+    const rs=ROUNDS.filter(r=>r.fileId===f.id&&!r.quickTaskId), pend=rs.filter(r=>r.exec!=='تم'&&r.actionNeeded);
+    const last=rs.map(r=>r.date).filter(Boolean).sort().pop()||''; const dues=pend.map(r=>r.due).filter(Boolean).sort(); const late=pend.filter(r=>r.due&&r.due<td).length;
+    h+=`<tr><td>${rpE(f.title)}</td><td>${rpE((rpGroupOfFile(f)||{}).name||'')}</td><td>${rpE(f.category||'')}</td><td class="n">${rpE(f.status||'')}</td><td class="n">${rpE(f.priority||'')}</td><td>${rpE(f.responsible||'')}</td><td class="n">${last?fmtDate(last):'—'}</td><td class="n">${pend.length}</td><td class="n">${late}</td><td class="n">${dues[0]?fmtDate(dues[0]):'—'}</td></tr>`;
+  });
+  return h+'</table>';
+}
+function rpParas(t){ return String(t||'').split(/\n+/).map(s=>s.trim()).filter(Boolean); }
+function rpDocHtml(R){
+  const by=RP.by, lv=RP.level, det=lv==='detailed', H=RP.h; const groups=rpGroups(R.items,by);
+  let h=`<div class="rp-head">${(H.org||H.dept)?`<div class="rp-org">${[H.org,H.dept].filter(Boolean).map(rpE).join(' — ')}</div>`:''}<h1>${rpE(rpTitle())}</h1>
+   <div class="rp-meta"><span>الفترة: <b>${rpE(R.b.label)}</b></span><span>تاريخ الإعداد: <b>${fmtDate(R.td)}</b></span>${H.recipient?`<span>الموجّه إلى: <b>${rpE(H.recipient)}</b></span>`:''}${H.author?`<span>إعداد: <b>${rpE(H.author)}</b></span>`:''}</div>
+   <div class="rp-meta"><span>النطاق: ${rpE(rpScopeText())}</span></div></div>`;
+  if(!R.items.length&&!R.files.length) return h+'<div class="empty">لا توجد بيانات ضمن النطاق والفترة المحددة. غيّر الفترة أو النطاق أو المحتوى.</div>';
+  if(RP.narr.trim()) h+=`<h2>الملخص التنفيذي</h2><div class="rp-narr">${rpParas(RP.narr).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
+  const hl=rpHighlights(R); h+=`<h2>أبرز النقاط</h2><ul>${(lv==='brief'?hl.slice(0,5):hl).map(x=>`<li>${rpE(x)}</li>`).join('')}</ul>`;
+  h+='<h2>المؤشرات</h2>'+rpKpiHtml(R);
+  const att=rpAttention(R,lv==='brief'?8:(det?30:12));
+  if(att.list.length){ h+=`<h2>ما يتطلب انتباه الإدارة (${att.all})</h2><table><tr><th>العنصر</th><th>النوع</th><th>الملف</th><th>الموعد</th><th>الحالة</th></tr>${att.list.map(i=>`<tr><td>${rpE(rpTrunc(i.title,110))}</td><td>${RP_KINDS[i.kind][1]}</td><td>${rpE(i.fileTitle||'—')}</td><td class="n">${i.date?fmtDate(i.date):'—'}</td><td class="n">${rpPill(i)}</td></tr>`).join('')}</table>${att.all>att.list.length?`<div class="more">… و${att.all-att.list.length} عنصر آخر</div>`:''}`; }
+  if(groups.length) h+=`<h2>الحصيلة حسب ${(RP_BY.find(x=>x[0]===by)||[0,''])[1]}</h2>`+rpSummaryTable(R,groups);
+  if(lv!=='brief'&&groups.length){ h+=`<h2>${det?'التفاصيل':'مقتطفات'} حسب ${(RP_BY.find(x=>x[0]===by)||[0,''])[1]}</h2>`+groups.map(g=>rpGroupBlock(g,by,det)).join(''); }
+  if(lv!=='brief'&&RP.register&&by!=='file') h+=rpRegisterHtml(R);
+  if(RP.notes.trim()) h+=`<h2>ملاحظات وتوصيات</h2><div class="rp-narr">${rpParas(RP.notes).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
+  if(RP.sign) h+=`<table class="sign"><tr><td>أعدّه${H.author?' — '+rpE(H.author):''}</td><td>راجعه</td><td>اعتمده</td></tr></table>`;
+  h+=`<div class="rp-foot">مهام صَفوان — ${rpE(rpTitle())} — ${fmtDate(R.td)}</div>`;
+  return h;
+}
+
+/* ---------- outputs ---------- */
+function rpSync(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; rpSave(); }
+function rpFileName(ext){ return (rpTitle()+' - '+rpBounds().label).replace(/[\\/:*?"<>|]+/g,' ').trim().slice(0,90)+'.'+ext; }
+function rpWrapDoc(inner,extraHead){
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${rpE(rpTitle())}</title><style>${RP_CSS}
+  body{margin:22px;background:#fff} @media print{body{margin:10mm} .rp-doc table{page-break-inside:auto} .rp-doc tr{page-break-inside:avoid} .rp-doc h2,.rp-doc h3{page-break-after:avoid} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}${extraHead||''}</style></head><body><div class="rp-doc">${inner}</div>`;
+}
+function rpPrint(){
+  rpSync(); const R=rpCollect(); const html=rpWrapDoc(rpDocHtml(R))+`<script>window.onload=function(){setTimeout(function(){window.print()},350)}<\/script></body></html>`;
+  const w=window.open('','_blank'); if(!w){ _showToast('اسمح بالنوافذ المنبثقة للطباعة','error'); return; }
+  w.document.open(); w.document.write(html); w.document.close(); logActivity('add','report',`إصدار تقرير: ${rpTitle()}`);
+}
+function rpDownload(name,data,type){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
+function rpWord(){ rpSync(); const R=rpCollect(); rpDownload(rpFileName('doc'),'﻿'+rpWrapDoc(rpDocHtml(R))+'</body></html>','application/msword;charset=utf-8'); logActivity('add','report',`تنزيل تقرير Word: ${rpTitle()}`); _showToast('تم تنزيل ملف Word','success'); }
+function rpCsv(){
+  rpSync(); const R=rpCollect(); const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['النوع','الملف','المجموعة','التصنيف','العنوان / الإجراء','التاريخ','الموعد','الحالة','الأولوية','المسؤول','التفاصيل','المبلغ']];
+  R.items.forEach(i=>{ const x=i.x; const det=i.kind==='round'?[x.finding,x.actionTaken].filter(Boolean).join(' | '):(i.kind==='urgent'?(x.note||x.notes||''):(x.notes||(i.kind==='pay'?[x.cat,x.ben,x.ent].filter(Boolean).join(' | '):'')));
+    rows.push([RP_KINDS[i.kind][1],i.fileTitle,i.group,i.cat,i.title,i.date,x.due||'',RP_STATE[i.state],i.priority,i.resp,det,x.amount||'']); });
+  rpDownload(rpFileName('csv'),'﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8'); _showToast('تم تنزيل ملف Excel (CSV)','success');
+}
+function rpText(R){
+  const K=R.K, L=[]; const by=(RP_BY.find(x=>x[0]===RP.by)||[0,''])[1];
+  L.push('*'+rpTitle()+'*'); L.push('الفترة: '+R.b.label); if(RP.h.recipient) L.push('إلى: '+RP.h.recipient); if(RP.h.author) L.push('إعداد: '+RP.h.author+(RP.h.dept?' — '+RP.h.dept:'')); L.push('');
+  if(RP.narr.trim()){ L.push('*الملخص التنفيذي*'); L.push(RP.narr.trim()); L.push(''); }
+  L.push('*أبرز النقاط*'); rpHighlights(R).forEach(x=>L.push('• '+x)); L.push('');
+  const att=rpAttention(R,8); if(att.list.length){ L.push(`*يتطلب الانتباه (${att.all})*`); att.list.forEach((i,n)=>L.push(`${n+1}. ${rpTrunc(i.title,80)}${i.fileTitle?' — '+i.fileTitle:''}${i.date?' ('+fmtDate(i.date)+')':''} [${RP_STATE[i.state]}]`)); L.push(''); }
+  const gs=rpGroups(R.items,RP.by); if(gs.length){ L.push('*الحصيلة حسب '+by+'*'); gs.slice(0,15).forEach(g=>L.push(`• ${rpGroupLabel(g.k,RP.by)}: ${g.n} (منجز ${g.done} · مفتوح ${g.open} · متأخر ${g.late})`)); L.push(''); }
+  L.push(`الإجمالي: ${K.total} عنصر — منجز ${K.done} (${K.total?Math.round(K.done/K.total*100):0}%) — مفتوح ${K.open} — متأخر ${K.late}`);
+  if(RP.notes.trim()){ L.push(''); L.push('*ملاحظات وتوصيات*'); L.push(RP.notes.trim()); }
+  return L.join('\n');
+}
+function rpCopy(){ rpSync(); const t=rpText(rpCollect()); axCopy(t); }
+function rpShare(){ rpSync(); const t=rpText(rpCollect()); if(navigator.share){ navigator.share({title:rpTitle(),text:t}).catch(()=>{}); } else axCopy(t); }
+async function axRpNarr(btn){
+  rpSync(); const R=rpCollect(); if(!R.items.length){ _showToast('لا بيانات في هذا التقرير','error'); return; }
+  const gs=rpGroups(R.items,RP.by).slice(0,15).map(g=>({name:rpGroupLabel(g.k,RP.by),total:g.n,done:g.done,open:g.open,late:g.late}));
+  const att=rpAttention(R,15).list.map(i=>({kind:RP_KINDS[i.kind][1],title:rpTrunc(i.title,120),file:i.fileTitle,date:i.date,state:RP_STATE[i.state]}));
+  const done=R.items.filter(i=>i.state==='done').slice(0,15).map(i=>({kind:RP_KINDS[i.kind][1],title:rpTrunc(i.title,100),file:i.fileTitle}));
+  const ctx={report:rpTitle(),period:R.b.label,scope:rpScopeText(),groupedBy:RP.by,kpis:R.K,highlights:rpHighlights(R),groups:gs,needsAttention:att,recentlyCompleted:done};
+  const old=btn&&btn.textContent; if(btn){ btn.disabled=true; btn.textContent='… أصيغ'; }
+  const r=await axAsk('rp_exec','أنت مساعد إداري محترف. اكتب لتقرير موجّه إلى الإدارة العليا: (1) ملخصًا تنفيذيًا من 4 إلى 6 أسطر بلغة عربية رسمية موجزة تبرز الإنجاز والمتأخرات وأهم المخاطر، (2) من 3 إلى 5 توصيات عملية قابلة للتنفيذ. اعتمد حصرًا على السياق المعطى ولا تختلق أرقامًا ولا وقائع ولا أسماء. المخطط: {"summary":"نص","recommendations":["..."]}',
+    'صغ الملخص التنفيذي والتوصيات لهذا التقرير.',ctx,{json:true,temp:0.3});
+  if(btn){ btn.disabled=false; btn.textContent=old; }
+  if(!r){ _showToast('تعذّرت صياغة الملخص','error'); return; }
+  const sm=axStr(r.summary), rec=axArr(r.recommendations).map(axStr).filter(Boolean);
+  if(sm) RP.narr=sm; if(rec.length) RP.notes=rec.map(x=>'• '+x).join('\n'); rpSave(); renderRepPage(); _showToast('تمت صياغة الملخص والتوصيات — راجعها وعدّلها','success');
+}
+
+/* ---------- page ---------- */
+const RP_TPL=[
+  ['📆','أسبوعي للإدارة',{level:'brief',range:'week',by:'group',sec:['rounds','actions','tasks','urgent']}],
+  ['🗓️','شهري تنفيذي',{level:'summary',range:'month',by:'group',sec:['rounds','actions','tasks','urgent']}],
+  ['📚','شهري مفصّل بالملفات',{level:'detailed',range:'month',by:'file',sec:['rounds','actions','tasks','urgent']}],
+  ['⏰','المتأخرات والمطلوب',{level:'summary',range:'all',by:'file',state:'late',sec:['actions','tasks','urgent']}],
+  ['📌','المفتوح حاليًا',{level:'summary',range:'all',by:'group',state:'pending',sec:['actions','tasks','urgent']}],
+  ['💸','مدفوعات الشهر',{level:'summary',range:'month',by:'cat',sec:['pay']}],
+  ['🧭','تقدّم الخطط',{level:'summary',range:'all',by:'group',sec:['plans']}],
+  ['📊','سنوي شامل',{level:'summary',range:'year',by:'month',sec:['rounds','actions','tasks','urgent','plans','pay']}]
+];
+let RP_OPEN={tpl:true,lvl:true,per:true,scope:true,by:true,sec:true,flt:false,hdr:false,pre:false}, _rpT=null;
+function rpInjectCss(){
+  if(document.getElementById('rpCss')) return; const s=document.createElement('style'); s.id='rpCss';
+  s.textContent=RP_CSS+`
+  .rp-layout{display:grid;grid-template-columns:minmax(300px,370px) minmax(0,1fr);gap:16px;align-items:start}
+  @media(max-width:960px){.rp-layout{grid-template-columns:1fr}}
+  .rp-ctl{display:flex;flex-direction:column;gap:10px}
+  .rp-sec{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);}
+  .rp-sec>summary{cursor:pointer;padding:11px 14px;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  .rp-sec>summary::-webkit-details-marker{display:none} .rp-sec>summary::after{content:'▾';color:var(--text-2);transition:transform .2s} .rp-sec:not([open])>summary::after{transform:rotate(90deg)}
+  .rp-b{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+  .rp-chips{display:flex;gap:6px;flex-wrap:wrap}
+  .rp-tpls{display:grid;grid-template-columns:1fr 1fr;gap:6px} .rp-tpls button{text-align:right;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;font-size:12.5px;font-family:inherit}
+  .rp-tpls button:hover{border-color:var(--accent)}
+  .rp-hint{font-size:11.5px;color:var(--text-2);margin:0}
+  .rp-list{max-height:210px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:4px;background:var(--surface-2)}
+  .rp-it{display:flex;gap:8px;align-items:center;padding:5px 7px;font-size:13px;cursor:pointer;border-radius:6px} .rp-it:hover{background:var(--surface-3)} .rp-it small{color:var(--text-2);margin-inline-start:auto;font-size:11px}
+  .rp-tog{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
+  .rp-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;position:sticky;top:6px;z-index:6;padding:8px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);backdrop-filter:blur(10px)}
+  .rp-paper{background:#fff;color:#1c1c1e;border-radius:12px;padding:30px 32px;border:1px solid var(--border);overflow-x:auto;min-height:300px}
+  @media(max-width:600px){.rp-paper{padding:16px 14px}}
+  .rp-2{display:grid;grid-template-columns:1fr 1fr;gap:8px} .rp-per{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .rp-per b{min-width:120px;text-align:center;font-size:14px}`;
+  document.head.appendChild(s);
+}
+function rpResps(){ const s=new Set(); FILES.forEach(f=>f.responsible&&s.add(f.responsible)); ROUNDS.forEach(r=>r.responsible&&s.add(r.responsible)); TASKS.forEach(t=>t.responsible&&s.add(t.responsible)); PLANS.forEach(p=>p.owner&&s.add(p.owner)); return [...s]; }
+function rpPickItems(kind){
+  if(kind==='gIds') return CATEGORY_GROUPS.map(g=>({v:g.id,l:g.name,s:FILES.filter(f=>(rpGroupOfFile(f)||{}).id===g.id).length+' ملف'}));
+  if(kind==='cIds') return CATEGORIES.map(c=>({v:c.name,l:c.name,s:FILES.filter(f=>f.category===c.name).length+' ملف'}));
+  if(kind==='fIds') return FILES.slice().sort((a,b)=>a.title.localeCompare(b.title,'ar')).map(f=>({v:f.id,l:f.title,s:f.category||''}));
+  return TASKS.slice().sort((a,b)=>((b.date||'')>(a.date||'')?1:-1)).slice(0,300).map(t=>({v:t.id,l:t.title,s:(t.quick?'⚡ ':'')+(t.date?fmtDate(t.date):'')+(t.done?' ✓':'')}));
+}
+function rpPicker(kind,ph){
+  const items=rpPickItems(kind), sel=RP[kind];
+  return `<input type="text" placeholder="${ph}" oninput="rpFilterList(this)"><div class="rp-list">${items.length?items.map(it=>`<label class="rp-it"><input type="checkbox" data-v="${rpA(it.v)}" ${sel.includes(it.v)?'checked':''} onchange="rpTog('${kind}',this.dataset.v,this.checked)"><span>${rpE(it.l)}</span><small>${rpE(it.s)}</small></label>`).join(''):'<div class="rp-hint" style="padding:8px">لا توجد عناصر</div>'}</div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><span class="rp-hint" id="rpSelCnt">${sel.length?`المحدد: ${sel.length}`:'لا تحديد = الكل'}</span><button class="btn btn-glass btn-sm" onclick="rpClear('${kind}')">مسح التحديد</button></div>`;
+}
+function rpSec(id,title,body){ return `<details class="rp-sec" ${RP_OPEN[id]?'open':''} ontoggle="RP_OPEN['${id}']=this.open"><summary>${title}</summary><div class="rp-b">${body}</div></details>`; }
+function rpChips(arr,cur,fn){ return `<div class="rp-chips">${arr.map(([k,l])=>`<button class="chip${cur===k?' active':''}" onclick="${fn}('${k}')">${l}</button>`).join('')}</div>`; }
+function renderRepPage(){
+  const root=document.getElementById('repRoot'); if(!root) return; rpInjectCss(); const b=rpBounds();
+  const per=RP.range==='custom'?`<div class="rp-2"><div class="form-row"><label>من</label><input type="date" value="${rpA(RP.from)}" onchange="rpTxt('from',this.value,1)"></div><div class="form-row"><label>إلى</label><input type="date" value="${rpA(RP.to)}" onchange="rpTxt('to',this.value,1)"></div></div>`
+    :(RP.range==='all'?'':`<div class="rp-per"><button class="btn btn-glass btn-sm" onclick="rpShift(1)">‹</button><b>${rpE(b.label)}</b><button class="btn btn-glass btn-sm" onclick="rpShift(-1)">›</button><button class="btn btn-glass btn-sm" onclick="rpSet('anchor',today())">الآن</button></div>`);
+  const scopeBody=rpChips([['all','الكل'],['groups','مجموعات'],['cats','تصنيفات'],['files','ملفات'],['tasks','مهام']],RP.scope,'rpScope')
+    +(RP.scope==='groups'?rpPicker('gIds','ابحث في المجموعات…'):RP.scope==='cats'?rpPicker('cIds','ابحث في التصنيفات…'):RP.scope==='files'?rpPicker('fIds','ابحث في الملفات…'):RP.scope==='tasks'?rpPicker('tIds','ابحث في المهام…'):'<p class="rp-hint">التقرير يشمل كل الملفات والمجموعات. اختر نطاقًا لتحديد جزء منها.</p>');
+  const secDefs=[['rounds','🔄 الجولات'],['actions','⏭️ الإجراءات المطلوبة'],['tasks','✅ المهام'],['urgent','⚡ المهام العاجلة'],['plans','🧭 الخطط'],['pay','💸 المدفوعات']];
+  const tg=(k,l,on,fn)=>`<label class="rp-tog"><input type="checkbox" ${on?'checked':''} onchange="${fn}"> ${l}</label>`;
+  const so=(k,l)=>`<option value="${rpA(k)}"${RP.priority===k||RP.fstatus===k?' selected':''}>${l}</option>`;
+  const ctl=
+   rpSec('tpl','⚡ قوالب جاهزة',`<div class="rp-tpls">${RP_TPL.map((t,i)=>`<button onclick="rpTpl(${i})">${t[0]} ${t[1]}</button>`).join('')}</div>`)
+  +rpSec('lvl','📏 مستوى التفصيل',rpChips(RP_LEVELS.map(l=>[l[0],l[1]]),RP.level,'rpLevel')+`<p class="rp-hint">${RP_LEVELS.find(l=>l[0]===RP.level)[2]}</p>`)
+  +rpSec('per','📅 الفترة',rpChips([['week','أسبوع'],['month','شهر'],['quarter','ربع'],['year','سنة'],['custom','مخصص'],['all','الكل']],RP.range,'rpRange')+per)
+  +rpSec('scope','🎯 النطاق',scopeBody)
+  +rpSec('by','🗂️ التجميع حسب',rpChips(RP_BY,RP.by,'rpBy'))
+  +rpSec('sec','🧩 المحتوى',`<div class="rp-2">${secDefs.map(([k,l])=>tg(k,l,RP.sec[k],`rpSecTog('${k}',this.checked)`)).join('')}</div>`+tg('register','📚 سجل الملفات',RP.register,`rpFlag('register',this.checked)`)+tg('empty','إظهار الملفات التي بلا نشاط',RP.emptyFiles,`rpFlag('emptyFiles',this.checked)`)+tg('sign','✍️ خانات التوقيع',RP.sign,`rpFlag('sign',this.checked)`))
+  +rpSec('flt','🔍 التصفية',`<div class="form-row"><label>الحالة</label><select onchange="rpSet('state',this.value)">${[['all','الكل'],['pending','غير المنجزة'],['late','المتأخرة فقط'],['done','المنجزة فقط']].map(([k,l])=>`<option value="${k}"${RP.state===k?' selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="rp-2"><div class="form-row"><label>الأولوية</label><select onchange="rpSet('priority',this.value)"><option value="">الكل</option>${['عاجل','متوسط','عادي'].map(k=>so(k,k)).join('')}</select></div>
+    <div class="form-row"><label>حالة الملف</label><select onchange="rpSet('fstatus',this.value)"><option value="">الكل</option>${['نشط','متوقف','مغلق','مكتملة'].map(k=>so(k,k)).join('')}</select></div></div>
+    <div class="form-row"><label>المسؤول</label><input type="text" list="rpRespList" value="${rpA(RP.resp)}" placeholder="الكل" onchange="rpSet('resp',this.value.trim())"><datalist id="rpRespList">${rpResps().map(v=>`<option value="${rpA(v)}">`).join('')}</datalist></div>`)
+  +rpSec('hdr','📝 الترويسة والنصوص',`<div class="form-row"><label>عنوان التقرير</label><input type="text" value="${rpA(RP.h.title)}" placeholder="${rpA(rpTitle())}" oninput="rpTxt('title',this.value)"></div>
+    <div class="rp-2"><div class="form-row"><label>الموجّه إلى</label><input type="text" value="${rpA(RP.h.recipient)}" oninput="rpTxt('recipient',this.value)"></div><div class="form-row"><label>المعدّ</label><input type="text" value="${rpA(RP.h.author)}" oninput="rpTxt('author',this.value)"></div></div>
+    <div class="rp-2"><div class="form-row"><label>الشركة / الجهة</label><input type="text" value="${rpA(RP.h.org)}" oninput="rpTxt('org',this.value)"></div><div class="form-row"><label>الإدارة</label><input type="text" value="${rpA(RP.h.dept)}" oninput="rpTxt('dept',this.value)"></div></div>
+    <div class="form-row"><label>الملخص التنفيذي (اختياري)</label><textarea id="rpNarr" rows="4" placeholder="اكتب خلاصة للإدارة أو اضغط ✨ لصياغتها تلقائيًا" oninput="rpSync();rpRefreshSoon()">${rpT(RP.narr)}</textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="btn btn-glass btn-sm" onclick="axRpNarr(this)">✨ صغ الملخص والتوصيات</button>${axMicBtn('rpNarr')}</div></div>
+    <div class="form-row"><label>ملاحظات وتوصيات (اختياري)</label><textarea id="rpNotes" rows="3" oninput="rpSync();rpRefreshSoon()">${rpT(RP.notes)}</textarea><div style="margin-top:6px">${axMicBtn('rpNotes')}</div></div>`)
+  +rpSec('pre','💾 قوالبي المحفوظة',rpPresetsHtml());
+  root.innerHTML=`<div class="section-head"><h2>📑 التقارير</h2></div><div class="rp-layout"><div class="rp-ctl">${ctl}</div><div class="rp-main">
+    <div class="rp-bar"><button class="btn btn-filled btn-sm" onclick="rpPrint()">🖨 طباعة / PDF</button><button class="btn btn-glass btn-sm" onclick="rpWord()">📝 Word</button><button class="btn btn-glass btn-sm" onclick="rpCsv()">📊 Excel</button><button class="btn btn-glass btn-sm" onclick="rpCopy()">📋 نسخ نص</button><button class="btn btn-glass btn-sm" onclick="rpShare()">📤 مشاركة</button></div>
+    <div class="rp-paper"><div class="rp-doc" id="rpPreview"></div></div></div></div>`;
+  rpRefresh();
+}
+function rpRefresh(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const el=document.getElementById('rpPreview'); if(el) el.innerHTML=rpDocHtml(rpCollect()); }
+function rpRefreshSoon(){ clearTimeout(_rpT); _rpT=setTimeout(rpRefresh,250); }
+function rpSet(k,v){ RP[k]=v; rpSave(); renderRepPage(); }
+function rpLevel(v){ rpSet('level',v); } function rpRange(v){ rpSet('range',v); } function rpBy(v){ rpSet('by',v); }
+function rpScope(v){ rpSet('scope',v); }
+function rpFlag(k,v){ RP[k]=v; rpSave(); rpRefresh(); }
+function rpSecTog(k,v){ RP.sec[k]=v; rpSave(); rpRefresh(); }
+function rpTxt(k,v,top){ if(top) RP[k]=v; else RP.h[k]=v; rpSave(); if(top) renderRepPage(); else rpRefreshSoon(); }
+function rpTog(kind,v,on){ const a=RP[kind]; const i=a.indexOf(v); if(on&&i<0) a.push(v); if(!on&&i>=0) a.splice(i,1); rpSave(); const c=document.getElementById('rpSelCnt'); if(c) c.textContent=a.length?`المحدد: ${a.length}`:'لا تحديد = الكل'; rpRefreshSoon(); }
+function rpClear(kind){ RP[kind]=[]; rpSave(); renderRepPage(); }
+function rpFilterList(inp){ const q=inp.value.trim().toLowerCase(); inp.nextElementSibling.querySelectorAll('.rp-it').forEach(l=>{ l.style.display=!q||l.textContent.toLowerCase().includes(q)?'':'none'; }); }
+function rpTpl(i){ const t=RP_TPL[i][2]; const sec={rounds:false,actions:false,tasks:false,urgent:false,plans:false,pay:false}; t.sec.forEach(k=>sec[k]=true);
+  Object.assign(RP,{level:t.level,range:t.range,by:t.by,state:t.state||'all',sec,anchor:today()}); rpSave(); renderRepPage(); _showToast('طُبّق القالب: '+RP_TPL[i][1],'success'); }
+/* saved presets (per device) */
+function rpPresets(){ try{ return JSON.parse(localStorage.getItem(RP_PKEY)||'[]'); }catch(e){ return []; } }
+function rpPresetsHtml(){
+  const p=rpPresets();
+  return `<button class="btn btn-glass btn-sm" onclick="rpPresetSave()">💾 حفظ الإعدادات الحالية كقالب</button>`+(p.length?p.map((x,i)=>`<div style="display:flex;gap:6px;align-items:center"><button class="btn btn-glass btn-sm" style="flex:1;text-align:right" onclick="rpPresetApply(${i})">${rpE(x.name)}</button><button class="btn btn-glass btn-sm" onclick="rpPresetDel(${i})" title="حذف">🗑</button></div>`).join(''):'<p class="rp-hint">لا قوالب محفوظة بعد. اضبط التقرير على ما تريد ثم احفظه لإعادة استخدامه بضغطة.</p>');
+}
+function rpPresetSave(){
+  plnForm({title:'💾 حفظ قالب تقرير',saveLabel:'حفظ',values:{name:''},fields:[{k:'name',label:'اسم القالب',type:'text',full:true,req:true,ph:'مثال: تقرير الإدارة الشهري'}],
+    onSave:v=>{ rpSync(); const s=JSON.parse(JSON.stringify(RP)); delete s.anchor; delete s.narr; delete s.notes; const p=rpPresets(); p.push({name:v.name,s}); try{ localStorage.setItem(RP_PKEY,JSON.stringify(p)); }catch(e){} RP_OPEN.pre=true; renderRepPage(); _showToast('حُفظ القالب','success'); }});
+}
+function rpPresetApply(i){ const x=rpPresets()[i]; if(!x) return; const keep={anchor:RP.anchor,narr:RP.narr,notes:RP.notes}; RP=Object.assign({},RP,x.s,keep,{sec:Object.assign({},RP.sec,x.s.sec||{}),h:Object.assign({},RP.h,x.s.h||{})}); rpSave(); renderRepPage(); _showToast('طُبّق القالب','success'); }
+function rpPresetDel(i){ const p=rpPresets(); p.splice(i,1); try{ localStorage.setItem(RP_PKEY,JSON.stringify(p)); }catch(e){} RP_OPEN.pre=true; renderRepPage(); }
+function goToRep(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='rep'));
+  ['home','urgent','plans','pay','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
+  document.getElementById('page-rep').classList.add('active'); currentFileId=null; renderRepPage();
+}
+
 
 /* ---------- toast / confirm ---------- */
 function _showToast(msg, type='info', duration=3000){
