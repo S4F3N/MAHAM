@@ -1581,6 +1581,32 @@
     <h3>إنجاز المهمة</h3>
     <div class="settings-desc" id="urgNoteTitle" style="margin:0 0 8px;font-weight:600;"></div>
     <div class="form-row"><label>ملاحظة الإنجاز (اختياري)</label><textarea id="urgNoteText" rows="4" placeholder="ماذا تم؟ نتيجة، ملاحظة، رقم مرجعي..."></textarea><button type="button" class="btn btn-glass btn-sm ax-mic" onclick="axMic(this,'urgNoteText')">🎤</button><button type="button" class="btn btn-glass btn-sm ax-fbtn" onclick="axSuggestDoneNote(this)">✨ اقترح الملاحظة</button></div>
+    <div class="nf-wrap" style="margin-top:6px">
+      <div class="settings-desc" style="margin:0 0 6px;font-weight:600">📂 إسناد سريع (اختياري)</div>
+      <div class="form-2col">
+        <div class="form-row"><label>المجموعة</label><select id="nGroup" onchange="nLinkChanged('group')"></select></div>
+        <div class="form-row"><label>التصنيف</label><select id="nCat" onchange="nLinkChanged('cat')"></select></div>
+      </div>
+      <div class="form-row"><label>الملف</label><select id="nFile" onchange="nLinkChanged('file')"></select></div>
+      <label class="nf-check"><input type="checkbox" id="nNewFile" onchange="nfToggle('n')"> 📁 إنشاء ملف جديد بهذه المهمة</label>
+      <div class="nf-box" id="nNfBox" style="display:none">
+        <div class="form-row"><label>اسم الملف</label><input type="text" id="nNfTitle" placeholder="اسم الملف الجديد"></div>
+        <div class="form-2col">
+          <div class="form-row"><label>المجموعة</label><select id="nNfGroup" onchange="nfGroupChanged('n')"></select></div>
+          <div class="form-row"><label>التصنيف</label><select id="nNfCat"></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="nf-wrap" style="margin-top:6px">
+      <div class="form-row"><label>⏭️ الإجراء المطلوب (الخطوة القادمة)</label><input type="text" id="nNext" placeholder="مثال: مراجعة الجهة، رفع المستندات، متابعة السداد…" style="width:100%"></div>
+      <div class="form-row"><label>موعد الإجراء</label><input type="date" id="nDue">
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <button type="button" class="btn btn-glass btn-sm" onclick="nSetDue(0)">اليوم</button>
+          <button type="button" class="btn btn-glass btn-sm" onclick="nSetDue(1)">غدًا</button>
+          <button type="button" class="btn btn-glass btn-sm" onclick="nSetDue(7)">بعد أسبوع</button>
+        </div></div>
+      <div class="settings-desc" style="margin:0" id="nNextNote">يُسجَّل في «مهام اليوم» في موعده؛ وإن أُسند لملف فيكون جولة معلّقة داخل الملف.</div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-glass" onclick="urgNoteCancel()">إلغاء</button>
       <button class="btn btn-filled" onclick="urgNoteOk()">✓ إنجاز</button>
@@ -4811,7 +4837,9 @@ function addUrgentSub(parentId){
 }
 function toggleUrgent(id){
   const x=TASKS.find(t=>t.id===id); if(!x) return;
-  const apply=(alsoKids,note)=>{
+  const apply=(alsoKids,res)=>{
+    const note=(res&&typeof res==='object')?res.note:res; res=(res&&typeof res==='object')?res:null;
+    if(res && x.done===false){ if(res.fileId||res.groupId||res.category){ x.fileId=res.fileId||''; x.groupId=res.groupId||''; x.category=res.category||''; } }
     const changed=[x];
     x.done=!x.done; x.doneAt=x.done?new Date().toISOString():'';
     if(x.done){ x.doneNote=note||''; } else { x._lastNote=x.doneNote; x.doneNote=''; }
@@ -4821,7 +4849,22 @@ function toggleUrgent(id){
     let sync={rounds:[],delRounds:[],subs:[]};
     changed.forEach(t=>{ sync=_urgMerge(sync, urgSyncToFile(t)); });
     delete x._lastNote;
-    urgPersist(changed.map(t=>t.id),sync).then(()=>{ if(x.done) _showToast('انتقلت إلى المنفذة ✓','success'); });
+    let nextMsg='';
+    if(x.done && res){
+      if(res.newFile) persistFiles([res.newFile.id],[]);
+      if(res.nextText){
+        const why='متابعة بعد إنجاز «'+x.title+'»';
+        if(x.fileId){
+          const r={id:uid(),fileId:x.fileId,subFileId:'',date:today(),type:'أخرى',priority:x.priority||'متوسط',exec:'لم',execDate:'',due:res.nextDue,responsible:x.responsible||'',amount:'',finding:why,actionTaken:'',actionNeeded:res.nextText,recommend:'',suggest:'',attachments:[],contactIds:[]};
+          ROUNDS.push(r); persistRounds([r.id],[]); nextMsg='سُجّل الإجراء كجولة في الملف';
+        } else {
+          const t={id:uid(),done:false,title:res.nextText,type:'مهمة',date:res.nextDue,time:'',priority:x.priority||'متوسط',fileId:'',notes:why};
+          TASKS.push(t); persistTasks([t.id],[]); nextMsg='سُجّل الإجراء كمهمة';
+        }
+        try{ renderHome(); }catch(e){} try{ renderTodayCard(); }catch(e){} try{ renderNotif(); }catch(e){} try{ updateTasksTabBadge(); }catch(e){}
+      }
+    }
+    urgPersist(changed.map(t=>t.id),sync).then(()=>{ if(x.done) _showToast('انتقلت إلى المنفذة ✓'+(nextMsg?' — '+nextMsg:''),'success'); });
   };
   if(x.done){ apply(false); return; }
   const pendingKids = urgKids(x.id).filter(k=>!k.done);
@@ -4837,12 +4880,45 @@ function urgAskNote(x){
     _urgNoteResolve=res; window.__urgNoteTask=x;
     document.getElementById('urgNoteTitle').textContent=x.title;
     const t=document.getElementById('urgNoteText'); t.value='';
+    nRebuildLinks(x.groupId||'',x.category||'',x.fileId||''); nfInit('n');
+    document.getElementById('nNext').value=''; document.getElementById('nDue').value=today();
+    try{ upgradeDateInput(document.getElementById('nDue')); }catch(e){}
     document.getElementById('urgNoteOverlay').classList.add('open');
     setTimeout(()=>{ try{t.focus();}catch(e){} },60);
   });
 }
+function nRebuildLinks(g,c,f){
+  const catsOfGroup = g ? (CATEGORY_GROUPS.find(q=>q.id===g)||{catIds:[]}).catIds.map(id=>(CATEGORIES.find(k=>k.id===id)||{}).name).filter(Boolean) : null;
+  document.getElementById('nGroup').innerHTML='<option value="">— بدون —</option>'+CATEGORY_GROUPS.map(q=>`<option value="${q.id}"${q.id===g?' selected':''}>${esc(q.name)}</option>`).join('');
+  const cats = catsOfGroup ? CATEGORIES.filter(k=>catsOfGroup.includes(k.name)) : CATEGORIES;
+  document.getElementById('nCat').innerHTML='<option value="">— بدون —</option>'+cats.map(k=>`<option value="${esc(k.name)}"${k.name===c?' selected':''}>${esc(k.name)}</option>`).join('');
+  const files = FILES.filter(q=> c ? q.category===c : (catsOfGroup ? catsOfGroup.includes(q.category) : true));
+  document.getElementById('nFile').innerHTML='<option value="">— بدون ملف —</option>'+files.map(q=>`<option value="${q.id}"${q.id===f?' selected':''}>${esc(q.title)}</option>`).join('');
+}
+function nLinkChanged(src){
+  let g=document.getElementById('nGroup').value, c=document.getElementById('nCat').value, f=document.getElementById('nFile').value;
+  if(src==='file' && f){
+    const file=fileOf(f); c=file?(file.category||''):'';
+    const grps=_urgGroupOfCat(c); if(!grps.find(q=>q.id===g)) g=grps[0]?grps[0].id:'';
+  } else if(src==='cat'){
+    if(c){ const grps=_urgGroupOfCat(c); if(!grps.find(q=>q.id===g)) g=grps[0]?grps[0].id:''; const file=fileOf(f); if(file && file.category!==c) f=''; }
+  } else if(src==='group'){
+    if(g){ const grp=CATEGORY_GROUPS.find(q=>q.id===g); const names=((grp&&grp.catIds)||[]).map(id=>(CATEGORIES.find(k=>k.id===id)||{}).name); if(c && !names.includes(c)) c=''; const file=fileOf(f); if(file && !names.includes(file.category)) f=''; }
+  }
+  nRebuildLinks(g,c,f);
+}
+function nSetDue(d){ const t=new Date(); t.setDate(t.getDate()+d); const v=t.toISOString().slice(0,10); const el=document.getElementById('nDue'); el.value=v; try{ el.dispatchEvent(new Event('change',{bubbles:true})); el.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} }
 function _urgNoteClose(v){ document.getElementById('urgNoteOverlay').classList.remove('open'); const r=_urgNoteResolve; _urgNoteResolve=null; if(r) r(v); }
-function urgNoteOk(){ _urgNoteClose(document.getElementById('urgNoteText').value.trim()); }
+function urgNoteOk(){
+  const x=window.__urgNoteTask||{};
+  const nb=nfBuild('n',{priority:x.priority,responsible:x.responsible}); if(nb===null) return;
+  const res={note:document.getElementById('urgNoteText').value.trim(), newFile:nb.file||null,
+    fileId:nb.file?nb.file.id:document.getElementById('nFile').value,
+    groupId:nb.file?(nb.file.groupId||''):document.getElementById('nGroup').value,
+    category:nb.file?nb.file.category:document.getElementById('nCat').value,
+    nextText:document.getElementById('nNext').value.trim(), nextDue:document.getElementById('nDue').value||today()};
+  _urgNoteClose(res);
+}
 function urgNoteCancel(){ _urgNoteClose(null); }
 document.getElementById('urgNoteOverlay').addEventListener('click',e=>{ if(e.target.id==='urgNoteOverlay') urgNoteCancel(); });
 document.getElementById('urgNoteText').addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) urgNoteOk(); if(e.key==='Escape') urgNoteCancel(); });
@@ -6397,7 +6473,7 @@ const axMicBtn=id=>`<button type="button" class="btn btn-glass btn-sm ax-mic" on
 
 
 /* ---------- create a new file from a task (task modal + urgent modal) ---------- */
-const NF_IDS={t:{title:'tTitle',file:'tFile'},u:{title:'uTitle',file:'uFile'}};
+const NF_IDS={t:{title:'tTitle',file:'tFile'},u:{title:'uTitle',file:'uFile'},n:{title:'nNfTitleSrc',file:'nFile'}};
 function nfInit(p){
   document.getElementById(p+'NewFile').checked=false; document.getElementById(p+'NfBox').style.display='none';
   const f=document.getElementById(NF_IDS[p].file); if(f) f.disabled=false;
@@ -6413,7 +6489,7 @@ function nfGroupChanged(p){
 function nfToggle(p){
   const on=document.getElementById(p+'NewFile').checked; document.getElementById(p+'NfBox').style.display=on?'block':'none';
   const f=document.getElementById(NF_IDS[p].file); if(f){ f.disabled=on; if(on) f.value=''; }
-  if(on){ const t=document.getElementById(p+'NfTitle'); if(!t.value.trim()) t.value=document.getElementById(NF_IDS[p].title).value.trim(); setTimeout(()=>t.focus(),50); }
+  if(on){ const t=document.getElementById(p+'NfTitle'); if(!t.value.trim()){ const src=document.getElementById(NF_IDS[p].title); t.value=src?src.value.trim():((window.__urgNoteTask||{}).title||''); } setTimeout(()=>t.focus(),50); }
 }
 /* returns {file} (already pushed to FILES, not yet persisted), {} when not requested, or null on validation error */
 function nfBuild(p,extra){
