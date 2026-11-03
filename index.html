@@ -6892,7 +6892,7 @@ const RP_BY=[['group','المجموعات'],['cat','التصنيفات'],['file'
 const RP_LEVELS=[['brief','موجز','صفحة واحدة: مؤشرات + أبرز النقاط + ما يحتاج انتباهًا'],['summary','ملخص','+ جدول حسب التجميع ومقتطفات لكل قسم'],['detailed','مفصّل','كل العناصر بتفاصيلها + سجل الملفات']];
 let RP={mode:'analysis',level:'summary',by:'group',range:'month',anchor:'',from:'',to:'',scope:'all',gIds:[],cIds:[],fIds:[],tIds:[],state:'all',priority:'',resp:'',fstatus:'',emptyFiles:false,register:true,sign:true,
   sec:{rounds:true,actions:true,tasks:true,urgent:true,plans:false,pay:false},
-  h:{title:'',recipient:'الإدارة العليا',org:'',dept:'الشؤون القانونية',author:'صفوان'},narr:'',notes:''};
+  h:{title:'',recipient:'الإدارة العليا',org:'',dept:'الشؤون القانونية',author:'صفوان'},narr:'',notes:'',risks:'',useAi:false,aiUpd:{}};
 try{ const s=JSON.parse(localStorage.getItem(RP_KEY)||'null'); if(s) RP=Object.assign(RP,s,{sec:Object.assign(RP.sec,s.sec||{}),h:Object.assign(RP.h,s.h||{})}); }catch(e){}
 if(!RP.anchor) RP.anchor=today();
 function rpSave(){ try{ localStorage.setItem(RP_KEY,JSON.stringify(RP)); }catch(e){} }
@@ -6909,15 +6909,15 @@ function rpBounds(){
   if(RP.range==='year') return {from:y+'-01-01',to:y+'-12-31',label:'سنة '+y};
   return {from:_dateToIso(new Date(y,m,1,12)),to:_dateToIso(new Date(y,m+1,0,12)),label:payMonthLabel(a.slice(0,7))};
 }
-function rpShift(n){
-  const d=plnD(RP.anchor||today())||new Date(), y=d.getFullYear(), m=d.getMonth();
-  let nd;
-  if(RP.range==='week') nd=new Date(y,m,d.getDate()+7*n,12);
-  else if(RP.range==='quarter') nd=new Date(y,m+3*n,15,12);
-  else if(RP.range==='year') nd=new Date(y+n,m,15,12);
+function rpShiftAnchor(a,range,n){
+  const d=plnD(a||today())||new Date(), y=d.getFullYear(), m=d.getMonth(); let nd;
+  if(range==='week') nd=new Date(y,m,d.getDate()+7*n,12);
+  else if(range==='quarter') nd=new Date(y,m+3*n,15,12);
+  else if(range==='year') nd=new Date(y+n,m,15,12);
   else nd=new Date(y,m+n,15,12);
-  RP.anchor=_dateToIso(nd); rpSave(); renderRepPage();
+  return _dateToIso(nd);
 }
+function rpShift(n){ RP.anchor=rpShiftAnchor(RP.anchor,RP.range,n); rpSave(); renderRepPage(); }
 
 /* ---------- scope & collection ---------- */
 function rpGroupOfFile(f){ if(!f) return null; return groupOf(f.groupId)||_urgGroupOfCat(f.category)[0]||null; }
@@ -7154,9 +7154,10 @@ function rpFilesData(){
     const rs=ROUNDS.filter(r=>r.fileId===f.id), g=rpGroupOfFile(f);
     const lr=rs.slice().sort((a,c)=>((c.date||'')>(a.date||'')?1:((c.date||'')<(a.date||'')?-1:0)))[0];
     const pend=rs.filter(r=>r.exec!=='تم'&&r.actionNeeded).sort((a,c)=>((a.due||'9999')<(c.due||'9999')?-1:1))[0];
-    let upd=''; if(lr){ upd=`آخر تحديث (${fmtDate(lr.date)}): `+rpTrunc([lr.finding||lr.type,lr.actionTaken].filter(Boolean).join(' — '),230); } else if(f.notes) upd=rpTrunc(f.notes,230);
+    const fp=rs.length+'|'+(lr?lr.date:'')+'|'+(pend?pend.id:''); const ai=RP.useAi&&RP.aiUpd[f.id]&&RP.aiUpd[f.id].fp===fp?RP.aiUpd[f.id].t:'';
+    let upd=''; if(ai){ upd=(lr?`آخر تحديث (${fmtDate(lr.date)}): `:'')+ai; } else if(lr){ upd=`آخر تحديث (${fmtDate(lr.date)}): `+rpTrunc([lr.finding||lr.type,lr.actionTaken].filter(Boolean).join(' — '),230); } else if(f.notes) upd=rpTrunc(f.notes,230);
     const need=pend?`المطلوب: ${rpTrunc(pend.actionNeeded,160)}${pend.due?' ('+fmtDate(pend.due)+')':''}`:'';
-    return {f,g:g?g.name:'بدون مجموعة',go:gOrder(g),cat:f.category||'—',st:rpFileStatus(f,rs,td),upd,need,date:lr?lr.date:''};
+    return {f,g:g?g.name:'بدون مجموعة',go:gOrder(g),cat:f.category||'—',st:rpFileStatus(f,rs,td),upd,need,date:lr?lr.date:'',fp};
   });
   rows.sort((a,c)=>(a.go-c.go)||a.cat.localeCompare(c.cat,'ar')||a.f.title.localeCompare(c.f.title,'ar'));
   return rows;
@@ -7175,6 +7176,7 @@ function rpDocHtml(R){
     const H=RP.h; let h=`<div class="rp-head">${(H.org||H.dept)?`<div class="rp-org">${[H.org,H.dept].filter(Boolean).map(rpE).join(' — ')}</div>`:''}<h1>${rpE(rpTitle())}</h1><div class="rp-meta"><span>تاريخ الإعداد: <b>${fmtDate(R.td)}</b></span>${H.recipient?`<span>الموجّه إلى: <b>${rpE(H.recipient)}</b></span>`:''}${H.author?`<span>إعداد: <b>${rpE(H.author)}</b></span>`:''}</div></div>`;
     if(RP.narr.trim()) h+=`<div class="rp-narr">${rpParas(RP.narr).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
     h+=rpFilesDoc();
+    if(RP.risks.trim()) h+=`<h2>قراءة تحليلية وتنبيهات</h2><div class="rp-narr">${rpParas(RP.risks).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
     if(RP.notes.trim()) h+=`<h2>ملاحظات وتوصيات</h2><div class="rp-narr">${rpParas(RP.notes).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
     if(RP.sign) h+=`<table class="sign"><tr><td>أعدّه${H.author?' — '+rpE(H.author):''}</td><td>راجعه</td><td>اعتمده</td></tr></table>`;
     return h+`<div class="rp-foot">مهام صَفوان — ${rpE(rpTitle())} — ${fmtDate(R.td)}</div>`;
@@ -7187,6 +7189,7 @@ function rpDocHtml(R){
   if(RP.narr.trim()) h+=`<h2>الملخص التنفيذي</h2><div class="rp-narr">${rpParas(RP.narr).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
   const att=rpAttention(R,lv==='brief'?8:(det?30:12));
   if(att.list.length){ h+=`<h2>ما يتطلب انتباه الإدارة (${att.all})</h2><table><tr><th>العنصر</th><th>النوع</th><th>الملف</th><th>الموعد</th><th>الحالة</th></tr>${att.list.map(i=>`<tr><td>${rpE(rpTrunc(i.title,110))}</td><td>${RP_KINDS[i.kind][1]}</td><td>${rpE(i.fileTitle||'—')}</td><td class="n">${i.date?fmtDate(i.date):'—'}</td><td class="n">${rpPill(i)}</td></tr>`).join('')}</table>${att.all>att.list.length?`<div class="more">… و${att.all-att.list.length} عنصر آخر</div>`:''}`; }
+  if(RP.risks.trim()) h+=`<h2>قراءة تحليلية وتنبيهات</h2><div class="rp-narr">${rpParas(RP.risks).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
   if(groups.length) h+=`<h2>الحصيلة حسب ${(RP_BY.find(x=>x[0]===by)||[0,''])[1]}</h2>`+rpSummaryTable(R,groups);
   if(lv!=='brief'&&groups.length){ h+=`<h2>${det?'التفاصيل':'مقتطفات'} حسب ${(RP_BY.find(x=>x[0]===by)||[0,''])[1]}</h2>`+groups.map(g=>rpGroupBlock(g,by,det)).join(''); }
   if(lv!=='brief'&&RP.register&&by!=='file') h+=rpRegisterHtml(R);
@@ -7197,7 +7200,7 @@ function rpDocHtml(R){
 }
 
 /* ---------- outputs ---------- */
-function rpSync(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; rpSave(); }
+function rpSync(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const k=document.getElementById('rpRisks'); if(k) RP.risks=k.value; rpSave(); }
 function rpFileName(ext){ return (rpTitle()+' - '+rpBounds().label).replace(/[\\/:*?"<>|]+/g,' ').trim().slice(0,90)+'.'+ext; }
 function rpWrapDoc(inner,extraHead){
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${rpE(rpTitle())}</title><style>${RP_CSS}
@@ -7232,11 +7235,11 @@ function rpText(R){
 function rpCopy(){ rpSync(); const t=rpText(rpCollect()); axCopy(t); }
 function rpShare(){ rpSync(); const t=rpText(rpCollect()); if(navigator.share){ navigator.share({title:rpTitle(),text:t}).catch(()=>{}); } else axCopy(t); }
 async function axRpNarr(btn){
-  rpSync(); const R=rpCollect(); if(!R.items.length){ _showToast('لا بيانات في هذا التقرير','error'); return; }
+  rpSync(); const R=rpCollect(); if(RP.mode==='files'?!rpFilesData().length:!R.items.length){ _showToast('لا بيانات في هذا التقرير','error'); return; }
   const gs=rpGroups(R.items,RP.by).slice(0,15).map(g=>({name:rpGroupLabel(g.k,RP.by),total:g.n,done:g.done,open:g.open,late:g.late}));
   const att=rpAttention(R,15).list.map(i=>({kind:RP_KINDS[i.kind][1],title:rpTrunc(i.title,120),file:i.fileTitle,date:i.date,state:RP_STATE[i.state]}));
   const done=R.items.filter(i=>i.state==='done').slice(0,15).map(i=>({kind:RP_KINDS[i.kind][1],title:rpTrunc(i.title,100),file:i.fileTitle}));
-  const ctx={report:rpTitle(),period:R.b.label,scope:rpScopeText(),groupedBy:RP.by,kpis:R.K,highlights:rpHighlights(R),groups:gs,needsAttention:att,recentlyCompleted:done};
+  const ctx=Object.assign({report:rpTitle(),period:R.b.label,scope:rpScopeText(),groupedBy:RP.by,kpis:R.K,highlights:rpHighlights(R),groups:gs,needsAttention:att,recentlyCompleted:done},RP.mode==='files'?{files:rpAiFiles()}:{});
   const old=btn&&btn.textContent; if(btn){ btn.disabled=true; btn.textContent='… أصيغ'; }
   const r=await axAsk('rp_exec','أنت مساعد إداري محترف. اكتب لتقرير موجّه إلى الإدارة العليا: (1) ملخصًا تنفيذيًا من 4 إلى 6 أسطر بلغة عربية رسمية موجزة تبرز الإنجاز والمتأخرات وأهم المخاطر، (2) من 3 إلى 5 توصيات عملية قابلة للتنفيذ. اعتمد حصرًا على السياق المعطى ولا تختلق أرقامًا ولا وقائع ولا أسماء. المخطط: {"summary":"نص","recommendations":["..."]}',
     'صغ الملخص التنفيذي والتوصيات لهذا التقرير.',ctx,{json:true,temp:0.3});
@@ -7258,7 +7261,7 @@ const RP_TPL=[
   ['🧭','تقدّم الخطط',{level:'summary',range:'all',by:'group',sec:['plans']}],
   ['📊','سنوي شامل',{level:'summary',range:'year',by:'month',sec:['rounds','actions','tasks','urgent','plans','pay']}]
 ];
-let RP_OPEN={tpl:true,lvl:true,per:true,scope:true,by:true,sec:true,flt:false,hdr:false,pre:false}, _rpT=null;
+let RP_OPEN={ai:true,tpl:true,lvl:true,per:true,scope:true,by:true,sec:true,flt:false,hdr:false,pre:false}, _rpT=null;
 function rpInjectCss(){
   if(document.getElementById('rpCss')) return; const s=document.createElement('style'); s.id='rpCss';
   s.textContent=RP_CSS+`
@@ -7305,7 +7308,11 @@ function renderRepPage(){
   const secDefs=[['rounds','🔄 الجولات'],['actions','⏭️ الإجراءات المطلوبة'],['tasks','✅ المهام'],['urgent','⚡ المهام العاجلة'],['plans','🧭 الخطط'],['pay','💸 المدفوعات']];
   const tg=(k,l,on,fn)=>`<label class="rp-tog"><input type="checkbox" ${on?'checked':''} onchange="${fn}"> ${l}</label>`;
   const so=(k,l)=>`<option value="${rpA(k)}"${RP.priority===k||RP.fstatus===k?' selected':''}>${l}</option>`;
-  const ctl=
+  const aiSec=rpSec('ai','✨ المساعد الذكي',`<div class="form-row"><label>اطلب التقرير بجملة واحدة</label><textarea id="rpNL" rows="2" placeholder="مثال: تقرير شهري مفصّل لمجموعة الشؤون القانونية حسب الملفات للإدارة" oninput="RP_NL=this.value">${rpT(RP_NL)}</textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="btn btn-filled btn-sm" onclick="axRpBuild(this)">✨ أنشئ التقرير</button>${axMicBtn('rpNL')}</div></div>
+    <div class="rp-tpls"><button onclick="axRpNarr(this)">✨ ملخص تنفيذي وتوصيات</button><button onclick="axRpRisks(this)">🔎 تحليل المخاطر</button><button onclick="axRpFileNotes(this)">🗃️ لخّص تحديثات الملفات</button></div>
+    <label class="rp-tog"><input type="checkbox" ${RP.useAi?'checked':''} onchange="rpFlag('useAi',this.checked)"> استخدم ملخصات الذكاء في جدول الملفات${Object.keys(RP.aiUpd).length?` (${Object.keys(RP.aiUpd).length} جاهز)`:''}</label>
+    <div class="form-row"><label>اسأل عن هذا التقرير</label><div style="display:flex;gap:6px"><input type="text" id="rpAsk" style="flex:1" placeholder="مثال: أي الملفات الأكثر خطرًا ولماذا؟" onkeydown="if(event.key==='Enter')axRpAsk()"><button class="btn btn-glass btn-sm" onclick="axRpAsk()">اسأل</button>${axMicBtn('rpAsk')}</div></div>`);
+  const ctl=aiSec+
    rpSec('tpl','⚡ قوالب جاهزة',`<div class="rp-tpls">${RP_TPL.map((t,i)=>`<button onclick="rpTpl(${i})">${t[0]} ${t[1]}</button>`).join('')}</div>`)
   +rpSec('lvl','📏 نوع التقرير ومستواه',rpChips([['analysis','📊 تحليلي'],['files','🗃️ جدول الملفات']],RP.mode,'rpMode')+(RP.mode==='files'?'<p class="rp-hint">جدول: المجموعة · التصنيف · الملف · الحالة · آخر تحديث. يتبع «النطاق» (اختر الملفات) و«التصفية»، ولا يتأثر بالفترة.</p>':rpChips(RP_LEVELS.map(l=>[l[0],l[1]]),RP.level,'rpLevel')+`<p class="rp-hint">${RP_LEVELS.find(l=>l[0]===RP.level)[2]}</p>`))
   +rpSec('per','📅 الفترة',rpChips([['week','أسبوع'],['month','شهر'],['quarter','ربع'],['year','سنة'],['custom','مخصص'],['all','الكل']],RP.range,'rpRange')+per)
@@ -7319,15 +7326,16 @@ function renderRepPage(){
   +rpSec('hdr','📝 الترويسة والنصوص',`<div class="form-row"><label>عنوان التقرير</label><input type="text" value="${rpA(RP.h.title)}" placeholder="${rpA(rpTitle())}" oninput="rpTxt('title',this.value)"></div>
     <div class="rp-2"><div class="form-row"><label>الموجّه إلى</label><input type="text" value="${rpA(RP.h.recipient)}" oninput="rpTxt('recipient',this.value)"></div><div class="form-row"><label>المعدّ</label><input type="text" value="${rpA(RP.h.author)}" oninput="rpTxt('author',this.value)"></div></div>
     <div class="rp-2"><div class="form-row"><label>الشركة / الجهة</label><input type="text" value="${rpA(RP.h.org)}" oninput="rpTxt('org',this.value)"></div><div class="form-row"><label>الإدارة</label><input type="text" value="${rpA(RP.h.dept)}" oninput="rpTxt('dept',this.value)"></div></div>
-    <div class="form-row"><label>الملخص التنفيذي (اختياري)</label><textarea id="rpNarr" rows="4" placeholder="اكتب خلاصة للإدارة أو اضغط ✨ لصياغتها تلقائيًا" oninput="rpSync();rpRefreshSoon()">${rpT(RP.narr)}</textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="btn btn-glass btn-sm" onclick="axRpNarr(this)">✨ صغ الملخص والتوصيات</button>${axMicBtn('rpNarr')}</div></div>
-    <div class="form-row"><label>ملاحظات وتوصيات (اختياري)</label><textarea id="rpNotes" rows="3" oninput="rpSync();rpRefreshSoon()">${rpT(RP.notes)}</textarea><div style="margin-top:6px">${axMicBtn('rpNotes')}</div></div>`)
+    <div class="form-row"><label>الملخص التنفيذي (اختياري)</label><textarea id="rpNarr" rows="4" placeholder="اكتب خلاصة للإدارة أو اضغط ✨ لصياغتها تلقائيًا" oninput="rpSync();rpRefreshSoon()">${rpT(RP.narr)}</textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="btn btn-glass btn-sm" onclick="axRpNarr(this)">✨ صغ الملخص والتوصيات</button></div>${rpPolishRow('rpNarr')}</div>
+    <div class="form-row"><label>ملاحظات وتوصيات (اختياري)</label><textarea id="rpNotes" rows="3" oninput="rpSync();rpRefreshSoon()">${rpT(RP.notes)}</textarea>${rpPolishRow('rpNotes')}</div>
+    <div class="form-row"><label>قراءة تحليلية وتنبيهات (اختياري)</label><textarea id="rpRisks" rows="3" placeholder="اضغط 🔎 تحليل المخاطر في المساعد الذكي، أو اكتب بنفسك" oninput="rpSync();rpRefreshSoon()">${rpT(RP.risks)}</textarea>${rpPolishRow('rpRisks')}</div>`)
   +rpSec('pre','💾 قوالبي المحفوظة',rpPresetsHtml());
   root.innerHTML=`<div class="section-head"><h2>📑 التقارير</h2></div><div class="rp-layout"><div class="rp-ctl">${ctl}</div><div class="rp-main">
     <div class="rp-bar"><button class="btn btn-filled btn-sm" onclick="rpPrint()">🖨 طباعة / PDF</button><button class="btn btn-glass btn-sm" onclick="rpWord()">📝 Word</button><button class="btn btn-glass btn-sm" onclick="rpCsv()">📊 Excel</button><button class="btn btn-glass btn-sm" onclick="rpCopy()">📋 نسخ نص</button><button class="btn btn-glass btn-sm" onclick="rpShare()">📤 مشاركة</button></div>
     <div class="rp-paper"><div class="rp-doc" id="rpPreview"></div></div></div></div>`;
   rpRefresh();
 }
-function rpRefresh(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const el=document.getElementById('rpPreview'); if(el) el.innerHTML=rpDocHtml(rpCollect()); }
+function rpRefresh(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const k=document.getElementById('rpRisks'); if(k) RP.risks=k.value; const el=document.getElementById('rpPreview'); if(el) el.innerHTML=rpDocHtml(rpCollect()); }
 function rpRefreshSoon(){ clearTimeout(_rpT); _rpT=setTimeout(rpRefresh,250); }
 function rpSet(k,v){ RP[k]=v; rpSave(); renderRepPage(); }
 function rpMode(v){ rpSet('mode',v); }
@@ -7355,6 +7363,75 @@ function rpPresetSave(){
 }
 function rpPresetApply(i){ const x=rpPresets()[i]; if(!x) return; const keep={anchor:RP.anchor,narr:RP.narr,notes:RP.notes}; RP=Object.assign({},RP,x.s,keep,{sec:Object.assign({},RP.sec,x.s.sec||{}),h:Object.assign({},RP.h,x.s.h||{})}); rpSave(); renderRepPage(); _showToast('طُبّق القالب','success'); }
 function rpPresetDel(i){ const p=rpPresets(); p.splice(i,1); try{ localStorage.setItem(RP_PKEY,JSON.stringify(p)); }catch(e){} RP_OPEN.pre=true; renderRepPage(); }
+
+/* ---------- AI: deep integration ---------- */
+function rpBusy(btn,t){ if(!btn) return ()=>{}; const o=btn.textContent; btn.disabled=true; btn.textContent=t; return ()=>{ btn.disabled=false; btn.textContent=o; }; }
+function rpAiFiles(){ return rpFilesData().slice(0,60).map(r=>({title:r.f.title,group:r.g,category:r.cat,status:r.st,lastUpdate:r.upd,required:r.need})); }
+function rpAiCtx(R){
+  const gs=rpGroups(R.items,RP.by).slice(0,20).map(g=>({name:rpGroupLabel(g.k,RP.by),total:g.n,done:g.done,open:g.open,late:g.late}));
+  const items=R.items.slice(0,140).map(i=>({kind:RP_KINDS[i.kind][1],title:rpTrunc(i.title,140),file:i.fileTitle,group:i.group,category:i.cat,date:i.date,due:i.x.due||'',state:RP_STATE[i.state],priority:i.priority,responsible:i.resp,finding:rpTrunc(i.x.finding||'',160)}));
+  return Object.assign({report:rpTitle(),period:R.b.label,scope:rpScopeText(),today:R.td,kpis:R.K,groups:gs,items},RP.mode==='files'?{files:rpAiFiles()}:{});
+}
+function rpMatch(list,q,get){ q=String(q||'').trim(); if(!q) return null; let m=list.find(x=>get(x)===q); if(m) return m; m=list.find(x=>get(x).includes(q)||q.includes(get(x))); return m||null; }
+async function axRpBuild(btn){
+  const q=((document.getElementById('rpNL')||{}).value||'').trim(); if(!q){ _showToast('اكتب ما تريده في التقرير (أو أملِه بالصوت)','error'); return; }
+  const done=rpBusy(btn,'… أفهم الطلب');
+  const names={groups:CATEGORY_GROUPS.map(g=>g.name),categories:CATEGORIES.map(c=>c.name),files:FILES.slice(0,250).map(f=>f.title),responsibles:rpResps()};
+  const r=await axAsk('rp_build','حوّل طلب المستخدم إلى إعدادات تقرير إداري. المخطط: {"mode":"analysis|files","level":"brief|summary|detailed","range":"week|month|quarter|year|custom|all","offset":0,"from":"YYYY-MM-DD","to":"YYYY-MM-DD","by":"group|cat|file|kind|resp|priority|state|month","groups":["أسماء مجموعات من القائمة"],"categories":["أسماء تصنيفات من القائمة"],"files":["عناوين ملفات من القائمة"],"sections":["rounds","actions","tasks","urgent","plans","pay"],"state":"all|pending|late|done","priority":"|عاجل|متوسط|عادي","title":"","recipient":""}. القواعد: mode=files عندما يريد جدولًا بالملفات وآخر تحديث وحالتها؛ وإلا analysis. offset عدد الفترات للخلف (الشهر الماضي = -1، هذا الشهر = 0). اختر الأسماء من القوائم المعطاة حرفيًا ولا تخترع أسماء. إن لم تُذكر فترة فالشهر الحالي. إن لم يُذكر مستوى فملخص. sections الافتراضية rounds وactions وtasks وurgent.',
+    q,names,{json:true,temp:0.1});
+  done(); if(!r){ return; }
+  const ok=(v,arr,d)=>arr.includes(v)?v:d, note=[];
+  RP.mode=ok(r.mode,['analysis','files'],'analysis'); RP.level=ok(r.level,['brief','summary','detailed'],'summary');
+  RP.range=ok(r.range,['week','month','quarter','year','custom','all'],'month');
+  if(RP.range==='custom'){ RP.from=axIso(r.from); RP.to=axIso(r.to)||RP.from; if(!RP.from) RP.range='month'; }
+  RP.anchor=rpShiftAnchor(today(),RP.range,Math.max(-24,Math.min(24,Math.round(+r.offset||0))));
+  RP.by=ok(r.by,RP_BY.map(x=>x[0]),'group');
+  const gs=axArr(r.groups).map(n=>rpMatch(CATEGORY_GROUPS,n,g=>g.name)), cs=axArr(r.categories).map(n=>rpMatch(CATEGORIES,n,c=>c.name)), fs=axArr(r.files).map(n=>rpMatch(FILES,n,f=>f.title));
+  const miss=[...axArr(r.groups).filter((n,i)=>!gs[i]),...axArr(r.categories).filter((n,i)=>!cs[i]),...axArr(r.files).filter((n,i)=>!fs[i])];
+  RP.gIds=gs.filter(Boolean).map(g=>g.id); RP.cIds=cs.filter(Boolean).map(c=>c.name); RP.fIds=fs.filter(Boolean).map(f=>f.id); RP.tIds=[];
+  RP.scope=RP.fIds.length?'files':RP.cIds.length?'cats':RP.gIds.length?'groups':(RP.mode==='files'?'files':'all');
+  if(RP.gIds.length&&RP.cIds.length){ RP.scope='groups'; RP.cIds=[]; } if(RP.fIds.length&&RP.scope!=='files'){ RP.fIds=[]; }
+  const sec={rounds:false,actions:false,tasks:false,urgent:false,plans:false,pay:false}; const sl=axArr(r.sections).filter(k=>k in sec); (sl.length?sl:['rounds','actions','tasks','urgent']).forEach(k=>sec[k]=true); RP.sec=sec;
+  RP.state=ok(r.state,['all','pending','late','done'],'all'); RP.priority=ok(r.priority,['عاجل','متوسط','عادي'],''); RP.resp=''; RP.fstatus='';
+  if(axStr(r.title)) RP.h.title=axStr(r.title).slice(0,120); if(axStr(r.recipient)) RP.h.recipient=axStr(r.recipient).slice(0,80);
+  rpSave(); renderRepPage();
+  const b=rpBounds(), lv=RP_LEVELS.find(l=>l[0]===RP.level)[1];
+  _showToast(`طُبّق: ${RP.mode==='files'?'جدول الملفات':lv+' · '+b.label+' · حسب '+RP_BY.find(x=>x[0]===RP.by)[1]}${miss.length?' — لم أجد: '+miss.join('، '):''}`,miss.length?'info':'success',5000);
+}
+async function axRpRisks(btn){
+  rpSync(); const R=rpCollect(); if(RP.mode==='files'?!rpFilesData().length:!R.items.length){ _showToast('لا بيانات في هذا التقرير','error'); return; }
+  const done=rpBusy(btn,'… أحلل');
+  const r=await axAsk('rp_risks','حلّل بيانات تقرير إداري وأبرز من 3 إلى 6 ملاحظات تحليلية موجزة للإدارة: الاختناقات والمتأخرات وأين تتركز، الملفات الراكدة التي لم تُحدَّث منذ مدة، تزاحم المواعيد القريبة، وأي خلل في توزيع العمل. كل ملاحظة جملة أو جملتان مبنية على أرقام وأسماء من السياق فقط، بلا اختلاق. المخطط: {"insights":["..."]}',
+    'استخرج القراءة التحليلية والتنبيهات لهذا التقرير.',rpAiCtx(R),{json:true,temp:0.2});
+  done(); if(!r){ _showToast('تعذّر التحليل','error'); return; }
+  const a=axArr(r.insights).map(axStr).filter(Boolean); if(!a.length){ _showToast('لم يُستخرج شيء','error'); return; }
+  RP.risks=a.map(x=>'• '+x).join('\n'); rpSave(); RP_OPEN.hdr=true; renderRepPage(); _showToast('أُضيفت «قراءة تحليلية» للتقرير — راجعها وعدّلها','success');
+}
+async function axRpFileNotes(btn){
+  rpSync(); const rows=rpFilesData().slice(0,40); if(!rows.length){ _showToast('لا ملفات مطابقة — اختر ملفات من «النطاق»','error'); return; }
+  const done=rpBusy(btn,'… ألخّص');
+  const ctx={files:rows.map(r=>({id:r.f.id,title:r.f.title,category:r.cat,group:r.g,status:r.st,notes:(r.f.notes||'').slice(0,400),rounds:ROUNDS.filter(x=>x.fileId===r.f.id).sort((a,c)=>((c.date||'')>(a.date||'')?1:-1)).slice(0,6).map(x=>({date:x.date,type:x.type,exec:x.exec,finding:rpTrunc(x.finding,300),actionTaken:rpTrunc(x.actionTaken,200),actionNeeded:rpTrunc(x.actionNeeded,200),due:x.due}))}))};
+  const r=await axAsk('rp_filenotes','لكل ملف اكتب خلاصة موجزة (سطر إلى سطرين، حتى 200 حرف) تعبّر عن آخر مستجداته ووضعه الحالي كما يُكتب في تقرير للإدارة، معتمدًا على جولاته وملاحظاته فقط دون اختلاق. لا تكرر اسم الملف. المخطط: {"items":[{"id":"معرّف الملف","summary":"..."}]}',
+    'لخّص آخر مستجدات كل ملف.',ctx,{json:true,temp:0.2,max:70000});
+  done(); if(!r){ _showToast('تعذّر التلخيص','error'); return; }
+  let n=0; axArr(r.items).forEach(it=>{ const row=rows.find(x=>x.f.id===axStr(it.id)); const t=axStr(it.summary); if(row&&t){ RP.aiUpd[row.f.id]={t:t.slice(0,300),fp:row.fp}; n++; } });
+  RP.useAi=true; rpSave(); renderRepPage(); _showToast(`لُخّص ${n} ملف — يظهر في عمود الملاحظات`,'success');
+}
+async function axRpAsk(btn){
+  const inp=document.getElementById('rpAsk'); const q=(inp&&inp.value||'').trim(); if(!q){ _showToast('اكتب سؤالك عن التقرير','error'); return; }
+  rpSync(); const R=rpCollect(); axOpen('❓ سؤال عن التقرير'); axLoading('أراجع بيانات التقرير…');
+  const t=await axAsk('rp_ask','أجب عن سؤال المستخدم اعتمادًا على بيانات هذا التقرير فقط (السياق). كن دقيقًا وموجزًا، واذكر الملفات والأرقام والتواريخ التي تدعم إجابتك. إن لم تكفِ البيانات فقل ذلك صراحة ولا تخمّن.',q,rpAiCtx(R),{temp:0.2});
+  if(t==null){ axFail(); return; }
+  axTextResult(t,[{label:'➕ إدراج في ملاحظات التقرير',fn:()=>{ RP.notes=(RP.notes?RP.notes+'\n':'')+t.trim(); rpSave(); axClose(); RP_OPEN.hdr=true; renderRepPage(); _showToast('أُدرج في الملاحظات','success'); }}]);
+}
+async function axRpPolish(id,mode,btn){
+  const el=document.getElementById(id); const v=(el&&el.value||'').trim(); if(!v){ _showToast('اكتب نصًا أولًا','error'); return; }
+  const P={formal:'أعد صياغة النص بعربية رسمية مهنية رصينة مناسبة لتقرير يُرفع للإدارة العليا، دون تغيير المعنى أو الأرقام أو الأسماء.',short:'اختصر النص إلى أقل عدد ممكن من الكلمات مع الحفاظ على كل المعلومات والأرقام الجوهرية.',en:'ترجم النص إلى الإنجليزية المهنية المناسبة لتقرير إداري، مع الحفاظ على الأرقام والأسماء.'};
+  const done=rpBusy(btn,'…'); const t=await axAsk('rp_polish',P[mode]+' أعد النص الناتج فقط بلا مقدمات.',v,null,{temp:0.2}); done();
+  if(t==null) return; el.value=t.trim(); rpSync(); rpRefresh();
+}
+const rpPolishRow=id=>`<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${axMicBtn(id)}<button class="btn btn-glass btn-sm" onclick="axRpPolish('${id}','formal',this)">🖋️ رسمي</button><button class="btn btn-glass btn-sm" onclick="axRpPolish('${id}','short',this)">✂️ اختصر</button><button class="btn btn-glass btn-sm" onclick="axRpPolish('${id}','en',this)">🌐 English</button></div>`;
+let RP_NL='';
 function goToRep(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='rep'));
   ['home','urgent','plans','pay','files','file','calendar','contacts','settings','activity','tasks'].forEach(t=>{ const e=document.getElementById('page-'+t); if(e) e.classList.remove('active'); });
