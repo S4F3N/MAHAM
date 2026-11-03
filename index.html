@@ -7138,8 +7138,6 @@ function rpDocHtml(R){
    <div class="rp-meta"><span>النطاق: ${rpE(rpScopeText())}</span></div></div>`;
   if(!R.items.length&&!R.files.length) return h+'<div class="empty">لا توجد بيانات ضمن النطاق والفترة المحددة. غيّر الفترة أو النطاق أو المحتوى.</div>';
   if(RP.narr.trim()) h+=`<h2>الملخص التنفيذي</h2><div class="rp-narr">${rpParas(RP.narr).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
-  const hl=rpHighlights(R); h+=`<h2>أبرز النقاط</h2><ul>${(lv==='brief'?hl.slice(0,5):hl).map(x=>`<li>${rpE(x)}</li>`).join('')}</ul>`;
-  h+='<h2>المؤشرات</h2>'+rpKpiHtml(R);
   const att=rpAttention(R,lv==='brief'?8:(det?30:12));
   if(att.list.length){ h+=`<h2>ما يتطلب انتباه الإدارة (${att.all})</h2><table><tr><th>العنصر</th><th>النوع</th><th>الملف</th><th>الموعد</th><th>الحالة</th></tr>${att.list.map(i=>`<tr><td>${rpE(rpTrunc(i.title,110))}</td><td>${RP_KINDS[i.kind][1]}</td><td>${rpE(i.fileTitle||'—')}</td><td class="n">${i.date?fmtDate(i.date):'—'}</td><td class="n">${rpPill(i)}</td></tr>`).join('')}</table>${att.all>att.list.length?`<div class="more">… و${att.all-att.list.length} عنصر آخر</div>`:''}`; }
   if(groups.length) h+=`<h2>الحصيلة حسب ${(RP_BY.find(x=>x[0]===by)||[0,''])[1]}</h2>`+rpSummaryTable(R,groups);
@@ -7176,7 +7174,6 @@ function rpText(R){
   const K=R.K, L=[]; const by=(RP_BY.find(x=>x[0]===RP.by)||[0,''])[1];
   L.push('*'+rpTitle()+'*'); L.push('الفترة: '+R.b.label); if(RP.h.recipient) L.push('إلى: '+RP.h.recipient); if(RP.h.author) L.push('إعداد: '+RP.h.author+(RP.h.dept?' — '+RP.h.dept:'')); L.push('');
   if(RP.narr.trim()){ L.push('*الملخص التنفيذي*'); L.push(RP.narr.trim()); L.push(''); }
-  L.push('*أبرز النقاط*'); rpHighlights(R).forEach(x=>L.push('• '+x)); L.push('');
   const att=rpAttention(R,8); if(att.list.length){ L.push(`*يتطلب الانتباه (${att.all})*`); att.list.forEach((i,n)=>L.push(`${n+1}. ${rpTrunc(i.title,80)}${i.fileTitle?' — '+i.fileTitle:''}${i.date?' ('+fmtDate(i.date)+')':''} [${RP_STATE[i.state]}]`)); L.push(''); }
   const gs=rpGroups(R.items,RP.by); if(gs.length){ L.push('*الحصيلة حسب '+by+'*'); gs.slice(0,15).forEach(g=>L.push(`• ${rpGroupLabel(g.k,RP.by)}: ${g.n} (منجز ${g.done} · مفتوح ${g.open} · متأخر ${g.late})`)); L.push(''); }
   L.push(`الإجمالي: ${K.total} عنصر — منجز ${K.done} (${K.total?Math.round(K.done/K.total*100):0}%) — مفتوح ${K.open} — متأخر ${K.late}`);
