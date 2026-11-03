@@ -6890,7 +6890,7 @@ const RP_KINDS={round:['🔄','الجولات'],action:['⏭️','الإجراء
 const RP_STATE={done:'منجز',open:'مفتوح',late:'متأخر'};
 const RP_BY=[['group','المجموعات'],['cat','التصنيفات'],['file','الملفات'],['kind','نوع العمل'],['resp','المسؤول'],['priority','الأولوية'],['state','الحالة'],['month','الشهر']];
 const RP_LEVELS=[['brief','موجز','صفحة واحدة: مؤشرات + أبرز النقاط + ما يحتاج انتباهًا'],['summary','ملخص','+ جدول حسب التجميع ومقتطفات لكل قسم'],['detailed','مفصّل','كل العناصر بتفاصيلها + سجل الملفات']];
-let RP={level:'summary',by:'group',range:'month',anchor:'',from:'',to:'',scope:'all',gIds:[],cIds:[],fIds:[],tIds:[],state:'all',priority:'',resp:'',fstatus:'',emptyFiles:false,register:true,sign:true,
+let RP={mode:'analysis',level:'summary',by:'group',range:'month',anchor:'',from:'',to:'',scope:'all',gIds:[],cIds:[],fIds:[],tIds:[],state:'all',priority:'',resp:'',fstatus:'',emptyFiles:false,register:true,sign:true,
   sec:{rounds:true,actions:true,tasks:true,urgent:true,plans:false,pay:false},
   h:{title:'',recipient:'الإدارة العليا',org:'',dept:'الشؤون القانونية',author:'صفوان'},narr:'',notes:''};
 try{ const s=JSON.parse(localStorage.getItem(RP_KEY)||'null'); if(s) RP=Object.assign(RP,s,{sec:Object.assign(RP.sec,s.sec||{}),h:Object.assign(RP.h,s.h||{})}); }catch(e){}
@@ -7040,9 +7040,15 @@ const RP_CSS=`
 .rp-doc .sign{width:100%;margin-top:40px;border:none} .rp-doc .sign td{border:none;border-top:1px solid #64748b;text-align:center;color:#475569;padding-top:6px;width:33%}
 .rp-doc .rp-foot{margin-top:20px;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;padding-top:6px}
 .rp-doc .empty{color:#64748b;text-align:center;padding:24px 0}
+.rp-doc table.ft th{background:#3b5a1c;color:#fff;text-align:center}
+.rp-doc table.ft td{font-size:12.5px;border-color:#94a3b8}
+.rp-doc table.ft tr.ban td{background:#3b5a1c;color:#fff;font-weight:800;font-size:13px;padding:5px 10px}
+.rp-doc table.ft td.g{background:#dbeafe;text-align:center;font-weight:700;color:#1e3a8a}
+.rp-doc table.ft td.c{background:#e0ecff;text-align:center;font-weight:600;color:#1e3a8a}
+.rp-doc table.ft td.t{font-weight:700;text-align:center}
 `;
 const rpE=esc;
-function rpTitle(){ return RP.h.title||('تقرير '+({brief:'موجز',summary:'ملخص',detailed:'مفصّل'}[RP.level])+' للإدارة'); }
+function rpTitle(){ if(RP.mode==='files') return RP.h.title||'تقرير الملفات وآخر مستجداتها'; return RP.h.title||('تقرير '+({brief:'موجز',summary:'ملخص',detailed:'مفصّل'}[RP.level])+' للإدارة'); }
 function rpScopeText(){
   const n=(arr,fn)=>arr.map(fn).filter(Boolean).join('، ');
   let s='جميع الملفات والمجموعات';
@@ -7131,7 +7137,48 @@ function rpRegisterHtml(R){
   return h+'</table>';
 }
 function rpParas(t){ return String(t||'').split(/\n+/).map(s=>s.trim()).filter(Boolean); }
+/* ----- files table mode: one row per chosen file → group · category · file · status · latest update ----- */
+function rpFileStatus(f,rs,td){
+  if(f.status==='مكتملة') return 'مكتملة'; if(f.status==='متوقف') return 'متوقفة'; if(f.status==='مغلق') return 'مغلق';
+  if(!rs.length) return 'لم تبدأ';
+  const last=rs.map(r=>r.date).filter(Boolean).sort().pop()||'', late=rs.some(r=>r.exec!=='تم'&&r.due&&r.due<td);
+  const old=last&&(-daysUntil(last))>30;
+  return (late||old)?'تحتاج تحديث':'قيد التنفيذ';
+}
+const RP_FST={'مكتملة':'#dcfce7','قيد التنفيذ':'#fef3c7','تحتاج تحديث':'#fed7aa','لم تبدأ':'#ffffff','متوقفة':'#ede9fe','مغلق':'#e5e7eb'};
+function rpFilesData(){
+  const td=today(); const sel=RP.scope==='files'&&RP.fIds.length;
+  let fs=FILES.filter(f=>rpFileOk(f)&&(sel||RP.fstatus||f.status!=='مكتملة'));
+  const gOrder=g=>g?CATEGORY_GROUPS.findIndex(x=>x.id===g.id):999;
+  const rows=fs.map(f=>{
+    const rs=ROUNDS.filter(r=>r.fileId===f.id), g=rpGroupOfFile(f);
+    const lr=rs.slice().sort((a,c)=>((c.date||'')>(a.date||'')?1:((c.date||'')<(a.date||'')?-1:0)))[0];
+    const pend=rs.filter(r=>r.exec!=='تم'&&r.actionNeeded).sort((a,c)=>((a.due||'9999')<(c.due||'9999')?-1:1))[0];
+    let upd=''; if(lr){ upd=`آخر تحديث (${fmtDate(lr.date)}): `+rpTrunc([lr.finding||lr.type,lr.actionTaken].filter(Boolean).join(' — '),230); } else if(f.notes) upd=rpTrunc(f.notes,230);
+    const need=pend?`المطلوب: ${rpTrunc(pend.actionNeeded,160)}${pend.due?' ('+fmtDate(pend.due)+')':''}`:'';
+    return {f,g:g?g.name:'بدون مجموعة',go:gOrder(g),cat:f.category||'—',st:rpFileStatus(f,rs,td),upd,need,date:lr?lr.date:''};
+  });
+  rows.sort((a,c)=>(a.go-c.go)||a.cat.localeCompare(c.cat,'ar')||a.f.title.localeCompare(c.f.title,'ar'));
+  return rows;
+}
+function rpFilesDoc(){
+  const rows=rpFilesData(); if(!rows.length) return '<div class="empty">لا توجد ملفات مطابقة. اختر ملفات من «النطاق ← ملفات» أو غيّر التصفية.</div>';
+  let h='<table class="ft"><tr><th style="width:12%">المجموعة</th><th style="width:11%">التصنيف</th><th style="width:25%">اسم الملف</th><th style="width:11%">حالة الملف</th><th>ملاحظات (آخر تحديث)</th></tr>'; let cur=null;
+  rows.forEach(r=>{
+    if(r.g!==cur){ cur=r.g; h+=`<tr class="ban"><td colspan="5">${rpE(r.g)}</td></tr>`; }
+    h+=`<tr><td class="g">${rpE(r.g)}</td><td class="c">${rpE(r.cat)}</td><td class="t">${rpE(r.f.title)}</td><td class="n" style="background:${RP_FST[r.st]||'#fff'};font-weight:700">${r.st}</td><td>${rpE(r.upd)}${r.need?`<br><b>${rpE(r.need)}</b>`:''}</td></tr>`;
+  });
+  return h+'</table>';
+}
 function rpDocHtml(R){
+  if(RP.mode==='files'){
+    const H=RP.h; let h=`<div class="rp-head">${(H.org||H.dept)?`<div class="rp-org">${[H.org,H.dept].filter(Boolean).map(rpE).join(' — ')}</div>`:''}<h1>${rpE(rpTitle())}</h1><div class="rp-meta"><span>تاريخ الإعداد: <b>${fmtDate(R.td)}</b></span>${H.recipient?`<span>الموجّه إلى: <b>${rpE(H.recipient)}</b></span>`:''}${H.author?`<span>إعداد: <b>${rpE(H.author)}</b></span>`:''}</div></div>`;
+    if(RP.narr.trim()) h+=`<div class="rp-narr">${rpParas(RP.narr).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
+    h+=rpFilesDoc();
+    if(RP.notes.trim()) h+=`<h2>ملاحظات وتوصيات</h2><div class="rp-narr">${rpParas(RP.notes).map(p=>`<p>${rpE(p)}</p>`).join('')}</div>`;
+    if(RP.sign) h+=`<table class="sign"><tr><td>أعدّه${H.author?' — '+rpE(H.author):''}</td><td>راجعه</td><td>اعتمده</td></tr></table>`;
+    return h+`<div class="rp-foot">مهام صَفوان — ${rpE(rpTitle())} — ${fmtDate(R.td)}</div>`;
+  }
   const by=RP.by, lv=RP.level, det=lv==='detailed', H=RP.h; const groups=rpGroups(R.items,by);
   let h=`<div class="rp-head">${(H.org||H.dept)?`<div class="rp-org">${[H.org,H.dept].filter(Boolean).map(rpE).join(' — ')}</div>`:''}<h1>${rpE(rpTitle())}</h1>
    <div class="rp-meta"><span>الفترة: <b>${rpE(R.b.label)}</b></span><span>تاريخ الإعداد: <b>${fmtDate(R.td)}</b></span>${H.recipient?`<span>الموجّه إلى: <b>${rpE(H.recipient)}</b></span>`:''}${H.author?`<span>إعداد: <b>${rpE(H.author)}</b></span>`:''}</div>
@@ -7165,12 +7212,14 @@ function rpDownload(name,data,type){ const a=document.createElement('a'); a.href
 function rpWord(){ rpSync(); const R=rpCollect(); rpDownload(rpFileName('doc'),'﻿'+rpWrapDoc(rpDocHtml(R))+'</body></html>','application/msword;charset=utf-8'); logActivity('add','report',`تنزيل تقرير Word: ${rpTitle()}`); _showToast('تم تنزيل ملف Word','success'); }
 function rpCsv(){
   rpSync(); const R=rpCollect(); const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  if(RP.mode==='files'){ const rows=[['المجموعة','التصنيف','اسم الملف','حالة الملف','آخر تحديث','المطلوب']]; rpFilesData().forEach(r=>rows.push([r.g,r.cat,r.f.title,r.st,r.upd,r.need])); rpDownload(rpFileName('csv'),'\ufeff'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8'); _showToast('تم تنزيل ملف Excel (CSV)','success'); return; }
   const rows=[['النوع','الملف','المجموعة','التصنيف','العنوان / الإجراء','التاريخ','الموعد','الحالة','الأولوية','المسؤول','التفاصيل','المبلغ']];
   R.items.forEach(i=>{ const x=i.x; const det=i.kind==='round'?[x.finding,x.actionTaken].filter(Boolean).join(' | '):(i.kind==='urgent'?(x.note||x.notes||''):(x.notes||(i.kind==='pay'?[x.cat,x.ben,x.ent].filter(Boolean).join(' | '):'')));
     rows.push([RP_KINDS[i.kind][1],i.fileTitle,i.group,i.cat,i.title,i.date,x.due||'',RP_STATE[i.state],i.priority,i.resp,det,x.amount||'']); });
   rpDownload(rpFileName('csv'),'﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8'); _showToast('تم تنزيل ملف Excel (CSV)','success');
 }
 function rpText(R){
+  if(RP.mode==='files'){ const L=['*'+rpTitle()+'*','التاريخ: '+fmtDate(R.td),'']; let cur=null; rpFilesData().forEach(r=>{ if(r.g!==cur){ cur=r.g; L.push('','*'+r.g+'*'); } L.push(`• ${r.f.title} [${r.cat}] — ${r.st}`+(r.upd?`\n   ${r.upd}`:'')+(r.need?`\n   ${r.need}`:'')); }); return L.join('\n'); }
   const K=R.K, L=[]; const by=(RP_BY.find(x=>x[0]===RP.by)||[0,''])[1];
   L.push('*'+rpTitle()+'*'); L.push('الفترة: '+R.b.label); if(RP.h.recipient) L.push('إلى: '+RP.h.recipient); if(RP.h.author) L.push('إعداد: '+RP.h.author+(RP.h.dept?' — '+RP.h.dept:'')); L.push('');
   if(RP.narr.trim()){ L.push('*الملخص التنفيذي*'); L.push(RP.narr.trim()); L.push(''); }
@@ -7199,6 +7248,7 @@ async function axRpNarr(btn){
 
 /* ---------- page ---------- */
 const RP_TPL=[
+  ['🗃️','جدول الملفات + آخر تحديث',{mode:'files',scope:'files'}],
   ['📆','أسبوعي للإدارة',{level:'brief',range:'week',by:'group',sec:['rounds','actions','tasks','urgent']}],
   ['🗓️','شهري تنفيذي',{level:'summary',range:'month',by:'group',sec:['rounds','actions','tasks','urgent']}],
   ['📚','شهري مفصّل بالملفات',{level:'detailed',range:'month',by:'file',sec:['rounds','actions','tasks','urgent']}],
@@ -7257,7 +7307,7 @@ function renderRepPage(){
   const so=(k,l)=>`<option value="${rpA(k)}"${RP.priority===k||RP.fstatus===k?' selected':''}>${l}</option>`;
   const ctl=
    rpSec('tpl','⚡ قوالب جاهزة',`<div class="rp-tpls">${RP_TPL.map((t,i)=>`<button onclick="rpTpl(${i})">${t[0]} ${t[1]}</button>`).join('')}</div>`)
-  +rpSec('lvl','📏 مستوى التفصيل',rpChips(RP_LEVELS.map(l=>[l[0],l[1]]),RP.level,'rpLevel')+`<p class="rp-hint">${RP_LEVELS.find(l=>l[0]===RP.level)[2]}</p>`)
+  +rpSec('lvl','📏 نوع التقرير ومستواه',rpChips([['analysis','📊 تحليلي'],['files','🗃️ جدول الملفات']],RP.mode,'rpMode')+(RP.mode==='files'?'<p class="rp-hint">جدول: المجموعة · التصنيف · الملف · الحالة · آخر تحديث. يتبع «النطاق» (اختر الملفات) و«التصفية»، ولا يتأثر بالفترة.</p>':rpChips(RP_LEVELS.map(l=>[l[0],l[1]]),RP.level,'rpLevel')+`<p class="rp-hint">${RP_LEVELS.find(l=>l[0]===RP.level)[2]}</p>`))
   +rpSec('per','📅 الفترة',rpChips([['week','أسبوع'],['month','شهر'],['quarter','ربع'],['year','سنة'],['custom','مخصص'],['all','الكل']],RP.range,'rpRange')+per)
   +rpSec('scope','🎯 النطاق',scopeBody)
   +rpSec('by','🗂️ التجميع حسب',rpChips(RP_BY,RP.by,'rpBy'))
@@ -7280,6 +7330,7 @@ function renderRepPage(){
 function rpRefresh(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const el=document.getElementById('rpPreview'); if(el) el.innerHTML=rpDocHtml(rpCollect()); }
 function rpRefreshSoon(){ clearTimeout(_rpT); _rpT=setTimeout(rpRefresh,250); }
 function rpSet(k,v){ RP[k]=v; rpSave(); renderRepPage(); }
+function rpMode(v){ rpSet('mode',v); }
 function rpLevel(v){ rpSet('level',v); } function rpRange(v){ rpSet('range',v); } function rpBy(v){ rpSet('by',v); }
 function rpScope(v){ rpSet('scope',v); }
 function rpFlag(k,v){ RP[k]=v; rpSave(); rpRefresh(); }
@@ -7288,8 +7339,10 @@ function rpTxt(k,v,top){ if(top) RP[k]=v; else RP.h[k]=v; rpSave(); if(top) rend
 function rpTog(kind,v,on){ const a=RP[kind]; const i=a.indexOf(v); if(on&&i<0) a.push(v); if(!on&&i>=0) a.splice(i,1); rpSave(); const c=document.getElementById('rpSelCnt'); if(c) c.textContent=a.length?`المحدد: ${a.length}`:'لا تحديد = الكل'; rpRefreshSoon(); }
 function rpClear(kind){ RP[kind]=[]; rpSave(); renderRepPage(); }
 function rpFilterList(inp){ const q=inp.value.trim().toLowerCase(); inp.nextElementSibling.querySelectorAll('.rp-it').forEach(l=>{ l.style.display=!q||l.textContent.toLowerCase().includes(q)?'':'none'; }); }
-function rpTpl(i){ const t=RP_TPL[i][2]; const sec={rounds:false,actions:false,tasks:false,urgent:false,plans:false,pay:false}; t.sec.forEach(k=>sec[k]=true);
-  Object.assign(RP,{level:t.level,range:t.range,by:t.by,state:t.state||'all',sec,anchor:today()}); rpSave(); renderRepPage(); _showToast('طُبّق القالب: '+RP_TPL[i][1],'success'); }
+function rpTpl(i){ const t=RP_TPL[i][2];
+  if(t.mode==='files'){ Object.assign(RP,{mode:'files',scope:'files',anchor:today()}); RP_OPEN.scope=true; rpSave(); renderRepPage(); _showToast('اختر الملفات من «النطاق» — وإن لم تختر فيشمل كل الملفات غير المكتملة','success'); return; }
+  const sec={rounds:false,actions:false,tasks:false,urgent:false,plans:false,pay:false}; t.sec.forEach(k=>sec[k]=true);
+  Object.assign(RP,{mode:'analysis',level:t.level,range:t.range,by:t.by,state:t.state||'all',sec,anchor:today()}); rpSave(); renderRepPage(); _showToast('طُبّق القالب: '+RP_TPL[i][1],'success'); }
 /* saved presets (per device) */
 function rpPresets(){ try{ return JSON.parse(localStorage.getItem(RP_PKEY)||'[]'); }catch(e){ return []; } }
 function rpPresetsHtml(){
