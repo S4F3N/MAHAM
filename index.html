@@ -5373,7 +5373,9 @@ function plnForm(cfg){
   document.getElementById('plnFormTitle').textContent=cfg.title;
   const body=document.getElementById('plnFormBody');
   const v=cfg.values||{};
+  attDraftDiscard();
   body.innerHTML = cfg.bodyHtml!==undefined ? cfg.bodyHtml : `<div class="pln-fgrid">${cfg.fields.map(f=>plnFieldHtml(f,v[f.k])).join('')}</div>`;
+  (cfg.fields||[]).forEach(f=>{ if(f.type==='files'){ attEnsureUi(); attDraftInit('plnF_'+f.k,v[f.k]); } });
   document.getElementById('plnFormSave').style.display = cfg.noSave?'none':'';
   document.getElementById('plnFormSave').textContent = cfg.saveLabel||'حفظ';
   document.getElementById('plnFormDel').style.display = cfg.onDelete?'inline-flex':'none';
@@ -5396,6 +5398,7 @@ function plnFieldHtml(f,val){
   if(f.type==='number') return `<div${cls}>${lab}<input type="number" id="${id}" value="${esc(val0)}" step="any"></div>`;
   if(f.type==='color') return `<div class="form-row full">${lab}<div class="pln-swatches" id="${id}" data-val="${val0}">${PLN_COLORS.map((c,i)=>`<button type="button" style="background:${c}" class="${i==val0?'on':''}" onclick="this.parentNode.dataset.val=${i};this.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));this.classList.add('on')"></button>`).join('')}</div></div>`;
   if(f.type==='icon') return `<div class="form-row full">${lab}<div class="pln-swatches" id="${id}" data-val="${esc(val0)}">${PLN_ICONS.map(c=>`<button type="button" class="${c===val0?'on':''}" onclick="this.parentNode.dataset.val='${c}';this.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${c}</button>`).join('')}</div></div>`;
+  if(f.type==='files') return `<div class="form-row full">${lab}<div id="${id}"></div></div>`;
   if(f.type==='checklist'){
     const items=Array.isArray(val)?val:[];
     return `<div class="form-row full">${lab}<div id="${id}">${items.map(plnClRow).join('')}</div><button type="button" class="btn btn-glass btn-sm" onclick="plnClAdd('${id}')">+ بند</button></div>`;
@@ -5405,7 +5408,7 @@ function plnFieldHtml(f,val){
 }
 function plnClRow(c){ return `<div class="pln-clrow" data-cl="1"><input type="checkbox" ${c.done?'checked':''}><input type="text" value="${esc(c.t||'')}" placeholder="بند..." onkeydown="if(event.key==='Enter'){event.preventDefault();plnClAdd(this.closest('[id]').id)}"><button type="button" onclick="this.parentNode.remove()" title="حذف">✕</button></div>`; }
 function plnClAdd(id,text){ const box=document.getElementById(id); box.insertAdjacentHTML('beforeend',plnClRow({t:text||'',done:false})); const r=box.querySelectorAll('.pln-clrow'); if(!text) r[r.length-1].querySelector('input[type=text]').focus(); }
-function plnFormClose(){ document.getElementById('plnFormOverlay').classList.remove('open'); PLN_FORM=null; }
+function plnFormClose(){ attDraftDiscard(); document.getElementById('plnFormOverlay').classList.remove('open'); PLN_FORM=null; }
 function plnFormSave(){
   const cfg=PLN_FORM; if(!cfg||!cfg.fields) return;
   const out={};
@@ -5413,6 +5416,7 @@ function plnFormSave(){
     const el=document.getElementById('plnF_'+f.k); if(!el) continue;
     let v;
     if(f.type==='color'||f.type==='icon') v=el.dataset.val;
+    else if(f.type==='files') v=attDraftOut();
     else if(f.type==='checklist') v=[...el.querySelectorAll('[data-cl]')].map(r=>({id:uid(),t:r.querySelector('input[type=text]').value.trim(),done:r.querySelector('input[type=checkbox]').checked})).filter(c=>c.t);
     else if(f.type==='number') v=el.value===''?'':+el.value;
     else v=el.value.trim();
@@ -6673,12 +6677,13 @@ function payRowHtml(x){
   const acts=[];
   if(x.status==='مطلوب'){ acts.push(`<button class="urg-act" onclick="event.stopPropagation();payMarkPaid('${x.id}')">✓ تم السداد</button>`); acts.push(`<button class="urg-act" onclick="event.stopPropagation();payRemind('${x.id}')">📲 تذكير</button>`); }
   else if(x.status==='تم السداد') acts.push(`<button class="urg-act" onclick="event.stopPropagation();payConfirm('${x.id}')">✔ تأكيد الاستلام</button>`);
+  if(x.status!=='ملغي') acts.push(`<button class="urg-act" onclick="event.stopPropagation();payAttach('${x.id}')">📎 ${(x.files||[]).length?'إضافة مرفق':'إرفاق'}</button>`);
   if(x.reimb==='مستحق الاسترداد') acts.push(`<button class="urg-act" onclick="event.stopPropagation();payReimbDone('${x.id}')">↩ تم الاسترداد</button>`);
   return `<div class="pay-row ${x.status==='ملغي'?'cancel':''}" style="--pc:${col}" onclick="payEdit('${x.id}')">
     <div class="pln-ico pay-ico">${payCatIcon(x.category)}</div>
     <div class="pay-main"><div class="pay-t">${esc(x.title)}</div>
       <div class="pln-tmeta">${payStatusPill(x)}${x.category?`<span class="badge">${esc(x.category)}</span>`:''}${x.payer?`<span class="badge">👤 ${esc(x.payer)}</span>`:''}${x.entity?`<span class="badge">🏢 ${esc(x.entity)}</span>`:''}${x.beneficiary?`<span class="badge">← ${esc(x.beneficiary)}</span>`:''}${x.method?`<span class="badge">${esc(x.method)}</span>`:''}${x.ref?`<span class="badge" dir="ltr">#${esc(x.ref)}</span>`:''}${f?`<span class="badge" style="cursor:pointer" onclick="event.stopPropagation();goToFile('${x.fileId}')">📁 ${esc(f)}</span>`:''}${x.reimb&&x.reimb!=='لا يُسترد'?`<span class="badge">${x.reimb==='مُسترد'?'↩ مُسترد':'⏳ يُسترد'}</span>`:''}</div>
-      ${x.notes?`<div class="pay-notes">${esc(x.notes)}</div>`:''}${acts.length?`<div class="pay-acts">${acts.join('')}</div>`:''}</div>
+      ${x.notes?`<div class="pay-notes">${esc(x.notes)}</div>`:''}${attChips(x.files,x.id)}${acts.length?`<div class="pay-acts">${acts.join('')}</div>`:''}</div>
     <div class="pay-amt">${payMoney(payTotal(x))}${payNum(x.fee)?`<small>منها رسوم ${payFmt(x.fee)}</small>`:''}</div></div>`;
 }
 
@@ -6699,7 +6704,8 @@ function payFields(){
     {k:'ref',label:'رقم الإيصال / المرجع / رقم السداد',type:'text'},
     {k:'fileId',label:'ملف مرتبط (اختياري)',type:'select',opts:[['','— بدون —'],...FILES.map(f=>[f.id,f.title])]},
     {k:'reimb',label:'الاسترداد',type:'select',opts:PAY_REIMB},
-    {k:'notes',label:'ملاحظات',type:'textarea',full:true,rows:3,mic:true}
+    {k:'notes',label:'ملاحظات',type:'textarea',full:true,rows:3,mic:true},
+    {k:'files',label:'📎 المرفقات (إيصال / فاتورة / مستندات)',type:'files',full:true}
   ];
 }
 function payEdit(id,prefill){
@@ -6707,14 +6713,16 @@ function payEdit(id,prefill){
   const vals=x?x:Object.assign({status:'مطلوب',reqDate:today(),reimb:'لا يُسترد',category:'',method:''},prefill||{});
   plnForm({title:x?'تعديل عملية سداد':'سداد جديد',wide:true,values:vals,fields:payFields(),
     onSave:v=>{
+      const _oldF=(x&&x.files)||[]; v.files=v.files||[];
       v.amount=v.amount===''?0:+v.amount; v.fee=v.fee===''?0:+v.fee;
       if(PAY_PAID.includes(v.status) && !v.paidDate) v.paidDate=today();
       if(v.status==='مطلوب') { /* keep paidDate only if the user set it */ }
       if(v.category && !PAY_CATS[v.category]) { /* custom category: fine */ }
       if(x){ const was=x.status; Object.assign(x,v); logActivity('edit','payment',`تعديل سداد: ${x.title} — ${payFmt(payTotal(x))} ر.س`); if(was!==x.status) logActivity('edit','payment',`حالة السداد «${x.title}»: ${x.status}`); paySave(x); }
       else { const n=Object.assign({id:uid(),createdAt:new Date().toISOString(),updatedAt:''},v); PAYMENTS.push(n); logActivity('add','payment',`تسجيل سداد: ${n.title} — ${payFmt(payTotal(n))} ر.س`); paySave(n); _showToast('سُجّلت العملية','success'); }
+      const _it=x||PAYMENTS[PAYMENTS.length-1]; attCommit(_oldF,_it.files||[]); attSync(_it.files).then(ch=>{ if(ch) paySave(_it,false); });
     },
-    onDelete:x?()=>_showConfirm(`حذف عملية «${x.title}» نهائيًا؟`,{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(!ok) return; PAYMENTS=PAYMENTS.filter(q=>q.id!==x.id); logActivity('delete','payment',`حذف سداد: ${x.title}`); payPersist(null,x.id).then(()=>{ payUpdateBadge(); renderPayPage(); _showToast('تم الحذف'); }); }):null});
+    onDelete:x?()=>_showConfirm(`حذف عملية «${x.title}» نهائيًا؟`,{destructive:true,confirmLabel:'حذف'}).then(ok=>{ if(!ok) return; attDeleteAll(x.files); PAYMENTS=PAYMENTS.filter(q=>q.id!==x.id); logActivity('delete','payment',`حذف سداد: ${x.title}`); payPersist(null,x.id).then(()=>{ payUpdateBadge(); renderPayPage(); _showToast('تم الحذف'); }); }):null});
 }
 function payQuickAdd(){
   const t=document.getElementById('payQT'), a=document.getElementById('payQA'), w=document.getElementById('payQW'), s=document.getElementById('payQS');
@@ -6726,9 +6734,9 @@ function payQuickAdd(){
 }
 function payMarkPaid(id){
   const x=payById(id); if(!x) return;
-  plnForm({title:'تأكيد السداد — '+x.title,saveLabel:'✓ تم السداد',values:{paidDate:today(),amount:x.amount||'',ref:x.ref||'',method:x.method||''},
-    fields:[{k:'paidDate',label:'تاريخ السداد',type:'date'},{k:'amount',label:'المبلغ الفعلي (ر.س)',type:'number'},{k:'method',label:'طريقة السداد',type:'select',opts:[['','— غير محدد —'],...PAY_METHODS]},{k:'ref',label:'رقم الإيصال / المرجع',type:'text'}],
-    onSave:v=>{ x.status='تم السداد'; x.paidDate=v.paidDate||today(); if(v.amount!=='') x.amount=+v.amount; if(v.method) x.method=v.method; if(v.ref) x.ref=v.ref; logActivity('edit','payment',`تم سداد: ${x.title} — ${payFmt(payTotal(x))} ر.س`); haptic(8); paySave(x); }});
+  plnForm({title:'تأكيد السداد — '+x.title,saveLabel:'✓ تم السداد',values:{paidDate:today(),amount:x.amount||'',ref:x.ref||'',method:x.method||'',files:x.files||[]},
+    fields:[{k:'paidDate',label:'تاريخ السداد',type:'date'},{k:'amount',label:'المبلغ الفعلي (ر.س)',type:'number'},{k:'method',label:'طريقة السداد',type:'select',opts:[['','— غير محدد —'],...PAY_METHODS]},{k:'ref',label:'رقم الإيصال / المرجع',type:'text'},{k:'files',label:'📎 إرفاق الإيصال / الفاتورة',type:'files',full:true}],
+    onSave:v=>{ const _o=x.files||[]; x.files=v.files||[]; attCommit(_o,x.files); attSync(x.files).then(ch=>{ if(ch) paySave(x,false); }); x.status='تم السداد'; x.paidDate=v.paidDate||today(); if(v.amount!=='') x.amount=+v.amount; if(v.method) x.method=v.method; if(v.ref) x.ref=v.ref; logActivity('edit','payment',`تم سداد: ${x.title} — ${payFmt(payTotal(x))} ر.س`); haptic(8); paySave(x); }});
 }
 function payConfirm(id){ const x=payById(id); if(!x) return; x.status='مؤكد'; logActivity('edit','payment',`تأكيد استلام سداد: ${x.title}`); paySave(x); }
 function payReimbDone(id){ const x=payById(id); if(!x) return; x.reimb='مُسترد'; x.reimbDate=today(); logActivity('edit','payment',`استرداد مبلغ: ${x.title}`); paySave(x); }
@@ -6781,7 +6789,7 @@ function payTrend(arr,b){
 }
 function payGroupKey(){ return {none:x=>'',category:x=>x.category||'بدون فئة',payer:x=>x.payer||'بدون مسدِّد',entity:x=>x.entity||'بدون كيان',file:x=>payFileTitle(x.fileId)||'بدون ملف'}[PAY_UI.grp]; }
 function payTableRows(items){
-  return items.map((x,i)=>`<tr><td>${i+1}</td><td>${payDate(x)?fmtDate(payDate(x)):''}</td><td>${esc(x.title)}${x.notes?`<div class="cl">${esc(x.notes)}</div>`:''}</td><td>${esc(x.category||'')}</td><td>${esc(x.payer||'')}</td><td>${esc(x.entity||'')}</td><td>${esc(x.beneficiary||'')}</td><td>${esc(x.method||'')}</td><td dir="ltr">${esc(x.ref||'')}</td><td class="num">${payFmt(payTotal(x))}</td><td>${esc(x.status)}</td></tr>`).join('');
+  return items.map((x,i)=>`<tr><td>${i+1}</td><td>${payDate(x)?fmtDate(payDate(x)):''}</td><td>${esc(x.title)}${x.notes?`<div class="cl">${esc(x.notes)}</div>`:''}${(x.files||[]).length?`<div class="cl">📎 ${x.files.map(a=>esc((a.kind||'مرفق')+': '+a.name)).join('، ')}</div>`:''}</td><td>${esc(x.category||'')}</td><td>${esc(x.payer||'')}</td><td>${esc(x.entity||'')}</td><td>${esc(x.beneficiary||'')}</td><td>${esc(x.method||'')}</td><td dir="ltr">${esc(x.ref||'')}</td><td class="num">${payFmt(payTotal(x))}</td><td>${esc(x.status)}</td></tr>`).join('');
 }
 function payReportData(){
   const b=payBounds(), arr=payList(b), paid=arr.filter(payIsPaid).sort((a,c)=>payDate(a).localeCompare(payDate(c)));
@@ -6790,7 +6798,7 @@ function payReportData(){
 }
 function payReportHtml(b,arr){
   const R=payReportData(); let h=payKpiHtml(b,arr);
-  h+=`<div class="pay-actions pln-noprint"><button class="btn btn-filled btn-sm" onclick="payPrint()">🖨️ طباعة / PDF</button><button class="btn btn-glass btn-sm" onclick="payExportCsv()">📥 تصدير Excel</button><button class="btn btn-glass btn-sm" onclick="payCopyReport()">📋 نسخ ملخص</button><button class="btn btn-glass btn-sm" onclick="axPayReport()">✨ ملخص إداري</button></div>`;
+  h+=`<div class="pay-actions pln-noprint"><button class="btn btn-filled btn-sm" onclick="payPrint()">🖨️ طباعة / PDF</button><button class="btn btn-glass btn-sm" onclick="payPrint(true)">🖨️ + الإيصالات والفواتير</button><button class="btn btn-glass btn-sm" onclick="payExportCsv()">📥 تصدير Excel</button><button class="btn btn-glass btn-sm" onclick="payCopyReport()">📋 نسخ ملخص</button><button class="btn btn-glass btn-sm" onclick="axPayReport()">✨ ملخص إداري</button></div>`;
   if(!R.paid.length) return h+`<div class="pln-box pln-empty"><div style="font-size:38px">📊</div><h3>لا عمليات مسدَّدة في هذه الفترة</h3><div class="settings-desc">يُحسب التقرير من العمليات بحالة «تم السداد» أو «مؤكد» حسب تاريخ السداد.</div></div>`+payPendingBox(R);
   h+=`<div class="pay-rgrid"><div class="pln-box"><h4><span>توزيع المسدَّد حسب الفئة</span></h4><div class="pay-dwrap">${payDonut(R.byCat,R.total)}<div style="flex:1;min-width:200px">${payBars(R.byCat,R.total)}</div></div></div>
     <div class="pln-box"><h4><span>${PAY_UI.range==='month'?'المسدَّد يوميًا':'المسدَّد شهريًا'}</span></h4>${payTrend(R.arr,R.b)}
@@ -6823,14 +6831,15 @@ function payReportText(){
 function payCopyReport(){ axCopy(payReportText()); }
 function payExportCsv(){
   const R=payReportData(); const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const head=['التاريخ','الوصف','الفئة','المسدِّد','الكيان','الجهة المسدَّد لها','الطريقة','المرجع','المبلغ','الرسوم','الإجمالي','الحالة','الملف','الاسترداد','ملاحظات'];
-  const rows=R.paid.map(x=>[payDate(x),x.title,x.category,x.payer,x.entity,x.beneficiary,x.method,x.ref,payNum(x.amount),payNum(x.fee),payTotal(x),x.status,payFileTitle(x.fileId),x.reimb,x.notes].map(q).join(','));
+  const head=['التاريخ','الوصف','الفئة','المسدِّد','الكيان','الجهة المسدَّد لها','الطريقة','المرجع','المبلغ','الرسوم','الإجمالي','الحالة','الملف','الاسترداد','ملاحظات','المرفقات'];
+  const rows=R.paid.map(x=>[payDate(x),x.title,x.category,x.payer,x.entity,x.beneficiary,x.method,x.ref,payNum(x.amount),payNum(x.fee),payTotal(x),x.status,payFileTitle(x.fileId),x.reimb,x.notes,(x.files||[]).map(a=>(a.kind||'مرفق')+': '+a.name).join(' | ')].map(q).join(','));
   rows.push(['','الإجمالي','','','','','','','','',R.total].map(q).join(','));
   const blob=new Blob(['﻿'+head.map(q).join(',')+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='تقرير-المدفوعات-'+(R.b.short||'').replace(/\s+/g,'-')+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
 }
-function payPrint(){
-  const R=payReportData(), E=esc;
+async function payPrint(withAtt){
+  const w=window.open('','_blank'); if(!w){ _showToast('اسمح بالنوافذ المنبثقة للطباعة','error'); return; }
+  const R=payReportData(), E=esc; const apx=withAtt?await payAttAppendix(R):'';
   const bars=g=>g.map(x=>`<tr><td>${E(x.k)}</td><td>${x.items.length}</td><td class="num">${payFmt(x.sum)}</td><td class="num">${R.total?Math.round(x.sum/R.total*100):0}%</td></tr>`).join('');
   const tbl=(t,g)=>g.length?`<h3>${t}</h3><table><tr><th>البند</th><th>العدد</th><th>المبلغ (ر.س)</th><th>%</th></tr>${bars(g)}</table>`:'';
   const detail=PAY_UI.grp==='none'?payTableRows(R.paid):payGroup(R.paid,payGroupKey()).map(g=>`<tr class="gh"><td colspan="9">${E(g.k)} (${g.items.length})</td><td class="num">${payFmt(g.sum)}</td><td></td></tr>`+payTableRows(g.items)).join('');
@@ -6852,8 +6861,7 @@ function payPrint(){
   <div class="sign"><div>أعدّه</div><div>راجعه</div><div>اعتمده</div></div>
   <div class="foot">مهام صَفوان — تقرير المدفوعات</div>
   <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`;
-  const w=window.open('','_blank'); if(!w){ _showToast('اسمح بالنوافذ المنبثقة للطباعة','error'); return; }
-  w.document.open(); w.document.write(html); w.document.close();
+  w.document.open(); w.document.write(apx?html.replace('<div class="sign">',apx+'<div class="sign">'):html); w.document.close();
 }
 
 /* ----- AI ----- */
@@ -6879,6 +6887,108 @@ function axPayParse(){
       payEdit(null,{title:axStr(r.title),category:axStr(r.category),amount:payNum(r.amount)||'',fee:payNum(r.fee)||'',payer:axStr(r.payer),entity:axStr(r.entity),beneficiary:axStr(r.beneficiary),method:PAY_METHODS.includes(r.method)?r.method:'',ref:axStr(r.ref),status:st,reqDate:axIso(r.reqDate)||today(),paidDate:axIso(r.paidDate)||(PAY_PAID.includes(st)?today():''),notes:axStr(r.notes),reimb:'لا يُسترد'});
       _showToast('عبّأ المساعد الحقول — راجعها واحفظ','success');
     }});
+}
+
+/* ================= ATTACHMENTS (مرفقات حقيقية: إيصالات / فواتير) =================
+   Payment records are stored as ONE Firestore field (1MB limit), so file bytes never live inside them.
+   Each attachment = small metadata on the record + bytes stored (a) in IndexedDB on this device and
+   (b) chunked in Firestore collection "maham_files" (docs <uid>_<attId>_<n>) so other devices can open them.
+   Images are compressed (≤1600px JPEG); other files are limited to 3MB. */
+const ATT_COL='maham_files', ATT_MAX=3*1024*1024, ATT_CHUNK=700000, ATT_MAXN=8, ATT_KINDS=['إيصال','فاتورة','مستند آخر'];
+let _attDb=null, _attWarned=false, ATT_DRAFT=null, _attQuickOwner=null, _attView=null;
+function attIdb(){ return new Promise((res,rej)=>{ if(_attDb) return res(_attDb); let q; try{ q=indexedDB.open('maham_att',1); }catch(e){ return rej(e); } q.onupgradeneeded=()=>q.result.createObjectStore('f'); q.onsuccess=()=>{ _attDb=q.result; res(_attDb); }; q.onerror=()=>rej(q.error); }); }
+async function attLocalPut(id,data){ try{ const db=await attIdb(); return await new Promise((res,rej)=>{ const t=db.transaction('f','readwrite'); t.objectStore('f').put(data,id); t.oncomplete=()=>res(true); t.onerror=()=>rej(t.error); }); }catch(e){ return false; } }
+async function attLocalGet(id){ try{ const db=await attIdb(); return await new Promise((res,rej)=>{ const q=db.transaction('f').objectStore('f').get(id); q.onsuccess=()=>res(q.result||null); q.onerror=()=>rej(q.error); }); }catch(e){ return null; } }
+async function attLocalDel(id){ try{ const db=await attIdb(); return await new Promise(res=>{ const t=db.transaction('f','readwrite'); t.objectStore('f').delete(id); t.oncomplete=()=>res(true); t.onerror=()=>res(false); }); }catch(e){ return false; } }
+/* cloud */
+async function attCloudPut(id,data){
+  if(typeof fbUser==='undefined'||!fbUser||!fbDb) return 0;
+  try{ const uid=fbUser.uid, n=Math.ceil(data.length/ATT_CHUNK);
+    for(let i=0;i<n;i++) await fbDb.collection(ATT_COL).doc(`${uid}_${id}_${i}`).set({uid,id,i,n,d:data.slice(i*ATT_CHUNK,(i+1)*ATT_CHUNK)});
+    return n;
+  }catch(e){ if(!_attWarned){ _attWarned=true; _showToast('تعذّر رفع المرفقات للسحابة (قواعد Firestore) — حُفظت على هذا الجهاز فقط','error',6000); } return 0; }
+}
+async function attCloudGet(id,n){
+  if(typeof fbUser==='undefined'||!fbUser||!fbDb||!n) return null;
+  try{ let out=''; for(let i=0;i<n;i++){ const s=await fbDb.collection(ATT_COL).doc(`${fbUser.uid}_${id}_${i}`).get(); if(!s.exists) return null; out+=s.data().d; } return out; }catch(e){ return null; }
+}
+async function attCloudDel(id,n){ if(typeof fbUser==='undefined'||!fbUser||!fbDb||!n) return; try{ for(let i=0;i<n;i++) await fbDb.collection(ATT_COL).doc(`${fbUser.uid}_${id}_${i}`).delete(); }catch(e){} }
+async function attGet(a){ let d=await attLocalGet(a.id); if(d) return d; if(a.cloud&&a.n){ d=await attCloudGet(a.id,a.n); if(d){ attLocalPut(a.id,d); return d; } } return null; }
+async function attDelete(a){ await attLocalDel(a.id); if(a.cloud) attCloudDel(a.id,a.n); }
+function attDeleteAll(list){ (list||[]).forEach(a=>attDelete(a)); }
+async function attSync(list){ let ch=false; for(const a of (list||[])){ if(a.cloud) continue; const d=await attLocalGet(a.id); if(!d) continue; const n=await attCloudPut(a.id,d); if(n){ a.cloud=true; a.n=n; ch=true; } else break; } return ch; }
+/* prepare: compress images, size-limit others */
+async function attPrepare(file){
+  const type=file.type||'', name=file.name||'ملف';
+  if(/^image\//.test(type)){
+    const bmp=await createImageBitmap(file).catch(()=>null);
+    if(bmp){ const sc=Math.min(1,1600/Math.max(bmp.width,bmp.height)); const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(bmp.width*sc)); c.height=Math.max(1,Math.round(bmp.height*sc));
+      const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(bmp,0,0,c.width,c.height);
+      let q=0.8, d=c.toDataURL('image/jpeg',q); while(d.length*0.75>ATT_MAX&&q>0.35){ q-=0.1; d=c.toDataURL('image/jpeg',q); }
+      return {data:d,type:'image/jpeg',size:Math.round(d.length*0.75),name:name.replace(/\.[^.]+$/,'')+'.jpg'}; }
+  }
+  if(file.size>ATT_MAX){ _showToast(`«${name}» أكبر من 3MB — صغّره أو صوّره كصورة`,'error',5000); return null; }
+  const data=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(file); }).catch(()=>null);
+  return data?{data,type:type||'application/octet-stream',size:file.size,name}:null;
+}
+const attGuessKind=n=>/فاتور|invoice|inv/i.test(n)?'فاتورة':'إيصال';
+const attSize=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+const attIcon=a=>/^image\//.test(a.type)?'🖼️':(/pdf/.test(a.type)?'📄':'📎');
+async function attMake(file){ const p=await attPrepare(file); if(!p) return null; const id=uid(); if(!(await attLocalPut(id,p.data))){ _showToast('تعذّر حفظ الملف على هذا الجهاز','error'); return null; } return {id,name:p.name,type:p.type,size:p.size,kind:attGuessKind(p.name),at:new Date().toISOString(),cloud:false,n:0}; }
+/* ---- draft inside a plnForm ---- */
+function attDraftInit(dom,list){ ATT_DRAFT={dom,items:(list||[]).map(a=>Object.assign({},a)),added:[],committed:false}; attDraftRender(); }
+function attDraftRender(){
+  const el=ATT_DRAFT&&document.getElementById(ATT_DRAFT.dom); if(!el) return; const it=ATT_DRAFT.items;
+  el.innerHTML=`<div class="att-list">${it.map((a,i)=>`<div class="att-it"><span class="att-open" onclick="attOpen(ATT_DRAFT.items[${i}])">${attIcon(a)} ${esc(a.name)}</span><small>${attSize(a.size)}${a.cloud?' · ☁️':''}</small><select onchange="ATT_DRAFT.items[${i}].kind=this.value">${ATT_KINDS.map(k=>`<option${a.kind===k?' selected':''}>${k}</option>`).join('')}</select><button type="button" class="btn btn-glass btn-sm" onclick="attDraftRemove(${i})" title="إزالة">✕</button></div>`).join('')||'<div class="rp-hint" style="color:var(--text-2);font-size:12px">لا مرفقات بعد</div>'}</div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn btn-glass btn-sm" onclick="attPickFiles('attPick')">📎 إرفاق ملف</button><button type="button" class="btn btn-glass btn-sm" onclick="attPickFiles('attCam')">📷 تصوير</button></div>
+   <div style="font-size:11px;color:var(--text-2);margin-top:4px">صور وPDF وWord وExcel — الصور تُضغط تلقائيًا، وللملفات الأخرى حد 3MB. الحد الأقصى ${ATT_MAXN} مرفقات.</div>`;
+}
+function attPickFiles(id){ attEnsureUi(); document.getElementById(id).click(); }
+async function attDraftAdd(files){
+  if(!ATT_DRAFT) return; for(const f of [...files]){ if(ATT_DRAFT.items.length>=ATT_MAXN){ _showToast('بلغت الحد الأقصى للمرفقات','error'); break; } const m=await attMake(f); if(m){ ATT_DRAFT.items.push(m); ATT_DRAFT.added.push(m.id); attDraftRender(); } }
+}
+function attDraftRemove(i){ const a=ATT_DRAFT.items.splice(i,1)[0]; if(a&&ATT_DRAFT.added.includes(a.id)){ attLocalDel(a.id); ATT_DRAFT.added=ATT_DRAFT.added.filter(x=>x!==a.id); } attDraftRender(); }
+function attDraftOut(){ if(!ATT_DRAFT) return []; ATT_DRAFT.committed=true; return ATT_DRAFT.items.map(a=>Object.assign({},a)); }
+function attDraftDiscard(){ if(ATT_DRAFT&&!ATT_DRAFT.committed) ATT_DRAFT.added.forEach(id=>attLocalDel(id)); ATT_DRAFT=null; }
+function attCommit(oldList,newList){ const keep=new Set((newList||[]).map(a=>a.id)); (oldList||[]).forEach(a=>{ if(!keep.has(a.id)) attDelete(a); }); }
+/* ---- quick attach on an existing record ---- */
+function attQuick(owner,after){ _attQuickOwner={owner,after}; attPickFiles('attPickQ'); }
+async function attQuickAdd(files){
+  const q=_attQuickOwner; if(!q) return; const o=q.owner; o.files=o.files||[]; let n=0;
+  for(const f of [...files]){ if(o.files.length>=ATT_MAXN){ _showToast('بلغت الحد الأقصى للمرفقات','error'); break; } const m=await attMake(f); if(m){ o.files.push(m); n++; } }
+  if(n){ _showToast(`أُرفق ${n} ملف`,'success'); await q.after(o); attSync(o.files).then(ch=>{ if(ch) q.after(o,true); }); }
+}
+/* ---- viewer ---- */
+function attEnsureUi(){
+  if(document.getElementById('attPick')) return;
+  const acc='image/*,.pdf,.doc,.docx,.xls,.xlsx';
+  document.body.insertAdjacentHTML('beforeend',`<input type="file" id="attPick" multiple accept="${acc}" hidden onchange="attDraftAdd(this.files).then(()=>{this.value=''})"><input type="file" id="attCam" accept="image/*" capture="environment" hidden onchange="attDraftAdd(this.files).then(()=>{this.value=''})"><input type="file" id="attPickQ" multiple accept="${acc}" hidden onchange="attQuickAdd(this.files).then(()=>{this.value=''})">
+  <div class="overlay" id="attViewOverlay" style="z-index:9999"><div class="modal wide"><div class="modal-handle"></div><h3 id="attViewTitle"></h3><div id="attViewBody" style="text-align:center;max-height:68vh;overflow:auto"></div><div class="modal-actions"><button class="btn btn-glass" onclick="attViewDl()">⬇ تنزيل</button><button class="btn btn-filled" onclick="attViewClose()">إغلاق</button></div></div></div>`);
+  const s=document.createElement('style'); s.textContent=`.att-list{display:flex;flex-direction:column;gap:6px}.att-it{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:6px 10px}.att-it .att-open{flex:1;cursor:pointer;word-break:break-all;font-size:13px}.att-it select{max-width:110px}.pay-atts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pay-att{background:var(--surface-3);border:1px solid var(--border);border-radius:999px;padding:1px 10px;font-size:11.5px;cursor:pointer;color:var(--text)}.pay-att:hover{border-color:var(--accent)}#attViewBody img{max-width:100%;border-radius:8px}`; document.head.appendChild(s);
+}
+async function attOpen(a){
+  attEnsureUi(); const d=await attGet(a);
+  if(!d){ _showToast('الملف غير متاح على هذا الجهاز ولم يُرفع للسحابة بعد','error',5000); return; }
+  _attView={a,d}; document.getElementById('attViewTitle').textContent=`${a.kind||''} — ${a.name}`;
+  const b=document.getElementById('attViewBody');
+  if(/^image\//.test(a.type)) b.innerHTML=`<img src="${d}" alt="">`;
+  else if(/pdf/.test(a.type)){ b.innerHTML=`<iframe src="${d}" style="width:100%;height:64vh;border:0;border-radius:8px;background:#fff"></iframe>`; }
+  else b.innerHTML=`<div class="rp-hint" style="padding:30px;color:var(--text-2)">${attIcon(a)} لا معاينة لهذا النوع — استخدم «تنزيل».</div>`;
+  document.getElementById('attViewOverlay').classList.add('open');
+}
+function attViewClose(){ document.getElementById('attViewOverlay').classList.remove('open'); document.getElementById('attViewBody').innerHTML=''; _attView=null; }
+function attViewDl(){ if(!_attView) return; const x=document.createElement('a'); x.href=_attView.d; x.download=_attView.a.name; document.body.appendChild(x); x.click(); x.remove(); }
+const attChips=(list,pid)=>(list&&list.length)?`<div class="pay-atts">${list.map(a=>`<span class="pay-att" title="${esc(a.name)}" onclick="event.stopPropagation();payOpenAtt('${pid}','${a.id}')">${attIcon(a)} ${esc(a.kind||'مرفق')}${a.cloud?'':' ·محلي'}</span>`).join('')}</div>`:'';
+function payOpenAtt(pid,aid){ const x=payById(pid); const a=x&&(x.files||[]).find(f=>f.id===aid); if(a) attOpen(a); }
+function payAttach(id){ const x=payById(id); if(!x) return; attQuick(x,(o,silent)=>paySave(o,!silent)); }
+async function payAttAppendix(R){
+  const imgs=[], other=[];
+  for(const x of R.paid){ for(const a of (x.files||[])){ if(/^image\//.test(a.type)){ const d=await attGet(a); if(d) imgs.push({x,a,d}); else other.push({x,a}); } else other.push({x,a}); } }
+  if(!imgs.length&&!other.length) return '';
+  let h='<h2 style="page-break-before:always">ملحق المرفقات (إيصالات وفواتير)</h2>';
+  h+=imgs.map(({x,a,d})=>`<div style="break-inside:avoid;margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:8px"><div style="font-size:12px;margin-bottom:6px"><b>${esc(x.title)}</b> — ${payFmt(payTotal(x))} ر.س${payDate(x)?' — '+fmtDate(payDate(x)):''} — ${esc(a.kind||'')}</div><img src="${d}" style="max-width:100%;max-height:560px;display:block;margin:auto"></div>`).join('');
+  if(other.length) h+=`<h3>مرفقات أخرى (غير مضمّنة بصريًا)</h3><ul>${other.map(({x,a})=>`<li>${esc(x.title)} — ${esc(a.kind||'')}: ${esc(a.name)}</li>`).join('')}</ul>`;
+  return h;
 }
 
 /* ================= REPORTS (التقارير) =================
