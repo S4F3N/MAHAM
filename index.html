@@ -6906,7 +6906,7 @@ async function attCloudPut(id,data){
   try{ const uid=fbUser.uid, n=Math.ceil(data.length/ATT_CHUNK);
     for(let i=0;i<n;i++) await fbDb.collection(ATT_COL).doc(`${uid}_${id}_${i}`).set({uid,id,i,n,d:data.slice(i*ATT_CHUNK,(i+1)*ATT_CHUNK)});
     return n;
-  }catch(e){ if(!_attWarned){ _attWarned=true; _showToast('تعذّر رفع المرفقات للسحابة (قواعد Firestore) — حُفظت على هذا الجهاز فقط','error',6000); } return 0; }
+  }catch(e){ if(!_attWarned){ _attWarned=true; _showToast('تعذّر رفع المرفقات للسحابة — حُفظت على هذا الجهاز فقط','error',6000); setTimeout(attRulesHelp,600); } return 0; }
 }
 async function attCloudGet(id,n){
   if(typeof fbUser==='undefined'||!fbUser||!fbDb||!n) return null;
@@ -6941,11 +6941,23 @@ function attDraftRender(){
   const el=ATT_DRAFT&&document.getElementById(ATT_DRAFT.dom); if(!el) return; const it=ATT_DRAFT.items;
   el.innerHTML=`<div class="att-list">${it.map((a,i)=>`<div class="att-it"><span class="att-open" onclick="attOpen(ATT_DRAFT.items[${i}])">${attIcon(a)} ${esc(a.name)}</span><small>${attSize(a.size)}${a.cloud?' · ☁️':''}</small><select onchange="ATT_DRAFT.items[${i}].kind=this.value">${ATT_KINDS.map(k=>`<option${a.kind===k?' selected':''}>${k}</option>`).join('')}</select><button type="button" class="btn btn-glass btn-sm" onclick="attDraftRemove(${i})" title="إزالة">✕</button></div>`).join('')||'<div class="rp-hint" style="color:var(--text-2);font-size:12px">لا مرفقات بعد</div>'}</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn btn-glass btn-sm" onclick="attPickFiles('attPick')">📎 إرفاق ملف</button><button type="button" class="btn btn-glass btn-sm" onclick="attPickFiles('attCam')">📷 تصوير</button></div>
-   <div style="font-size:11px;color:var(--text-2);margin-top:4px">صور وPDF وWord وExcel — الصور تُضغط تلقائيًا، وللملفات الأخرى حد 3MB. الحد الأقصى ${ATT_MAXN} مرفقات.</div>`;
+   <div style="font-size:11px;color:var(--text-2);margin-top:4px">صور وPDF وWord وExcel — الصور تُضغط تلقائيًا، وللملفات الأخرى حد 3MB. الحد الأقصى ${ATT_MAXN} مرفقات. <a href="#" onclick="event.preventDefault();attTest()" style="color:var(--accent)">☁️ فحص الرفع للسحابة</a></div>`;
 }
 function attPickFiles(id){ attEnsureUi(); document.getElementById(id).click(); }
 async function attDraftAdd(files){
   if(!ATT_DRAFT) return; for(const f of [...files]){ if(ATT_DRAFT.items.length>=ATT_MAXN){ _showToast('بلغت الحد الأقصى للمرفقات','error'); break; } const m=await attMake(f); if(m){ ATT_DRAFT.items.push(m); ATT_DRAFT.added.push(m.id); attDraftRender(); } }
+}
+const ATT_RULES="match /maham_files/{id} {\n  allow read, delete: if request.auth != null && resource.data.uid == request.auth.uid;\n  allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid;\n}";
+async function attTest(){
+  if(typeof fbUser==='undefined'||!fbUser||!fbDb){ _showToast('سجّل الدخول لحساب Firebase أولًا (الإعدادات)','error'); return; }
+  try{ const id=fbUser.uid+'_test_0', r=fbDb.collection(ATT_COL).doc(id); await r.set({uid:fbUser.uid,id:'test',i:0,n:1,d:'ok'}); const g=await r.get(); await r.delete(); if(g.exists){ _showToast('✓ الرفع للسحابة يعمل — مرفقاتك تظهر على كل أجهزتك','success',5000); return; } }catch(e){}
+  _attWarned=true; attRulesHelp();
+}
+function attRulesHelp(){
+  plnForm({title:'☁️ تفعيل رفع المرفقات للسحابة',noSave:true,wide:true,bodyHtml:`<p style="margin:0 0 8px;line-height:1.8">المرفقات الآن محفوظة على هذا الجهاز فقط. لتظهر على كل أجهزتك أضف هذه القاعدة مرة واحدة:</p>
+   <ol style="margin:0 0 10px;padding-right:20px;line-height:1.9"><li>افتح <b>Firebase Console</b> ← مشروع <b>maham-3d4d7</b> ← <b>Firestore Database</b> ← تبويب <b>Rules</b>.</li><li>الصق القاعدة التالية <b>داخل</b> <code>match /databases/{database}/documents { … }</code> بجانب القواعد الموجودة.</li><li>اضغط <b>Publish</b> ثم ارجع هنا واضغط «فحص الرفع».</li></ol>
+   <textarea id="attRulesTx" rows="6" readonly style="width:100%;direction:ltr;font-family:monospace;font-size:12px">${esc(ATT_RULES).replace(/<br>/g,'\n')}</textarea>
+   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-filled" onclick="axCopy(ATT_RULES)">📋 نسخ القاعدة</button><button class="btn btn-glass" onclick="attTest()">🔄 فحص الرفع</button></div>`});
 }
 function attDraftRemove(i){ const a=ATT_DRAFT.items.splice(i,1)[0]; if(a&&ATT_DRAFT.added.includes(a.id)){ attLocalDel(a.id); ATT_DRAFT.added=ATT_DRAFT.added.filter(x=>x!==a.id); } attDraftRender(); }
 function attDraftOut(){ if(!ATT_DRAFT) return []; ATT_DRAFT.committed=true; return ATT_DRAFT.items.map(a=>Object.assign({},a)); }
