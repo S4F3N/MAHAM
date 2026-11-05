@@ -7012,10 +7012,13 @@ const RP_KINDS={round:['🔄','الجولات'],action:['⏭️','الإجراء
 const RP_STATE={done:'منجز',open:'مفتوح',late:'متأخر'};
 const RP_BY=[['group','المجموعات'],['cat','التصنيفات'],['file','الملفات'],['kind','نوع العمل'],['resp','المسؤول'],['priority','الأولوية'],['state','الحالة'],['month','الشهر']];
 const RP_LEVELS=[['brief','موجز','صفحة واحدة: مؤشرات + أبرز النقاط + ما يحتاج انتباهًا'],['summary','ملخص','+ جدول حسب التجميع ومقتطفات لكل قسم'],['detailed','مفصّل','كل العناصر بتفاصيلها + سجل الملفات']];
-let RP={mode:'analysis',level:'summary',by:'group',range:'month',anchor:'',from:'',to:'',scope:'all',gIds:[],cIds:[],fIds:[],tIds:[],state:'all',priority:'',resp:'',fstatus:'',emptyFiles:false,register:true,sign:true,
+const RP_FT_DEF=()=>({cols:['group','cat','title','status','notes'],notesTitle:'ملاحظات (آخر تحديث)',note:'raw',raw:'last',need:true,banner:true,groupBy:'group',sort:'group',colors:true,staleDays:30,showDone:false,auto:false,ai:{style:'analytic',inc:{sit:true,risk:true,next:true,dl:false},max:300,extra:'',tone:'رسمي',tasks:true,pays:true}});
+function rpFtMerge(x){ const d=RP_FT_DEF(); x=x||{}; const xa=x.ai||{}; return Object.assign(d,x,{ai:Object.assign(d.ai,xa,{inc:Object.assign(d.ai.inc,xa.inc||{})})}); }
+let RP={mode:'analysis',ft:RP_FT_DEF(),level:'summary',by:'group',range:'month',anchor:'',from:'',to:'',scope:'all',gIds:[],cIds:[],fIds:[],tIds:[],state:'all',priority:'',resp:'',fstatus:'',emptyFiles:false,register:true,sign:true,
   sec:{rounds:true,actions:true,tasks:true,urgent:true,plans:false,pay:false},
   h:{title:'',recipient:'الإدارة العليا',org:'',dept:'الشؤون القانونية',author:'صفوان'},narr:'',notes:'',risks:'',useAi:false,aiUpd:{}};
 try{ const s=JSON.parse(localStorage.getItem(RP_KEY)||'null'); if(s) RP=Object.assign(RP,s,{sec:Object.assign(RP.sec,s.sec||{}),h:Object.assign(RP.h,s.h||{})}); }catch(e){}
+RP.ft=rpFtMerge(RP.ft);
 if(!RP.anchor) RP.anchor=today();
 function rpSave(){ try{ localStorage.setItem(RP_KEY,JSON.stringify(RP)); }catch(e){} }
 const rpA=s=>esc(String(s==null?'':s)).replace(/"/g,'&quot;');
@@ -7168,6 +7171,8 @@ const RP_CSS=`
 .rp-doc table.ft td.g{background:#dbeafe;text-align:center;font-weight:700;color:#1e3a8a}
 .rp-doc table.ft td.c{background:#e0ecff;text-align:center;font-weight:600;color:#1e3a8a}
 .rp-doc table.ft td.t{font-weight:700;text-align:center}
+.rp-doc .rp-noprint{font-size:11px;margin-top:4px}.rp-doc .rp-noprint a{color:#1d4ed8;cursor:pointer}
+@media print{.rp-doc .rp-noprint{display:none}}
 `;
 const rpE=esc;
 function rpTitle(){ if(RP.mode==='files') return RP.h.title||'تقرير الملفات وآخر مستجداتها'; return RP.h.title||('تقرير '+({brief:'موجز',summary:'ملخص',detailed:'مفصّل'}[RP.level])+' للإدارة'); }
@@ -7259,37 +7264,66 @@ function rpRegisterHtml(R){
   return h+'</table>';
 }
 function rpParas(t){ return String(t||'').split(/\n+/).map(s=>s.trim()).filter(Boolean); }
-/* ----- files table mode: one row per chosen file → group · category · file · status · latest update ----- */
+/* ----- files table mode: one row per chosen file; fully configurable columns / notes (raw or AI analysis) ----- */
+const RP_FT_COLS=[['group','المجموعة'],['cat','التصنيف'],['title','اسم الملف'],['status','حالة الملف'],['resp','المسؤول'],['prio','الأولوية'],['opened','تاريخ الفتح'],['lastdate','تاريخ آخر تحديث'],['rounds','عدد الجولات'],['open','إجراءات مفتوحة'],['nextdue','أقرب موعد'],['notes','ملاحظات / تحليل']];
+const RP_FST={'مكتملة':'#dcfce7','قيد التنفيذ':'#fef3c7','تحتاج تحديث':'#fed7aa','لم تبدأ':'#ffffff','متوقفة':'#ede9fe','مغلق':'#e5e7eb'};
+let _rpAiBusy=false, _rpAutoFail=false, _rpPrev=false;
 function rpFileStatus(f,rs,td){
   if(f.status==='مكتملة') return 'مكتملة'; if(f.status==='متوقف') return 'متوقفة'; if(f.status==='مغلق') return 'مغلق';
   if(!rs.length) return 'لم تبدأ';
   const last=rs.map(r=>r.date).filter(Boolean).sort().pop()||'', late=rs.some(r=>r.exec!=='تم'&&r.due&&r.due<td);
-  const old=last&&(-daysUntil(last))>30;
+  const old=last&&(-daysUntil(last))>(+RP.ft.staleDays||30);
   return (late||old)?'تحتاج تحديث':'قيد التنفيذ';
 }
-const RP_FST={'مكتملة':'#dcfce7','قيد التنفيذ':'#fef3c7','تحتاج تحديث':'#fed7aa','لم تبدأ':'#ffffff','متوقفة':'#ede9fe','مغلق':'#e5e7eb'};
+function rpAiSig(){ const a=RP.ft.ai; return JSON.stringify([a.style,a.inc,a.max,a.extra,a.tone,a.tasks,a.pays]); }
 function rpFilesData(){
-  const td=today(); const sel=RP.scope==='files'&&RP.fIds.length;
-  let fs=FILES.filter(f=>rpFileOk(f)&&(sel||RP.fstatus||f.status!=='مكتملة'));
+  const td=today(), T=RP.ft, sel=RP.scope==='files'&&RP.fIds.length, sig=rpAiSig();
+  const fs=FILES.filter(f=>rpFileOk(f)&&(T.showDone||sel||RP.fstatus||f.status!=='مكتملة'));
   const gOrder=g=>g?CATEGORY_GROUPS.findIndex(x=>x.id===g.id):999;
   const rows=fs.map(f=>{
-    const rs=ROUNDS.filter(r=>r.fileId===f.id), g=rpGroupOfFile(f);
-    const lr=rs.slice().sort((a,c)=>((c.date||'')>(a.date||'')?1:((c.date||'')<(a.date||'')?-1:0)))[0];
-    const pend=rs.filter(r=>r.exec!=='تم'&&r.actionNeeded).sort((a,c)=>((a.due||'9999')<(c.due||'9999')?-1:1))[0];
-    const fp=rs.length+'|'+(lr?lr.date:'')+'|'+(pend?pend.id:''); const ai=RP.useAi&&RP.aiUpd[f.id]&&RP.aiUpd[f.id].fp===fp?RP.aiUpd[f.id].t:'';
-    let upd=''; if(ai){ upd=(lr?`آخر تحديث (${fmtDate(lr.date)}): `:'')+ai; } else if(lr){ upd=`آخر تحديث (${fmtDate(lr.date)}): `+rpTrunc([lr.finding||lr.type,lr.actionTaken].filter(Boolean).join(' — '),230); } else if(f.notes) upd=rpTrunc(f.notes,230);
-    const need=pend?`المطلوب: ${rpTrunc(pend.actionNeeded,160)}${pend.due?' ('+fmtDate(pend.due)+')':''}`:'';
-    return {f,g:g?g.name:'بدون مجموعة',go:gOrder(g),cat:f.category||'—',st:rpFileStatus(f,rs,td),upd,need,date:lr?lr.date:'',fp};
+    const rs=ROUNDS.filter(r=>r.fileId===f.id).sort((a,c)=>((c.date||'')>(a.date||'')?1:((c.date||'')<(a.date||'')?-1:0))), g=rpGroupOfFile(f);
+    const lr=rs[0], pendAll=rs.filter(r=>r.exec!=='تم'&&r.actionNeeded).sort((a,c)=>((a.due||'9999')<(c.due||'9999')?-1:1)), pend=pendAll[0];
+    const fp=rs.length+'|'+(lr?lr.date:'')+'|'+(pend?pend.id:'')+'|'+f.status;
+    const one=r=>rpTrunc([r.finding||r.type,r.actionTaken].filter(Boolean).join(' — '),T.raw==='last3'?160:230);
+    let upd='';
+    if(T.raw==='pending') upd=pendAll.slice(0,4).map(r=>`• ${rpTrunc(r.actionNeeded,160)}${r.due?' ('+fmtDate(r.due)+')':''}`).join('\n');
+    else if(T.raw==='last3') upd=rs.slice(0,3).map(r=>`(${fmtDate(r.date)}) ${one(r)}`).join('\n');
+    else if(lr) upd=`آخر تحديث (${fmtDate(lr.date)}): `+one(lr);
+    if(!upd&&f.notes) upd=rpTrunc(f.notes,230);
+    const need=(T.need&&T.raw!=='pending'&&pend)?`المطلوب: ${rpTrunc(pend.actionNeeded,160)}${pend.due?' ('+fmtDate(pend.due)+')':''}`:'';
+    const e=RP.aiUpd[f.id]; const ai=(T.note!=='raw'&&e&&(e.manual||(e.fp===fp&&e.sig===sig)))?e.t:'';
+    return {f,g:g?g.name:'بدون مجموعة',go:gOrder(g),cat:f.category||'—',st:rpFileStatus(f,rs,td),upd,need,ai,date:lr?lr.date:'',fp,resp:f.responsible||'',prio:f.priority||'',opened:f.opened||'',rounds:rs.length,open:pendAll.length,nextdue:pendAll.map(r=>r.due).filter(Boolean).sort()[0]||''};
   });
-  rows.sort((a,c)=>(a.go-c.go)||a.cat.localeCompare(c.cat,'ar')||a.f.title.localeCompare(c.f.title,'ar'));
+  const SO={'تحتاج تحديث':0,'قيد التنفيذ':1,'لم تبدأ':2,'متوقفة':3,'مغلق':4,'مكتملة':5}, PO={'عاجل':0,'متوسط':1,'عادي':2};
+  const sec=(a,c)=>{ switch(T.sort){ case 'status': return (SO[a.st]-SO[c.st])||a.f.title.localeCompare(c.f.title,'ar'); case 'lastdate': return ((a.date||'0')<(c.date||'0')?-1:(a.date||'0')>(c.date||'0')?1:0)||a.f.title.localeCompare(c.f.title,'ar'); case 'priority': return ((PO[a.prio]??9)-(PO[c.prio]??9))||a.f.title.localeCompare(c.f.title,'ar'); case 'title': return a.f.title.localeCompare(c.f.title,'ar'); default: return a.cat.localeCompare(c.cat,'ar')||a.f.title.localeCompare(c.f.title,'ar'); } };
+  rows.sort((a,c)=>{ if(T.banner&&T.groupBy==='group'){ const d=a.go-c.go; if(d) return d; } else if(T.banner&&T.groupBy==='cat'){ const d=a.cat.localeCompare(c.cat,'ar'); if(d) return d; } return sec(a,c); });
   return rows;
+}
+const rpBanKey=r=>RP.ft.groupBy==='cat'?r.cat:r.g;
+const rpNeedOk=r=>!!r.need&&!(r.ai&&RP.ft.note!=='raw'&&RP.ft.ai.style==='analytic'&&RP.ft.ai.inc.next);
+function rpNotePlain(r){ const T=RP.ft; const a=[]; if(T.note!=='raw'&&r.ai) a.push(r.ai); if(T.note==='raw'||!r.ai||T.note==='both') if(r.upd) a.push(r.upd); if(rpNeedOk(r)) a.push(r.need); return a.join('\n'); }
+function rpNoteHtml(r){
+  const lines=t=>t.split('\n').map(l=>{ const m=/^(الوضع|المخاطر|المطلوب|المواعيد|التوصية):\s*(.*)$/.exec(l); return m?`<b>${m[1]}:</b> ${rpE(m[2])}`:rpE(l); }).join('<br>');
+  const T=RP.ft; let h=[]; if(T.note!=='raw'&&r.ai) h.push(lines(r.ai));
+  if(T.note==='raw'||!r.ai||T.note==='both'){ if(r.upd) h.push(T.note==='both'&&r.ai?`<span style="color:#64748b">${lines(r.upd)}</span>`:lines(r.upd)); }
+  if(rpNeedOk(r)) h.push(`<b>${rpE(r.need)}</b>`);
+  let out=h.join('<br>');
+  if(_rpPrev&&RP.ft.note!=='raw') out+=`<div class="rp-noprint"><a onclick="rpFtRegen('${r.f.id}')">↻ أعد التحليل</a> · <a onclick="rpFtEdit('${r.f.id}')">✎ عدّل</a></div>`;
+  return out;
 }
 function rpFilesDoc(){
   const rows=rpFilesData(); if(!rows.length) return '<div class="empty">لا توجد ملفات مطابقة. اختر ملفات من «النطاق ← ملفات» أو غيّر التصفية.</div>';
-  let h='<table class="ft"><tr><th style="width:12%">المجموعة</th><th style="width:11%">التصنيف</th><th style="width:25%">اسم الملف</th><th style="width:11%">حالة الملف</th><th>ملاحظات (آخر تحديث)</th></tr>'; let cur=null;
+  const T=RP.ft, cols=RP_FT_COLS.filter(c=>T.cols.includes(c[0]));
+  let h='<table class="ft"><tr>'+cols.map(c=>`<th>${rpE(c[0]==='notes'?T.notesTitle:c[1])}</th>`).join('')+'</tr>'; let cur=null;
+  const cell=(k,r)=>{ switch(k){
+    case 'group': return `<td class="g">${rpE(r.g)}</td>`; case 'cat': return `<td class="c">${rpE(r.cat)}</td>`; case 'title': return `<td class="t">${rpE(r.f.title)}</td>`;
+    case 'status': return `<td class="n" style="${T.colors?'background:'+(RP_FST[r.st]||'#fff')+';':''}font-weight:700">${r.st}</td>`;
+    case 'resp': return `<td class="n">${rpE(r.resp)}</td>`; case 'prio': return `<td class="n">${rpE(r.prio)}</td>`; case 'opened': return `<td class="n">${r.opened?fmtDate(r.opened):'—'}</td>`;
+    case 'lastdate': return `<td class="n">${r.date?fmtDate(r.date):'—'}</td>`; case 'rounds': return `<td class="n">${r.rounds}</td>`; case 'open': return `<td class="n">${r.open}</td>`; case 'nextdue': return `<td class="n">${r.nextdue?fmtDate(r.nextdue):'—'}</td>`;
+    case 'notes': return `<td>${rpNoteHtml(r)}</td>`; } return '<td></td>'; };
   rows.forEach(r=>{
-    if(r.g!==cur){ cur=r.g; h+=`<tr class="ban"><td colspan="5">${rpE(r.g)}</td></tr>`; }
-    h+=`<tr><td class="g">${rpE(r.g)}</td><td class="c">${rpE(r.cat)}</td><td class="t">${rpE(r.f.title)}</td><td class="n" style="background:${RP_FST[r.st]||'#fff'};font-weight:700">${r.st}</td><td>${rpE(r.upd)}${r.need?`<br><b>${rpE(r.need)}</b>`:''}</td></tr>`;
+    if(T.banner&&T.groupBy!=='none'&&rpBanKey(r)!==cur){ cur=rpBanKey(r); h+=`<tr class="ban"><td colspan="${cols.length}">${rpE(cur)}</td></tr>`; }
+    h+='<tr>'+cols.map(c=>cell(c[0],r)).join('')+'</tr>';
   });
   return h+'</table>';
 }
@@ -7337,14 +7371,14 @@ function rpDownload(name,data,type){ const a=document.createElement('a'); a.href
 function rpWord(){ rpSync(); const R=rpCollect(); rpDownload(rpFileName('doc'),'﻿'+rpWrapDoc(rpDocHtml(R))+'</body></html>','application/msword;charset=utf-8'); logActivity('add','report',`تنزيل تقرير Word: ${rpTitle()}`); _showToast('تم تنزيل ملف Word','success'); }
 function rpCsv(){
   rpSync(); const R=rpCollect(); const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  if(RP.mode==='files'){ const rows=[['المجموعة','التصنيف','اسم الملف','حالة الملف','آخر تحديث','المطلوب']]; rpFilesData().forEach(r=>rows.push([r.g,r.cat,r.f.title,r.st,r.upd,r.need])); rpDownload(rpFileName('csv'),'\ufeff'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8'); _showToast('تم تنزيل ملف Excel (CSV)','success'); return; }
+  if(RP.mode==='files'){ const cs=RP_FT_COLS.filter(c=>RP.ft.cols.includes(c[0])); const val=(k,r)=>({group:r.g,cat:r.cat,title:r.f.title,status:r.st,resp:r.resp,prio:r.prio,opened:r.opened,lastdate:r.date,rounds:r.rounds,open:r.open,nextdue:r.nextdue,notes:rpNotePlain(r)})[k]; const rows=[cs.map(c=>c[0]==='notes'?RP.ft.notesTitle:c[1])]; rpFilesData().forEach(r=>rows.push(cs.map(c=>val(c[0],r)))); rpDownload(rpFileName('csv'),'\ufeff'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8'); _showToast('تم تنزيل ملف Excel (CSV)','success'); return; }
   const rows=[['النوع','الملف','المجموعة','التصنيف','العنوان / الإجراء','التاريخ','الموعد','الحالة','الأولوية','المسؤول','التفاصيل','المبلغ']];
   R.items.forEach(i=>{ const x=i.x; const det=i.kind==='round'?[x.finding,x.actionTaken].filter(Boolean).join(' | '):(i.kind==='urgent'?(x.note||x.notes||''):(x.notes||(i.kind==='pay'?[x.cat,x.ben,x.ent].filter(Boolean).join(' | '):'')));
     rows.push([RP_KINDS[i.kind][1],i.fileTitle,i.group,i.cat,i.title,i.date,x.due||'',RP_STATE[i.state],i.priority,i.resp,det,x.amount||'']); });
   rpDownload(rpFileName('csv'),'﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8'); _showToast('تم تنزيل ملف Excel (CSV)','success');
 }
 function rpText(R){
-  if(RP.mode==='files'){ const L=['*'+rpTitle()+'*','التاريخ: '+fmtDate(R.td),'']; let cur=null; rpFilesData().forEach(r=>{ if(r.g!==cur){ cur=r.g; L.push('','*'+r.g+'*'); } L.push(`• ${r.f.title} [${r.cat}] — ${r.st}`+(r.upd?`\n   ${r.upd}`:'')+(r.need?`\n   ${r.need}`:'')); }); return L.join('\n'); }
+  if(RP.mode==='files'){ const L=['*'+rpTitle()+'*','التاريخ: '+fmtDate(R.td),'']; let cur=null; rpFilesData().forEach(r=>{ if(r.g!==cur){ cur=r.g; L.push('','*'+r.g+'*'); } const nt=rpNotePlain(r); L.push(`• ${r.f.title} [${r.cat}] — ${r.st}`+(nt?'\n   '+nt.replace(/\n/g,'\n   '):'')); }); return L.join('\n'); }
   const K=R.K, L=[]; const by=(RP_BY.find(x=>x[0]===RP.by)||[0,''])[1];
   L.push('*'+rpTitle()+'*'); L.push('الفترة: '+R.b.label); if(RP.h.recipient) L.push('إلى: '+RP.h.recipient); if(RP.h.author) L.push('إعداد: '+RP.h.author+(RP.h.dept?' — '+RP.h.dept:'')); L.push('');
   if(RP.narr.trim()){ L.push('*الملخص التنفيذي*'); L.push(RP.narr.trim()); L.push(''); }
@@ -7383,7 +7417,7 @@ const RP_TPL=[
   ['🧭','تقدّم الخطط',{level:'summary',range:'all',by:'group',sec:['plans']}],
   ['📊','سنوي شامل',{level:'summary',range:'year',by:'month',sec:['rounds','actions','tasks','urgent','plans','pay']}]
 ];
-let RP_OPEN={ai:true,tpl:true,lvl:true,per:true,scope:true,by:true,sec:true,flt:false,hdr:false,pre:false}, _rpT=null;
+let RP_OPEN={ft:true,ai:true,tpl:true,lvl:true,per:true,scope:true,by:true,sec:true,flt:false,hdr:false,pre:false}, _rpT=null;
 function rpInjectCss(){
   if(document.getElementById('rpCss')) return; const s=document.createElement('style'); s.id='rpCss';
   s.textContent=RP_CSS+`
@@ -7398,6 +7432,7 @@ function rpInjectCss(){
   .rp-tpls{display:grid;grid-template-columns:1fr 1fr;gap:6px} .rp-tpls button{text-align:right;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;font-size:12.5px;font-family:inherit}
   .rp-tpls button:hover{border-color:var(--accent)}
   .rp-hint{font-size:11.5px;color:var(--text-2);margin:0}
+  .rp-ftai{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--accent);border-radius:10px;background:var(--surface-2)}
   .rp-list{max-height:210px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:4px;background:var(--surface-2)}
   .rp-it{display:flex;gap:8px;align-items:center;padding:5px 7px;font-size:13px;cursor:pointer;border-radius:6px} .rp-it:hover{background:var(--surface-3)} .rp-it small{color:var(--text-2);margin-inline-start:auto;font-size:11px}
   .rp-tog{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
@@ -7432,9 +7467,10 @@ function renderRepPage(){
   const so=(k,l)=>`<option value="${rpA(k)}"${RP.priority===k||RP.fstatus===k?' selected':''}>${l}</option>`;
   const aiSec=rpSec('ai','✨ المساعد الذكي',`<div class="form-row"><label>اطلب التقرير بجملة واحدة</label><textarea id="rpNL" rows="2" placeholder="مثال: تقرير شهري مفصّل لمجموعة الشؤون القانونية حسب الملفات للإدارة" oninput="RP_NL=this.value">${rpT(RP_NL)}</textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="btn btn-filled btn-sm" onclick="axRpBuild(this)">✨ أنشئ التقرير</button>${axMicBtn('rpNL')}</div></div>
     <div class="rp-tpls"><button onclick="axRpNarr(this)">✨ ملخص تنفيذي وتوصيات</button><button onclick="axRpRisks(this)">🔎 تحليل المخاطر</button><button onclick="axRpFileNotes(this)">🗃️ لخّص تحديثات الملفات</button></div>
-    <label class="rp-tog"><input type="checkbox" ${RP.useAi?'checked':''} onchange="rpFlag('useAi',this.checked)"> استخدم ملخصات الذكاء في جدول الملفات${Object.keys(RP.aiUpd).length?` (${Object.keys(RP.aiUpd).length} جاهز)`:''}</label>
+    <div class="rp-hint">لتحليل عمود «آخر تحديث» في جدول الملفات: اختر قالب «جدول الملفات» ثم اضبط «خيارات جدول الملفات».</div>
     <div class="form-row"><label>اسأل عن هذا التقرير</label><div style="display:flex;gap:6px"><input type="text" id="rpAsk" style="flex:1" placeholder="مثال: أي الملفات الأكثر خطرًا ولماذا؟" onkeydown="if(event.key==='Enter')axRpAsk()"><button class="btn btn-glass btn-sm" onclick="axRpAsk()">اسأل</button>${axMicBtn('rpAsk')}</div></div>`);
-  const ctl=aiSec+
+  const ftSec=RP.mode==='files'?rpSec('ft','🗃️ خيارات جدول الملفات (تحكّم كامل)',rpFtPanel()):'';
+  const ctl=aiSec+ftSec+
    rpSec('tpl','⚡ قوالب جاهزة',`<div class="rp-tpls">${RP_TPL.map((t,i)=>`<button onclick="rpTpl(${i})">${t[0]} ${t[1]}</button>`).join('')}</div>`)
   +rpSec('lvl','📏 نوع التقرير ومستواه',rpChips([['analysis','📊 تحليلي'],['files','🗃️ جدول الملفات']],RP.mode,'rpMode')+(RP.mode==='files'?'<p class="rp-hint">جدول: المجموعة · التصنيف · الملف · الحالة · آخر تحديث. يتبع «النطاق» (اختر الملفات) و«التصفية»، ولا يتأثر بالفترة.</p>':rpChips(RP_LEVELS.map(l=>[l[0],l[1]]),RP.level,'rpLevel')+`<p class="rp-hint">${RP_LEVELS.find(l=>l[0]===RP.level)[2]}</p>`))
   +rpSec('per','📅 الفترة',rpChips([['week','أسبوع'],['month','شهر'],['quarter','ربع'],['year','سنة'],['custom','مخصص'],['all','الكل']],RP.range,'rpRange')+per)
@@ -7457,7 +7493,8 @@ function renderRepPage(){
     <div class="rp-paper"><div class="rp-doc" id="rpPreview"></div></div></div></div>`;
   rpRefresh();
 }
-function rpRefresh(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const k=document.getElementById('rpRisks'); if(k) RP.risks=k.value; const el=document.getElementById('rpPreview'); if(el) el.innerHTML=rpDocHtml(rpCollect()); }
+function rpRefresh(){ const n=document.getElementById('rpNarr'); if(n) RP.narr=n.value; const t=document.getElementById('rpNotes'); if(t) RP.notes=t.value; const k=document.getElementById('rpRisks'); if(k) RP.risks=k.value; const el=document.getElementById('rpPreview'); _rpPrev=true; try{ if(el) el.innerHTML=rpDocHtml(rpCollect()); } finally{ _rpPrev=false; }
+  if(RP.mode==='files'&&RP.ft.auto&&RP.ft.note!=='raw'&&!_rpAiBusy&&!_rpAutoFail&&getAIKey()&&rpFilesData().some(r=>!r.ai)) axRpFileNotes(null,'missing',true); }
 function rpRefreshSoon(){ clearTimeout(_rpT); _rpT=setTimeout(rpRefresh,250); }
 function rpSet(k,v){ RP[k]=v; rpSave(); renderRepPage(); }
 function rpMode(v){ rpSet('mode',v); }
@@ -7470,7 +7507,7 @@ function rpTog(kind,v,on){ const a=RP[kind]; const i=a.indexOf(v); if(on&&i<0) a
 function rpClear(kind){ RP[kind]=[]; rpSave(); renderRepPage(); }
 function rpFilterList(inp){ const q=inp.value.trim().toLowerCase(); inp.nextElementSibling.querySelectorAll('.rp-it').forEach(l=>{ l.style.display=!q||l.textContent.toLowerCase().includes(q)?'':'none'; }); }
 function rpTpl(i){ const t=RP_TPL[i][2];
-  if(t.mode==='files'){ Object.assign(RP,{mode:'files',scope:'files',anchor:today()}); RP_OPEN.scope=true; rpSave(); renderRepPage(); _showToast('اختر الملفات من «النطاق» — وإن لم تختر فيشمل كل الملفات غير المكتملة','success'); return; }
+  if(t.mode==='files'){ Object.assign(RP,{mode:'files',scope:'files',anchor:today()}); RP.ft.note='ai'; RP.ft.auto=true; _rpAutoFail=false; RP_OPEN.scope=true; RP_OPEN.ft=true; if(!getAIKey()) _showToast('لتحليل الذكاء أدخل مفتاح OpenAI من الإعدادات — حاليًا يُعرض نص آخر تحديث','info',6000); rpSave(); renderRepPage(); _showToast('اختر الملفات من «النطاق» — وإن لم تختر فيشمل كل الملفات غير المكتملة','success'); return; }
   const sec={rounds:false,actions:false,tasks:false,urgent:false,plans:false,pay:false}; t.sec.forEach(k=>sec[k]=true);
   Object.assign(RP,{mode:'analysis',level:t.level,range:t.range,by:t.by,state:t.state||'all',sec,anchor:today()}); rpSave(); renderRepPage(); _showToast('طُبّق القالب: '+RP_TPL[i][1],'success'); }
 /* saved presets (per device) */
@@ -7488,7 +7525,7 @@ function rpPresetDel(i){ const p=rpPresets(); p.splice(i,1); try{ localStorage.s
 
 /* ---------- AI: deep integration ---------- */
 function rpBusy(btn,t){ if(!btn) return ()=>{}; const o=btn.textContent; btn.disabled=true; btn.textContent=t; return ()=>{ btn.disabled=false; btn.textContent=o; }; }
-function rpAiFiles(){ return rpFilesData().slice(0,60).map(r=>({title:r.f.title,group:r.g,category:r.cat,status:r.st,lastUpdate:r.upd,required:r.need})); }
+function rpAiFiles(){ return rpFilesData().slice(0,60).map(r=>({title:r.f.title,group:r.g,category:r.cat,status:r.st,lastUpdate:rpNotePlain(r),required:r.need})); }
 function rpAiCtx(R){
   const gs=rpGroups(R.items,RP.by).slice(0,20).map(g=>({name:rpGroupLabel(g.k,RP.by),total:g.n,done:g.done,open:g.open,late:g.late}));
   const items=R.items.slice(0,140).map(i=>({kind:RP_KINDS[i.kind][1],title:rpTrunc(i.title,140),file:i.fileTitle,group:i.group,category:i.cat,date:i.date,due:i.x.due||'',state:RP_STATE[i.state],priority:i.priority,responsible:i.resp,finding:rpTrunc(i.x.finding||'',160)}));
@@ -7529,15 +7566,74 @@ async function axRpRisks(btn){
   const a=axArr(r.insights).map(axStr).filter(Boolean); if(!a.length){ _showToast('لم يُستخرج شيء','error'); return; }
   RP.risks=a.map(x=>'• '+x).join('\n'); rpSave(); RP_OPEN.hdr=true; renderRepPage(); _showToast('أُضيفت «قراءة تحليلية» للتقرير — راجعها وعدّلها','success');
 }
-async function axRpFileNotes(btn){
-  rpSync(); const rows=rpFilesData().slice(0,40); if(!rows.length){ _showToast('لا ملفات مطابقة — اختر ملفات من «النطاق»','error'); return; }
-  const done=rpBusy(btn,'… ألخّص');
-  const ctx={files:rows.map(r=>({id:r.f.id,title:r.f.title,category:r.cat,group:r.g,status:r.st,notes:(r.f.notes||'').slice(0,400),rounds:ROUNDS.filter(x=>x.fileId===r.f.id).sort((a,c)=>((c.date||'')>(a.date||'')?1:-1)).slice(0,6).map(x=>({date:x.date,type:x.type,exec:x.exec,finding:rpTrunc(x.finding,300),actionTaken:rpTrunc(x.actionTaken,200),actionNeeded:rpTrunc(x.actionNeeded,200),due:x.due}))}))};
-  const r=await axAsk('rp_filenotes','لكل ملف اكتب خلاصة موجزة (سطر إلى سطرين، حتى 200 حرف) تعبّر عن آخر مستجداته ووضعه الحالي كما يُكتب في تقرير للإدارة، معتمدًا على جولاته وملاحظاته فقط دون اختلاق. لا تكرر اسم الملف. المخطط: {"items":[{"id":"معرّف الملف","summary":"..."}]}',
-    'لخّص آخر مستجدات كل ملف.',ctx,{json:true,temp:0.2,max:70000});
-  done(); if(!r){ _showToast('تعذّر التلخيص','error'); return; }
-  let n=0; axArr(r.items).forEach(it=>{ const row=rows.find(x=>x.f.id===axStr(it.id)); const t=axStr(it.summary); if(row&&t){ RP.aiUpd[row.f.id]={t:t.slice(0,300),fp:row.fp}; n++; } });
-  RP.useAi=true; rpSave(); renderRepPage(); _showToast(`لُخّص ${n} ملف — يظهر في عمود الملاحظات`,'success');
+function rpFtAiPrompt(){
+  const a=RP.ft.ai, tone={'رسمي':'بلغة عربية رسمية مهنية','مختصر':'بأقصر عبارة ممكنة وبأسلوب برقي مختصر','تنفيذي':'بأسلوب تنفيذي موجّه للإدارة العليا يركّز على القرار المطلوب'}[a.tone]||'بلغة عربية رسمية مهنية';
+  let s=`لكل ملف اكتب تحليلًا ${tone} يُوضع في عمود الملاحظات بتقرير للإدارة، معتمدًا على جولات الملف وملاحظاته (وبقية السياق المعطى) فقط دون اختلاق وقائع أو أرقام أو أسماء. لا تكرر اسم الملف. الحد الأقصى للتحليل الواحد ${a.max} حرفًا.`;
+  if(a.style==='brief') s+=' الشكل: جملة أو جملتان تلخّصان آخر مستجدات الملف ووضعه الحالي. المخطط: {"items":[{"id":"معرّف الملف","summary":"..."}]}';
+  else if(a.style==='detailed') s+=' الشكل: فقرة مترابطة تشرح مسار الملف وآخر مستجداته ووضعه الحالي وما ينتظره. المخطط: {"items":[{"id":"معرّف الملف","summary":"..."}]}';
+  else { const f=[]; if(a.inc.sit) f.push('"situation": الوضع الحالي وآخر المستجدات'); if(a.inc.risk) f.push('"risks": المخاطر أو نقاط الضعف أو التأخر (اتركها فارغة إن لم يوجد ما يستند للسياق)'); if(a.inc.next) f.push('"next": الخطوة أو الإجراء المطلوب تاليًا'); if(a.inc.dl) f.push('"deadlines": المواعيد القريبة المهمة'); if(!f.length) f.push('"situation": الوضع الحالي');
+    s+=` الشكل: حلّل كل ملف في الحقول التالية فقط: ${f.join('؛ ')}. كل حقل جملة أو جملتان موجزتان. المخطط: {"items":[{"id":"معرّف الملف","situation":"","risks":"","next":"","deadlines":""}]}`; }
+  if((a.extra||'').trim()) s+='\nتعليمات إضافية من المستخدم (التزم بها): '+a.extra.trim().slice(0,500);
+  return s;
+}
+function rpFtCompose(it){
+  const a=RP.ft.ai;
+  if(a.style==='analytic'){ const L=[['sit','الوضع','situation'],['risk','المخاطر','risks'],['next','المطلوب','next'],['dl','المواعيد','deadlines']]; const out=[]; L.forEach(([k,lab,fld])=>{ if(a.inc[k]){ const v=axStr(it[fld]); if(v) out.push(lab+': '+v); } }); if(!out.length&&axStr(it.situation)) out.push('الوضع: '+axStr(it.situation)); return out.join('\n'); }
+  return axStr(it.summary);
+}
+async function axRpFileNotes(btn,mode,auto,onlyIds){
+  if(_rpAiBusy) return 0; rpSync();
+  const all=rpFilesData(); let rows=onlyIds?all.filter(r=>onlyIds.includes(r.f.id)):(mode==='all'?all:all.filter(r=>!r.ai||0));
+  rows=rows.filter(r=>!(RP.aiUpd[r.f.id]&&RP.aiUpd[r.f.id].manual)||onlyIds);
+  rows=rows.slice(0,60); if(!rows.length){ if(!auto) _showToast(all.length?'كل الملفات محلَّلة بالفعل':'لا ملفات مطابقة — اختر ملفات من «النطاق»','info'); return 0; }
+  _rpAiBusy=true; const done=rpBusy(btn,'… أحلل'); const a=RP.ft.ai, sys=rpFtAiPrompt(), sig=rpAiSig(); let n=0, fail=false;
+  for(let i=0;i<rows.length;i+=12){
+    const ch=rows.slice(i,i+12); if(rows.length>12) _showToast(`أحلل ${Math.min(i+12,rows.length)} من ${rows.length}…`,'info',2500);
+    const ctx={today:today(),files:ch.map(r=>({id:r.f.id,title:r.f.title,category:r.cat,group:r.g,status:r.st,responsible:r.resp,priority:r.prio,opened:r.opened,notes:(r.f.notes||'').slice(0,500),
+      rounds:ROUNDS.filter(x=>x.fileId===r.f.id).sort((p,q)=>((q.date||'')>(p.date||'')?1:-1)).slice(0,8).map(x=>({date:x.date,type:x.type,exec:x.exec,finding:rpTrunc(x.finding,300),actionTaken:rpTrunc(x.actionTaken,200),actionNeeded:rpTrunc(x.actionNeeded,200),due:x.due,amount:x.amount})),
+      openTasks:a.tasks?TASKS.filter(t=>t.fileId===r.f.id&&!t.done).slice(0,6).map(t=>({title:rpTrunc(t.title,100),date:t.date})):undefined,
+      payments:a.pays?PAYMENTS.filter(p=>p.fileId===r.f.id&&p.status!=='ملغي').slice(0,6).map(p=>({title:rpTrunc(p.title,80),amount:payTotal(p),status:p.status})):undefined}))};
+    const r=await axAsk('rp_filenotes',sys,'حلّل هذه الملفات.',ctx,{json:true,temp:0.2,max:70000});
+    if(!r){ fail=true; break; }
+    axArr(r.items).forEach(it=>{ const row=ch.find(x=>x.f.id===axStr(it.id)); const t=rpFtCompose(it); if(row&&t){ RP.aiUpd[row.f.id]={t:t.slice(0,Math.max(300,a.max*2)),fp:row.fp,sig}; n++; } });
+  }
+  done(); _rpAiBusy=false;
+  if(fail&&!n){ _rpAutoFail=true; if(!auto) _showToast('تعذّر التحليل','error'); return 0; }
+  if(RP.ft.note==='raw') RP.ft.note='ai'; rpSave(); renderRepPage(); if(!auto||n) _showToast(`حُلّل ${n} ملف — يظهر في عمود الملاحظات`,'success'); return n;
+}
+function rpFtRegen(id){ _rpAutoFail=false; axRpFileNotes(null,'all',false,[id]); }
+function rpFtEdit(id){
+  const r=rpFilesData().find(x=>x.f.id===id); if(!r) return;
+  plnForm({title:'✎ تعديل الملاحظة — '+r.f.title,saveLabel:'حفظ',values:{t:r.ai||rpNotePlain(r)},fields:[{k:'t',label:'نص الملاحظة (يُثبَّت ولا يُستبدل بالتحليل التلقائي)',type:'textarea',full:true,rows:6,mic:true}],
+    onSave:v=>{ if(v.t){ RP.aiUpd[id]={t:v.t,fp:r.fp,manual:true}; if(RP.ft.note==='raw') RP.ft.note='ai'; } else delete RP.aiUpd[id]; rpSave(); renderRepPage(); }});
+}
+function rpFtClear(){ _showConfirm('مسح كل تحليلات الذكاء المحفوظة (بما فيها التعديلات اليدوية)؟',{confirmLabel:'مسح'}).then(ok=>{ if(!ok) return; RP.aiUpd={}; rpSave(); renderRepPage(); }); }
+function rpFtSet(k,v){ RP.ft[k]=v; _rpAutoFail=false; rpSave(); renderRepPage(); }
+function rpFtAi(k,v){ RP.ft.ai[k]=v; _rpAutoFail=false; rpSave(); renderRepPage(); }
+function rpFtInc(k,on){ RP.ft.ai.inc[k]=on; _rpAutoFail=false; rpSave(); renderRepPage(); }
+function rpFtTxt(k,v,ai){ (ai?RP.ft.ai:RP.ft)[k]=v; rpSave(); if(!ai) rpRefreshSoon(); }
+function rpFtCol(k,on){ let c=RP.ft.cols.filter(x=>x!==k); if(on) c.push(k); RP.ft.cols=RP_FT_COLS.map(x=>x[0]).filter(x=>c.includes(x)); if(!RP.ft.cols.length) RP.ft.cols=['title']; rpSave(); renderRepPage(); }
+function rpFtPanel(){
+  const T=RP.ft, a=T.ai, sel=(cur,arr)=>arr.map(([v,l])=>`<option value="${v}"${String(cur)===String(v)?' selected':''}>${l}</option>`).join(''), ck=(on,fn,l)=>`<label class="rp-tog"><input type="checkbox" ${on?'checked':''} onchange="${fn}"> ${l}</label>`;
+  const aiBox=T.note==='raw'?'':`<div class="rp-ftai"><div class="rp-hint" style="font-weight:700">✨ إعدادات التحليل</div>
+    <div class="rp-2"><div class="form-row"><label>شكل التحليل</label><select onchange="rpFtAi('style',this.value)">${sel(a.style,[['brief','سطر موجز'],['analytic','تحليل منظّم (وضع/مخاطر/مطلوب)'],['detailed','فقرة مفصّلة']])}</select></div>
+    <div class="form-row"><label>الأسلوب</label><select onchange="rpFtAi('tone',this.value)">${sel(a.tone,[['رسمي','رسمي مهني'],['مختصر','مختصر جدًا'],['تنفيذي','تنفيذي للإدارة']])}</select></div></div>
+    ${a.style==='analytic'?`<div class="rp-2">${ck(a.inc.sit,"rpFtInc('sit',this.checked)",'الوضع الحالي')}${ck(a.inc.risk,"rpFtInc('risk',this.checked)",'المخاطر')}${ck(a.inc.next,"rpFtInc('next',this.checked)",'المطلوب تاليًا')}${ck(a.inc.dl,"rpFtInc('dl',this.checked)",'المواعيد')}</div>`:''}
+    <div class="form-row"><label>الطول الأقصى</label><select onchange="rpFtAi('max',+this.value)">${sel(a.max,[[120,'قصير جدًا (120 حرف)'],[200,'قصير (200)'],[300,'متوسط (300)'],[450,'مفصّل (450)'],[700,'طويل (700)']])}</select></div>
+    <div class="form-row"><label>تعليمات إضافية للذكاء (اختياري)</label><textarea id="rpFtExtra" rows="2" placeholder="مثال: ركّز على المبالغ والمواعيد القضائية، أو اكتب بصيغة المبني للمجهول" oninput="rpFtTxt('extra',this.value,1)">${rpT(a.extra)}</textarea>${axMicBtn('rpFtExtra')}</div>
+    <div class="rp-2">${ck(a.tasks,"rpFtAi('tasks',this.checked)",'يشمل المهام المفتوحة')}${ck(a.pays,"rpFtAi('pays',this.checked)",'يشمل المدفوعات')}</div>
+    ${ck(T.auto,"rpFtSet('auto',this.checked)",'حلّل تلقائيًا الملفات الجديدة/المتغيّرة')}
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-filled btn-sm" onclick="axRpFileNotes(this,'missing')">✨ حلّل الناقص</button><button class="btn btn-glass btn-sm" onclick="axRpFileNotes(this,'all')">↻ أعد تحليل الكل</button><button class="btn btn-glass btn-sm" onclick="rpFtClear()">🧹 مسح</button></div></div>`;
+  return `<div class="form-row"><label>محتوى عمود الملاحظات</label><select onchange="rpFtSet('note',this.value)">${sel(T.note,[['raw','نص آخر تحديث (بدون ذكاء)'],['ai','✨ تحليل الذكاء الاصطناعي'],['both','التحليل + النص الأصلي']])}</select></div>`+aiBox
+  +`<div class="form-row"><label>عنوان عمود الملاحظات</label><input type="text" value="${rpA(T.notesTitle)}" oninput="rpFtTxt('notesTitle',this.value)"></div>
+   ${T.note!=='ai'?`<div class="rp-2"><div class="form-row"><label>النص الأصلي يعرض</label><select onchange="rpFtSet('raw',this.value)">${sel(T.raw,[['last','آخر جولة'],['last3','آخر 3 جولات'],['pending','الإجراءات المطلوبة فقط']])}</select></div></div>`:''}
+   ${ck(T.need&&T.raw!=='pending',"rpFtSet('need',this.checked)",'إظهار سطر «المطلوب» (الإجراء القادم وموعده)')}
+   <div class="rp-hint" style="font-weight:700;margin-top:4px">الأعمدة</div><div class="rp-2">${RP_FT_COLS.map(c=>ck(T.cols.includes(c[0]),`rpFtCol('${c[0]}',this.checked)`,c[1])).join('')}</div>
+   <div class="rp-hint" style="font-weight:700;margin-top:4px">الجدول</div>
+   ${ck(T.banner,"rpFtSet('banner',this.checked)",'أشرطة العناوين بين المجموعات')}
+   <div class="rp-2"><div class="form-row"><label>تجميع الأشرطة حسب</label><select onchange="rpFtSet('groupBy',this.value)">${sel(T.groupBy,[['group','المجموعة'],['cat','التصنيف'],['none','بدون']])}</select></div><div class="form-row"><label>الترتيب</label><select onchange="rpFtSet('sort',this.value)">${sel(T.sort,[['group','التصنيف ثم الاسم'],['status','الحالة (الأحوج أولًا)'],['lastdate','الأقدم تحديثًا أولًا'],['priority','الأولوية'],['title','الاسم']])}</select></div></div>
+   ${ck(T.colors,"rpFtSet('colors',this.checked)",'تلوين خلايا الحالة')}${ck(T.showDone,"rpFtSet('showDone',this.checked)",'إظهار الملفات المكتملة')}
+   <div class="form-row"><label>«تحتاج تحديث» إذا لم يتحدّث الملف منذ (يوم)</label><input type="number" min="1" value="${T.staleDays}" onchange="rpFtSet('staleDays',Math.max(1,+this.value||30))"></div>`;
 }
 async function axRpAsk(btn){
   const inp=document.getElementById('rpAsk'); const q=(inp&&inp.value||'').trim(); if(!q){ _showToast('اكتب سؤالك عن التقرير','error'); return; }
