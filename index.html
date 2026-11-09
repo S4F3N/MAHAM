@@ -423,6 +423,16 @@
   .subfile-chip .sf-edit{opacity:.55;font-size:11px;padding:2px 4px;border-radius:50%;}
   .subfile-chip .sf-edit:hover{opacity:1;background:rgba(0,0,0,.15);}
 
+.tl-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;}
+  .tl-quick{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+  .tl-qrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;} .tl-qrow input[type=text]{flex:1;min-width:150px;}
+  .tl-opts select,.tl-opts input{font-size:12px;padding:5px 7px;} .tl-fu{font-size:12px;display:flex;gap:4px;align-items:center;}
+  .tl-list{position:relative;padding-right:14px;border-right:2px solid var(--border);margin-right:10px;}
+  .tl-ev{display:flex;gap:8px;padding:6px 0;position:relative;} .tl-ev[onclick]{cursor:pointer;}
+  .tl-dot{position:absolute;right:-27px;top:6px;width:22px;height:22px;border-radius:50%;background:var(--surface-1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .tl-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;} .tl-d{font-size:11px;color:var(--text-3);}
+  .tl-st{font-size:10px;padding:1px 7px;border-radius:9px;background:rgba(128,128,128,.15);} .tl-st.ok{background:rgba(46,160,90,.18);}
+  .tl-t{font-size:12px;color:var(--text-2);margin-top:2px;line-height:1.6;}
   .round-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:17px 19px;margin-bottom:13px;backdrop-filter:var(--blur);border-right:4px solid var(--text-3);}
   .round-card.exec-تم{background:rgba(48,209,88,0.04);border-color:rgba(48,209,88,0.4);}
   .round-card.exec-لم{background:rgba(255,69,58,0.04);}
@@ -1093,6 +1103,8 @@
       <button class="btn btn-glass btn-sm" onclick="openSubfileModal()">+ مسار جديد</button>
     </div>
     <div class="subfile-chips" id="subfileChips"></div>
+
+    <div id="fileTimeline"></div>
 
     <div class="section-head"><h2>سجل الجولات</h2>
       <div style="display:flex;gap:6px;">
@@ -3636,6 +3648,7 @@ function renderSubfileChips(){
   el.innerHTML = html;
 }
 function renderRounds(){
+  try{ renderTimeline(); }catch(e){ console.error(e); }
   let list = ROUNDS.filter(r=>r.fileId===currentFileId);
   if(roundFilterExec) list = list.filter(r=>r.exec===roundFilterExec);
   if(roundFilterTrack==='__general__') list = list.filter(r=>!r.subFileId);
@@ -6054,8 +6067,86 @@ function axFileCtx(f){
   const rs=ROUNDS.filter(r=>r.fileId===f.id).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,20);
   return {today:today(),file:{id:f.id,title:f.title,status:f.status,priority:f.priority,category:f.category,party:f.party,opened:f.opened,target:f.target,notes:(f.notes||'').slice(0,1500)},
     contacts:(f.contactIds||[]).map(id=>CONTACTS.find(c=>c.id===id)).filter(Boolean).map(c=>({name:c.name,role:c.role})),
+    timeline:tlForAI(f.id,60),
     rounds:rs.map(r=>({date:r.date,type:r.type,exec:r.exec,finding:(r.finding||'').slice(0,400),actionTaken:(r.actionTaken||'').slice(0,300),actionNeeded:(r.actionNeeded||'').slice(0,300),due:r.due,amount:r.amount})),
     tasks:TASKS.filter(t=>t.fileId===f.id&&!t.done).slice(0,15).map(t=>({title:t.title,date:t.date,quick:!!t.quick}))};
+}
+
+/* ====================== FILE TIMELINE (السجل الزمني) ====================== */
+let TL={asc:false,all:false};
+function _tlTs(r){ const c=r&&(r.createdAt||''); if(c) return String(c); const n=parseInt(String(r&&r.id||'').slice(0,8),36); return isNaN(n)?'':new Date(n).toISOString(); }
+function fileTimeline(fid){
+  const f=fileOf(fid); if(!f) return []; const ev=[];
+  const add=(date,time,ts,kind,icon,title,detail,status,ref)=>{ if(!date) return; ev.push({date,time:time||'',ts:ts||'',kind,icon,title:title||'',detail:detail||'',status:status||'',ref:ref||''}); };
+  if(f.opened) add(f.opened,'','0','file','📂','فُتح الملف',f.title,'');
+  ROUNDS.filter(r=>r.fileId===fid).forEach(r=>{
+    const sf=r.subFileId?subfileOf(r.subFileId):null;
+    const d=[r.finding,r.actionTaken&&('الإجراء: '+r.actionTaken),r.actionNeeded&&('المطلوب: '+r.actionNeeded+(r.due?' (حتى '+r.due+')':'')),r.recommend&&('التوصية: '+r.recommend),r.amount&&('مبلغ: '+r.amount)].filter(Boolean).join(' — ');
+    add(r.date,r.time,_tlTs(r),r.log?'log':'round',ROUND_TYPES[r.type]||'📌',(r.type||'جولة')+(sf&&sf.title?' ['+sf.title+']':''),d,r.exec==='تم'?'تم':(r.exec==='جارٍ'?'جارٍ':'معلّق'),r.id);
+  });
+  TASKS.filter(t=>t.fileId===fid&&!t.quick).forEach(t=>add(t.date,t.time,_tlTs(t),'task','✅',t.title,t.notes||'',t.done?'تم':'معلّق',''));
+  PAYMENTS.filter(p=>p.fileId===fid&&p.status!=='ملغي').forEach(p=>add(p.paidDate||p.reqDate||(p.createdAt||'').slice(0,10),'',_tlTs(p),'pay','💳',p.title,payFmt(payTotal(p))+' ر.س',p.status||'',''));
+  (PLANS||[]).filter(p=>p.fileId===fid).forEach(p=>add(p.start,'',_tlTs(p),'plan','🧭','بدء خطة: '+p.title,p.goal||'',p.status||'',''));
+  ev.sort((a,b)=>(a.date+' '+a.time).localeCompare(b.date+' '+b.time)||a.ts.localeCompare(b.ts));
+  return ev;
+}
+function tlForAI(fid,max){
+  const ev=fileTimeline(fid); const cut=ev.slice(-(max||60));
+  return cut.map(e=>({d:e.date+(e.time?' '+e.time:''),k:e.kind,t:e.title.slice(0,80),x:e.detail.slice(0,260),s:e.status}));
+}
+function renderTimeline(){
+  const box=document.getElementById('fileTimeline'); if(!box||!currentFileId) return;
+  const all=fileTimeline(currentFileId); let list=all.slice();
+  if(!TL.asc) list.reverse();
+  const total=list.length; if(!TL.all) list=list.slice(0,8);
+  const opts=Object.keys(ROUND_TYPES).map(k=>`<option value="${k}"${k==='تحديث داخلي'?' selected':''}>${ROUND_TYPES[k]} ${k}</option>`).join('');
+  const rows=list.map(e=>`<div class="tl-ev tl-${e.kind}"${e.kind==='round'||e.kind==='log'?` onclick="openRoundModal('${e.ref}')"`:''}>
+    <div class="tl-dot">${e.icon}</div>
+    <div class="tl-body"><div class="tl-h"><b>${esc(e.title)}</b><span class="tl-d"${dTitle(e.date)}>${fmtDate(e.date)}${e.time?' · '+esc(e.time):''}</span>${e.status?`<span class="tl-st ${e.status==='تم'?'ok':''}">${esc(e.status)}</span>`:''}</div>${e.detail?`<div class="tl-t">${esc(e.detail.slice(0,260))}</div>`:''}</div></div>`).join('');
+  box.innerHTML=`<div class="tl-card">
+    <div class="section-head" style="margin-bottom:8px;"><h3 style="font-size:15px;">🕒 السجل الزمني <span class="badge">${total}</span></h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-glass btn-sm" onclick="TL.asc=!TL.asc;renderTimeline()">${TL.asc?'⬆ الأقدم أولًا':'⬇ الأحدث أولًا'}</button>
+        <button class="btn btn-glass btn-sm" onclick="tlAiParse()">✨ من نص</button>
+        <button class="btn btn-glass btn-sm" onclick="tlAiPath()">✨ تحليل المسار</button>
+      </div></div>
+    <div class="tl-quick">
+      <div class="tl-qrow"><input type="text" id="tlText" placeholder="سجّل خطوة بسرعة… مثال: اتصلت بالطرف الآخر وطلب مهلة أسبوع" onkeydown="if(event.key==='Enter')tlAdd()">${axMicBtn('tlText')}<button class="btn btn-filled btn-sm" onclick="tlAdd()">+ سجّل</button></div>
+      <div class="tl-qrow tl-opts"><select id="tlType">${opts}</select><input type="date" id="tlDate" value="${today()}"><input type="time" id="tlTime" value="${new Date().toTimeString().slice(0,5)}">
+        <label class="tl-fu"><input type="checkbox" id="tlFu" onchange="document.getElementById('tlDue').style.display=this.checked?'':'none'"> تتطلب متابعة</label><input type="date" id="tlDue" style="display:none" title="موعد المتابعة"></div>
+    </div>
+    <div class="tl-list">${rows||'<div class="empty-note">لا أحداث بعد — سجّل أول خطوة.</div>'}</div>
+    ${total>8?`<button class="btn btn-glass btn-sm" style="margin-top:8px;" onclick="TL.all=!TL.all;renderTimeline()">${TL.all?'عرض أقل':'عرض كل '+total+' حدث'}</button>`:''}
+  </div>`;
+}
+function tlMake(o){
+  const fu=!!o.fu;
+  return {id:uid(),createdAt:new Date().toISOString(),fileId:currentFileId,subFileId:'',date:o.date||today(),time:o.time||'',type:o.type||'تحديث داخلي',priority:'متوسط',exec:fu?'لم':'تم',execDate:'',due:fu?(o.due||''):'',responsible:'',amount:'',finding:o.text,actionTaken:'',actionNeeded:fu?o.text:'',recommend:'',suggest:'',attachments:[],contactIds:[],log:true};
+}
+function tlAdd(){
+  const el=document.getElementById('tlText'); const text=(el.value||'').trim(); if(!text){ el.focus(); return; }
+  const fu=document.getElementById('tlFu').checked;
+  const r=tlMake({text,type:document.getElementById('tlType').value,date:document.getElementById('tlDate').value,time:document.getElementById('tlTime').value,fu,due:document.getElementById('tlDue').value});
+  ROUNDS.push(r); logActivity('add','round','سجل سريع: '+text.slice(0,60)); haptic();
+  persistRounds(r.id).then(()=>{ renderFilePage(); try{renderNotif();}catch(e){} _showToast('سُجّلت الخطوة','success'); });
+}
+async function tlAiPath(){
+  const f=fileOf(currentFileId); if(!f) return; axOpen('🕒 تحليل مسار الملف — '+f.title);
+  if(fileTimeline(f.id).length<2){ axShow('<div class="tasks-empty-note">السجل الزمني قصير — سجّل خطوات أكثر ثم أعد التحليل.</div>',[]); return; }
+  axLoading('أقرأ التسلسل الزمني…');
+  const t=await axAsk('file_path','أنت محلل متابعة قانوني. يُعطى لك تسلسل زمني (timeline من الأقدم للأحدث) لأحداث ملف: جولات، مراسلات، مهام، مدفوعات. اكتب بالعربية وبإيجاز: (1) القصة في 3-5 أسطر مرتبة زمنيًا (2) نقاط التحول والقرارات (3) التأخيرات أو الفجوات الزمنية أو التكرار دون تقدم (4) الوضع الحالي (5) الخطوة التالية المنطقية مع التوقيت. لا تختلق ما ليس في السجل، وقل صراحة إن كان ناقصًا.','حلّل مسار الملف.',axFileCtx(f),{max:40000});
+  if(t==null){ axFail(); return; }
+  axTextResult(t,[{label:'💾 احفظ كسجل',fn:()=>{ const r=tlMake({text:'تحليل المسار: '+t.replace(/\s+/g,' ').slice(0,600),type:'تحديث داخلي'}); ROUNDS.push(r); persistRounds(r.id).then(()=>{ axClose(); renderFilePage(); _showToast('حُفظ في السجل','success'); }); }}]);
+}
+function tlAiParse(){
+  axOpen('✨ سجل من نص'); axShow(`<div class="ax-inrow"><textarea id="tlBulk" rows="6" placeholder="الصق أو أملِ ما حصل بحرية، مثال: أمس اتصلت بالمحامي، وقبل أسبوع أرسلنا الخطاب وما ردوا، واليوم حددنا جلسة الخميس…"></textarea>${axMicBtn('tlBulk')}</div>`,[{label:'✨ حوّل لسجلات',fn:tlAiParseGo}]);
+}
+async function tlAiParseGo(){
+  const txt=(document.getElementById('tlBulk')||{}).value||''; if(!txt.trim()) return; const f=fileOf(currentFileId); axLoading('أرتّب الأحداث…');
+  const r=await axAsk('file_log_parse','حوّل النص إلى أحداث منفصلة مرتبة زمنيًا. استنتج التاريخ بالنسبة لتاريخ اليوم (أمس، قبل أسبوع…)، وإن لم يُذكر فاستخدم تاريخ اليوم. لا تختلق أحداثًا. type من: '+Object.keys(ROUND_TYPES).join('، ')+'. المخطط: {"items":[{"date":"YYYY-MM-DD","type":"","text":""}]}',txt,{today:today(),file:f?f.title:''},{json:true});
+  const items=r&&axArr(r.items).filter(x=>x&&x.text);
+  if(!items||!items.length){ axFail(); return; }
+  axShow(axPick(items,it=>`<b>${esc(it.date||today())}</b> · ${esc(it.type||'')} — ${esc(it.text)}`),[{label:'➕ أضف المحدد',fn:()=>{ const sel=axPicked(items); if(!sel.length) return; const ids=[]; sel.forEach(it=>{ const rr=tlMake({text:String(it.text).slice(0,600),type:ROUND_TYPES[it.type]?it.type:'تحديث داخلي',date:/^\d{4}-\d{2}-\d{2}$/.test(it.date||'')?it.date:today()}); ROUNDS.push(rr); ids.push(rr.id); }); persistRounds(ids).then(()=>{ axClose(); renderFilePage(); _showToast('أُضيفت '+ids.length+' خطوة','success'); }); }}]);
 }
 
 /* ====================== PLANS ====================== */
@@ -7590,6 +7681,7 @@ async function axRpFileNotes(btn,mode,auto,onlyIds){
   for(let i=0;i<rows.length;i+=12){
     const ch=rows.slice(i,i+12); if(rows.length>12) _showToast(`أحلل ${Math.min(i+12,rows.length)} من ${rows.length}…`,'info',2500);
     const ctx={today:today(),files:ch.map(r=>({id:r.f.id,title:r.f.title,category:r.cat,group:r.g,status:r.st,responsible:r.resp,priority:r.prio,opened:r.opened,notes:(r.f.notes||'').slice(0,500),
+      timeline:tlForAI(r.f.id,12),
       rounds:ROUNDS.filter(x=>x.fileId===r.f.id).sort((p,q)=>((q.date||'')>(p.date||'')?1:-1)).slice(0,8).map(x=>({date:x.date,type:x.type,exec:x.exec,finding:rpTrunc(x.finding,300),actionTaken:rpTrunc(x.actionTaken,200),actionNeeded:rpTrunc(x.actionNeeded,200),due:x.due,amount:x.amount})),
       openTasks:a.tasks?TASKS.filter(t=>t.fileId===r.f.id&&!t.done).slice(0,6).map(t=>({title:rpTrunc(t.title,100),date:t.date})):undefined,
       payments:a.pays?PAYMENTS.filter(p=>p.fileId===r.f.id&&p.status!=='ملغي').slice(0,6).map(p=>({title:rpTrunc(p.title,80),amount:payTotal(p),status:p.status})):undefined}))};
@@ -7945,7 +8037,7 @@ function _aiFileSummary(f){
   const rs = ROUNDS.filter(r=>r.fileId===f.id);
   return {
     id:f.id, title:f.title, status:f.status, priority:f.priority, category:f.category,
-    party:f.party, tags:f.tags||[], roundsCount:rs.length,
+    party:f.party, tags:f.tags||[], roundsCount:rs.length, lastEvents:tlForAI(f.id,4),
     overdue: rs.filter(r=>r.exec!=='تم' && r.due && daysUntil(r.due)<0).length,
     nextAction: na ? {actionNeeded:na.actionNeeded, due:na.due, exec:na.exec} : null,
   };
